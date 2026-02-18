@@ -38,11 +38,14 @@ shared/
 - **Right to Erasure**: Users can permanently delete their account and all associated data
 - **Role-based Access**: Titulados FP see job search + applications; COMPANY sees job management + candidates
 - **FP-focused**: Tailored for Formacion Profesional graduates (CFGS DAW, ASIR, DAM, etc.)
+- **Familias Profesionales y Ciclos**: Both user profiles and job offers include familia profesional and ciclo formativo fields with cascading selectors (23 familias, each with relevant ciclos)
 
 ## Important Notes
 - DB column `university` stores "Centro de FP" (kept for backwards compat)
 - DB column `graduation_year` stores "Ano de promocion" (kept for backwards compat)
+- DB columns `familia_profesional` and `ciclo_formativo` on both `users` and `job_offers` tables
 - Internal role value is "ALUMNI" but displayed as "Titulado FP" in the UI
+- `FAMILIAS_PROFESIONALES` and `CICLOS_POR_FAMILIA` constants exported from shared/schema.ts
 
 ## API Endpoints
 - POST /api/auth/register - Register new user

@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { JobOffer, Application, User } from "@shared/schema";
+import { FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
 import {
   Briefcase, Plus, Users, LogOut, Loader2, MapPin, Clock, Building2,
   Mail, Phone, GraduationCap, FileText, ChevronDown, ChevronUp,
@@ -245,6 +246,12 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
               <Badge variant="outline" className="text-xs">{jobTypeLabels[job.jobType] || job.jobType}</Badge>
               {job.active ? <Badge variant="default" className="text-xs">Activa</Badge> : <Badge variant="secondary" className="text-xs">Inactiva</Badge>}
             </div>
+            {(job.familiaProfesional || job.cicloFormativo) && (
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {job.familiaProfesional && <Badge variant="outline" className="text-xs">{job.familiaProfesional}</Badge>}
+                {job.cicloFormativo && <Badge variant="secondary" className="text-xs">{job.cicloFormativo}</Badge>}
+              </div>
+            )}
             <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{job.location}</span>
               {(job.salaryMin || job.salaryMax) && (
@@ -300,9 +307,15 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                           <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{app.alumni.phone}</span>
                         )}
                         {app.alumni?.university && (
-                          <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{app.alumni.university} (FP)</span>
+                          <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{app.alumni.university}</span>
                         )}
                       </div>
+                      {(app.alumni?.familiaProfesional || app.alumni?.cicloFormativo) && (
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {app.alumni?.familiaProfesional && <Badge variant="outline" className="text-xs">{app.alumni.familiaProfesional}</Badge>}
+                          {app.alumni?.cicloFormativo && <Badge variant="secondary" className="text-xs">{app.alumni.cicloFormativo}</Badge>}
+                        </div>
+                      )}
                       {app.alumni?.skills && (
                         <p className="text-xs text-muted-foreground mt-1">Habilidades: {app.alumni.skills}</p>
                       )}
@@ -350,6 +363,10 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
   const [salaryMax, setSalaryMax] = useState("");
   const [jobType, setJobType] = useState("FULL_TIME");
   const [requirements, setRequirements] = useState("");
+  const [familiaProfesional, setFamiliaProfesional] = useState("");
+  const [cicloFormativo, setCicloFormativo] = useState("");
+
+  const ciclosDisponibles = familiaProfesional ? CICLOS_POR_FAMILIA[familiaProfesional] || [] : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -357,6 +374,8 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
       title, description, location, jobType, requirements,
       salaryMin: salaryMin ? parseInt(salaryMin) : undefined,
       salaryMax: salaryMax ? parseInt(salaryMax) : undefined,
+      familiaProfesional: familiaProfesional || undefined,
+      cicloFormativo: cicloFormativo || undefined,
     });
   };
 
@@ -387,6 +406,44 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
               <SelectItem value="INTERNSHIP">Practicas</SelectItem>
               <SelectItem value="FREELANCE">Freelance</SelectItem>
               <SelectItem value="REMOTE">Remoto</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Familia Profesional</Label>
+          <Select
+            value={familiaProfesional}
+            onValueChange={(val) => {
+              setFamiliaProfesional(val);
+              setCicloFormativo("");
+            }}
+          >
+            <SelectTrigger data-testid="select-job-familia">
+              <SelectValue placeholder="Selecciona familia" />
+            </SelectTrigger>
+            <SelectContent>
+              {FAMILIAS_PROFESIONALES.map((f) => (
+                <SelectItem key={f} value={f}>{f}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Ciclo Formativo</Label>
+          <Select
+            value={cicloFormativo}
+            onValueChange={setCicloFormativo}
+            disabled={ciclosDisponibles.length === 0}
+          >
+            <SelectTrigger data-testid="select-job-ciclo">
+              <SelectValue placeholder="Selecciona ciclo" />
+            </SelectTrigger>
+            <SelectContent>
+              {ciclosDisponibles.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

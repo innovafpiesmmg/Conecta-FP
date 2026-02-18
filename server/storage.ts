@@ -116,6 +116,8 @@ export class DatabaseStorage implements IStorage {
         cvUrl: alumni.cvUrl,
         university: alumni.university,
         graduationYear: alumni.graduationYear,
+        familiaProfesional: alumni.familiaProfesional,
+        cicloFormativo: alumni.cicloFormativo,
         skills: alumni.skills,
         role: alumni.role,
         profilePublic: alumni.profilePublic,

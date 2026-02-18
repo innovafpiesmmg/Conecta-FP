@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { JobOffer, Application, User } from "@shared/schema";
+import { FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
 import {
   Briefcase, Search, User as UserIcon, FileText, LogOut, Loader2, MapPin,
   Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink
@@ -15,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -109,14 +111,19 @@ export default function AlumniDashboard() {
     onError: () => toast({ title: "Error", description: "No se pudo eliminar la cuenta", variant: "destructive" }),
   });
 
+  const [filterFamilia, setFilterFamilia] = useState("");
+
   const filteredJobs = jobs.filter((job) => {
+    if (filterFamilia && filterFamilia !== "all" && job.familiaProfesional !== filterFamilia) return false;
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (
       job.title.toLowerCase().includes(q) ||
       job.location.toLowerCase().includes(q) ||
       job.description.toLowerCase().includes(q) ||
-      job.company?.companyName?.toLowerCase().includes(q)
+      job.company?.companyName?.toLowerCase().includes(q) ||
+      job.familiaProfesional?.toLowerCase().includes(q) ||
+      job.cicloFormativo?.toLowerCase().includes(q)
     );
   });
 
@@ -165,8 +172,8 @@ export default function AlumniDashboard() {
           </TabsList>
 
           <TabsContent value="jobs" className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[200px] max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar por titulo, ubicacion, empresa..."
@@ -176,6 +183,17 @@ export default function AlumniDashboard() {
                   data-testid="input-search-jobs"
                 />
               </div>
+              <Select value={filterFamilia} onValueChange={setFilterFamilia}>
+                <SelectTrigger className="w-[220px]" data-testid="select-filter-familia">
+                  <SelectValue placeholder="Todas las familias" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las familias</SelectItem>
+                  {FAMILIAS_PROFESIONALES.map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Badge variant="secondary">{filteredJobs.length} ofertas</Badge>
             </div>
 
@@ -224,6 +242,12 @@ export default function AlumniDashboard() {
                             </span>
                           )}
                         </div>
+                        {(job.familiaProfesional || job.cicloFormativo) && (
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            {job.familiaProfesional && <Badge variant="outline" className="text-xs">{job.familiaProfesional}</Badge>}
+                            {job.cicloFormativo && <Badge variant="secondary" className="text-xs">{job.cicloFormativo}</Badge>}
+                          </div>
+                        )}
                         <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
                         {job.requirements && (
                           <p className="text-xs text-muted-foreground mt-1">
@@ -382,14 +406,20 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
   const [cvUrl, setCvUrl] = useState(user.cvUrl || "");
   const [university, setUniversity] = useState(user.university || "");
   const [graduationYear, setGraduationYear] = useState(user.graduationYear?.toString() || "");
+  const [familiaProfesional, setFamiliaProfesional] = useState(user.familiaProfesional || "");
+  const [cicloFormativo, setCicloFormativo] = useState(user.cicloFormativo || "");
   const [skills, setSkills] = useState(user.skills || "");
   const [profilePublic, setProfilePublic] = useState(user.profilePublic);
+
+  const ciclosDisponibles = familiaProfesional ? CICLOS_POR_FAMILIA[familiaProfesional] || [] : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
       name, phone, bio, cvUrl, university,
       graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
+      familiaProfesional: familiaProfesional || undefined,
+      cicloFormativo: cicloFormativo || undefined,
       skills, profilePublic,
     });
   };
@@ -409,6 +439,46 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
             <Label>Telefono</Label>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+34 600 000 000" data-testid="input-profile-phone" />
           </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Familia Profesional</Label>
+            <Select
+              value={familiaProfesional}
+              onValueChange={(val) => {
+                setFamiliaProfesional(val);
+                setCicloFormativo("");
+              }}
+            >
+              <SelectTrigger data-testid="select-profile-familia">
+                <SelectValue placeholder="Selecciona familia" />
+              </SelectTrigger>
+              <SelectContent>
+                {FAMILIAS_PROFESIONALES.map((f) => (
+                  <SelectItem key={f} value={f}>{f}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Ciclo Formativo</Label>
+            <Select
+              value={cicloFormativo}
+              onValueChange={setCicloFormativo}
+              disabled={ciclosDisponibles.length === 0}
+            >
+              <SelectTrigger data-testid="select-profile-ciclo">
+                <SelectValue placeholder="Selecciona ciclo" />
+              </SelectTrigger>
+              <SelectContent>
+                {ciclosDisponibles.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Centro de FP</Label>
             <Input value={university} onChange={(e) => setUniversity(e.target.value)} data-testid="input-profile-university" />

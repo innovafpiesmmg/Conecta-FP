@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { registerAlumniSchema, registerCompanySchema } from "@shared/schema";
+import { registerAlumniSchema, registerCompanySchema, FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,9 +33,14 @@ export default function Register() {
     resolver: zodResolver(registerAlumniSchema),
     defaultValues: {
       email: "", password: "", name: "", role: "ALUMNI",
-      university: "", graduationYear: undefined, consentGiven: undefined as any,
+      university: "", graduationYear: undefined,
+      familiaProfesional: "", cicloFormativo: "",
+      consentGiven: undefined as any,
     },
   });
+
+  const selectedFamilia = alumniForm.watch("familiaProfesional");
+  const ciclosDisponibles = selectedFamilia ? CICLOS_POR_FAMILIA[selectedFamilia] || [] : [];
 
   const companyForm = useForm<CompanyData>({
     resolver: zodResolver(registerCompanySchema),
@@ -108,6 +114,44 @@ export default function Register() {
                   <Label htmlFor="alumni-password">Contrasena</Label>
                   <Input id="alumni-password" type="password" placeholder="Minimo 8 caracteres" data-testid="input-alumni-password" {...alumniForm.register("password")} />
                   {alumniForm.formState.errors.password && <p className="text-sm text-destructive">{alumniForm.formState.errors.password.message}</p>}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Familia Profesional</Label>
+                    <Select
+                      value={alumniForm.watch("familiaProfesional") || ""}
+                      onValueChange={(val) => {
+                        alumniForm.setValue("familiaProfesional", val);
+                        alumniForm.setValue("cicloFormativo", "");
+                      }}
+                    >
+                      <SelectTrigger data-testid="select-alumni-familia">
+                        <SelectValue placeholder="Selecciona familia" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FAMILIAS_PROFESIONALES.map((f) => (
+                          <SelectItem key={f} value={f}>{f}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Ciclo Formativo</Label>
+                    <Select
+                      value={alumniForm.watch("cicloFormativo") || ""}
+                      onValueChange={(val) => alumniForm.setValue("cicloFormativo", val)}
+                      disabled={ciclosDisponibles.length === 0}
+                    >
+                      <SelectTrigger data-testid="select-alumni-ciclo">
+                        <SelectValue placeholder="Selecciona ciclo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ciclosDisponibles.map((c) => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">

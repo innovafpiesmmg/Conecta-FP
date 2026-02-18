@@ -62,8 +62,10 @@ export async function seedDatabase() {
     name: "Maria Fernandez",
     phone: "+34 620 123 456",
     bio: "Titulada en Desarrollo de Aplicaciones Web (DAW) con pasion por el desarrollo web y la inteligencia artificial. Busco mi primera oportunidad profesional.",
-    university: "IES Vallecas - CFGS DAW",
+    university: "IES Vallecas",
     graduationYear: 2024,
+    familiaProfesional: "Informatica y Comunicaciones",
+    cicloFormativo: "CFGS Desarrollo de Aplicaciones Web (DAW)",
     skills: "JavaScript, TypeScript, React, Node.js, Python, SQL",
     cvUrl: "https://drive.google.com/example-cv-maria",
     consentGiven: true,
@@ -78,8 +80,10 @@ export async function seedDatabase() {
     name: "Pablo Rodriguez",
     phone: "+34 630 234 567",
     bio: "Tecnico superior en Administracion de Sistemas Informaticos en Red (ASIR) con experiencia en practicas. Especializado en backend y arquitectura de microservicios.",
-    university: "IES Joan d'Austria - CFGS ASIR",
+    university: "IES Joan d'Austria",
     graduationYear: 2023,
+    familiaProfesional: "Informatica y Comunicaciones",
+    cicloFormativo: "CFGS Administracion de Sistemas Informaticos en Red (ASIR)",
     skills: "Java, Spring Boot, Docker, Kubernetes, AWS, PostgreSQL",
     cvUrl: "https://drive.google.com/example-cv-pablo",
     consentGiven: true,
@@ -95,6 +99,8 @@ export async function seedDatabase() {
     salaryMax: 35000,
     jobType: "FULL_TIME",
     requirements: "Titulo de FP en DAW, DAM o similar. Conocimientos de JavaScript, React y Node.js. Nivel de ingles B2.",
+    familiaProfesional: "Informatica y Comunicaciones",
+    cicloFormativo: "CFGS Desarrollo de Aplicaciones Web (DAW)",
   });
 
   const job2 = await storage.createJob(company1.id, {
@@ -105,6 +111,8 @@ export async function seedDatabase() {
     salaryMax: 45000,
     jobType: "FULL_TIME",
     requirements: "FP Superior o formacion equivalente en Data Science. Experiencia con Python, TensorFlow, pandas. Conocimientos de estadistica avanzada.",
+    familiaProfesional: "Informatica y Comunicaciones",
+    cicloFormativo: "CFGS Desarrollo de Aplicaciones Multiplataforma (DAM)",
   });
 
   const job3 = await storage.createJob(company2.id, {
@@ -115,6 +123,8 @@ export async function seedDatabase() {
     salaryMax: 15000,
     jobType: "INTERNSHIP",
     requirements: "Estudiante o recien titulado en FP de Diseno o similar. Portfolio de proyectos. Manejo de Figma y Adobe XD.",
+    familiaProfesional: "Imagen y Sonido",
+    cicloFormativo: "CFGS Animaciones 3D, Juegos y Entornos Interactivos",
   });
 
   const job4 = await storage.createJob(company2.id, {
@@ -125,6 +135,8 @@ export async function seedDatabase() {
     salaryMax: 28000,
     jobType: "REMOTE",
     requirements: "FP en Marketing y Publicidad, Comunicacion o similar. Experiencia con herramientas de gestion de RRSS. Creatividad y capacidad analitica.",
+    familiaProfesional: "Comercio y Marketing",
+    cicloFormativo: "CFGS Marketing y Publicidad",
   });
 
   const job5 = await storage.createJob(company3.id, {
@@ -135,6 +147,8 @@ export async function seedDatabase() {
     salaryMax: 38000,
     jobType: "FULL_TIME",
     requirements: "FP Superior en Energias Renovables, Electricidad o similar. Conocimientos en energia solar. Carnet de conducir B.",
+    familiaProfesional: "Energia y Agua",
+    cicloFormativo: "CFGS Energias Renovables",
   });
 
   await storage.createApplication(alumni1.id, {
