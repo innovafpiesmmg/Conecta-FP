@@ -71,7 +71,7 @@ export default function CompanyDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/mine"] });
-      toast({ title: "Oferta creada", description: "Ya es visible para los egresados" });
+      toast({ title: "Oferta creada", description: "Ya es visible para los titulados de FP" });
       setShowCreateJob(false);
     },
     onError: () => toast({ title: "Error", description: "No se pudo crear la oferta", variant: "destructive" }),
@@ -104,7 +104,7 @@ export default function CompanyDashboard() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">AlumniJobs</span>
+              <span className="font-semibold text-lg tracking-tight">FP Empleo</span>
             </div>
           </Link>
           <div className="flex items-center gap-3 flex-wrap">
@@ -139,7 +139,7 @@ export default function CompanyDashboard() {
                 <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Crear nueva oferta</DialogTitle>
-                    <DialogDescription>Publica una vacante para que los egresados puedan postularse</DialogDescription>
+                    <DialogDescription>Publica una vacante para que los titulados de FP puedan postularse</DialogDescription>
                   </DialogHeader>
                   <CreateJobForm onSubmit={(data) => createJobMutation.mutate(data)} isPending={createJobMutation.isPending} />
                 </DialogContent>
@@ -300,7 +300,7 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                           <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{app.alumni.phone}</span>
                         )}
                         {app.alumni?.university && (
-                          <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{app.alumni.university}</span>
+                          <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{app.alumni.university} (FP)</span>
                         )}
                       </div>
                       {app.alumni?.skills && (

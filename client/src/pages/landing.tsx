@@ -16,7 +16,7 @@ export default function Landing() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">AlumniJobs</span>
+              <span className="font-semibold text-lg tracking-tight">FP Empleo</span>
             </div>
           </Link>
           <nav className="flex items-center gap-2 flex-wrap">
@@ -48,18 +48,18 @@ export default function Landing() {
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-6">
               Conecta talento
-              <span className="text-primary"> universitario</span>
+              <span className="text-primary"> de FP</span>
               <br />con oportunidades reales
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              Plataforma exclusiva para egresados y empresas. Tus datos estan protegidos: 
+              Plataforma exclusiva para titulados de FP y empresas. Tus datos estan protegidos: 
               solo compartes informacion cuando tu decides postularte.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register?role=alumni">
                 <Button size="lg" className="gap-2 w-full sm:w-auto" data-testid="button-register-alumni">
                   <GraduationCap className="w-5 h-5" />
-                  Soy Egresado
+                  Soy Titulado FP
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -89,7 +89,7 @@ export default function Landing() {
               </div>
               <h3 className="font-semibold text-lg mb-2">1. Registrate</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Crea tu cuenta como egresado o empresa. Aceptas el tratamiento de datos con total transparencia.
+                Crea tu cuenta como titulado de FP o empresa. Aceptas el tratamiento de datos con total transparencia.
               </p>
             </Card>
             <Card className="p-6 text-center">
@@ -98,7 +98,7 @@ export default function Landing() {
               </div>
               <h3 className="font-semibold text-lg mb-2">2. Explora ofertas</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Las empresas publican vacantes y los egresados buscan entre las oportunidades disponibles.
+                Las empresas publican vacantes y los titulados de FP buscan entre las oportunidades disponibles.
               </p>
             </Card>
             <Card className="p-6 text-center">
@@ -164,13 +164,13 @@ export default function Landing() {
         <div className="max-w-3xl mx-auto text-center px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Empieza hoy mismo</h2>
           <p className="text-primary-foreground/80 mb-8 text-lg">
-            Unete a nuestra comunidad de egresados y empresas. Es gratuito y seguro.
+            Unete a nuestra comunidad de titulados de FP y empresas. Es gratuito y seguro.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/register?role=alumni">
               <Button size="lg" variant="secondary" className="gap-2 w-full sm:w-auto" data-testid="button-cta-alumni">
                 <GraduationCap className="w-5 h-5" />
-                Registrarme como Egresado
+                Registrarme como Titulado FP
               </Button>
             </Link>
             <Link href="/register?role=company">
@@ -187,7 +187,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Briefcase className="w-4 h-4" />
-            <span>AlumniJobs - Portal de Empleo Privado</span>
+            <span>FP Empleo - Portal de Empleo Privado</span>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             <span>Protegido por RGPD</span>

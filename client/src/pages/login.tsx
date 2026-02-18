@@ -48,7 +48,7 @@ export default function Login() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">AlumniJobs</span>
+              <span className="font-semibold text-lg tracking-tight">FP Empleo</span>
             </div>
           </Link>
         </div>
@@ -58,7 +58,7 @@ export default function Login() {
         <Card className="w-full max-w-md p-6 sm:p-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-1">Iniciar Sesion</h1>
-            <p className="text-muted-foreground text-sm">Accede a tu cuenta en AlumniJobs</p>
+            <p className="text-muted-foreground text-sm">Accede a tu cuenta en FP Empleo</p>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

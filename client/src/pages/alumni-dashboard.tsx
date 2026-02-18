@@ -138,7 +138,7 @@ export default function AlumniDashboard() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">AlumniJobs</span>
+              <span className="font-semibold text-lg tracking-tight">FP Empleo</span>
             </div>
           </Link>
           <div className="flex items-center gap-3 flex-wrap">
@@ -410,11 +410,11 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+34 600 000 000" data-testid="input-profile-phone" />
           </div>
           <div className="space-y-2">
-            <Label>Universidad</Label>
+            <Label>Centro de FP</Label>
             <Input value={university} onChange={(e) => setUniversity(e.target.value)} data-testid="input-profile-university" />
           </div>
           <div className="space-y-2">
-            <Label>Ano de graduacion</Label>
+            <Label>Ano de promocion</Label>
             <Input type="number" value={graduationYear} onChange={(e) => setGraduationYear(e.target.value)} data-testid="input-profile-year" />
           </div>
         </div>

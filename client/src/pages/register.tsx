@@ -50,7 +50,7 @@ export default function Register() {
     try {
       await apiRequest("POST", "/api/auth/register", data);
       await login(data.email, data.password);
-      toast({ title: "Cuenta creada", description: "Bienvenido/a a AlumniJobs" });
+      toast({ title: "Cuenta creada", description: "Bienvenido/a a FP Empleo" });
       navigate(data.role === "ALUMNI" ? "/dashboard" : "/company");
     } catch (err: any) {
       const msg = err.message?.includes("409") ? "Este email ya esta registrado" : "Error al crear la cuenta";
@@ -69,7 +69,7 @@ export default function Register() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">AlumniJobs</span>
+              <span className="font-semibold text-lg tracking-tight">FP Empleo</span>
             </div>
           </Link>
         </div>
@@ -79,13 +79,13 @@ export default function Register() {
         <Card className="w-full max-w-lg p-6 sm:p-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-1">Crear Cuenta</h1>
-            <p className="text-muted-foreground text-sm">Unete a AlumniJobs como egresado o empresa</p>
+            <p className="text-muted-foreground text-sm">Unete a FP Empleo como titulado de FP o empresa</p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="alumni" className="gap-2" data-testid="tab-alumni">
-                <GraduationCap className="w-4 h-4" /> Egresado
+                <GraduationCap className="w-4 h-4" /> Titulado FP
               </TabsTrigger>
               <TabsTrigger value="company" className="gap-2" data-testid="tab-company">
                 <Building2 className="w-4 h-4" /> Empresa
@@ -111,11 +111,11 @@ export default function Register() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="alumni-university">Universidad</Label>
-                    <Input id="alumni-university" placeholder="Tu universidad" data-testid="input-alumni-university" {...alumniForm.register("university")} />
+                    <Label htmlFor="alumni-university">Centro de FP</Label>
+                    <Input id="alumni-university" placeholder="Tu centro de FP" data-testid="input-alumni-university" {...alumniForm.register("university")} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="alumni-year">Ano de graduacion</Label>
+                    <Label htmlFor="alumni-year">Ano de promocion</Label>
                     <Input id="alumni-year" type="number" placeholder="2024" data-testid="input-alumni-year" {...alumniForm.register("graduationYear", { valueAsNumber: true })} />
                   </div>
                 </div>
@@ -134,7 +134,7 @@ export default function Register() {
                 {alumniForm.formState.errors.consentGiven && <p className="text-sm text-destructive">{alumniForm.formState.errors.consentGiven.message}</p>}
 
                 <Button type="submit" className="w-full" disabled={isSubmitting} data-testid="button-submit-alumni">
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Crear cuenta de Egresado"}
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Crear cuenta de Titulado FP"}
                 </Button>
               </form>
             </TabsContent>

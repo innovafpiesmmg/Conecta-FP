@@ -61,8 +61,8 @@ export async function seedDatabase() {
     role: "ALUMNI",
     name: "Maria Fernandez",
     phone: "+34 620 123 456",
-    bio: "Graduada en Ingenieria Informatica con pasion por el desarrollo web y la inteligencia artificial. Busco mi primera oportunidad profesional.",
-    university: "Universidad Politecnica de Madrid",
+    bio: "Titulada en Desarrollo de Aplicaciones Web (DAW) con pasion por el desarrollo web y la inteligencia artificial. Busco mi primera oportunidad profesional.",
+    university: "IES Vallecas - CFGS DAW",
     graduationYear: 2024,
     skills: "JavaScript, TypeScript, React, Node.js, Python, SQL",
     cvUrl: "https://drive.google.com/example-cv-maria",
@@ -77,8 +77,8 @@ export async function seedDatabase() {
     role: "ALUMNI",
     name: "Pablo Rodriguez",
     phone: "+34 630 234 567",
-    bio: "Ingeniero de software con experiencia en practicas. Especializado en backend y arquitectura de microservicios.",
-    university: "Universidad de Barcelona",
+    bio: "Tecnico superior en Administracion de Sistemas Informaticos en Red (ASIR) con experiencia en practicas. Especializado en backend y arquitectura de microservicios.",
+    university: "IES Joan d'Austria - CFGS ASIR",
     graduationYear: 2023,
     skills: "Java, Spring Boot, Docker, Kubernetes, AWS, PostgreSQL",
     cvUrl: "https://drive.google.com/example-cv-pablo",
@@ -94,7 +94,7 @@ export async function seedDatabase() {
     salaryMin: 25000,
     salaryMax: 35000,
     jobType: "FULL_TIME",
-    requirements: "Grado en Informatica o similar. Conocimientos de JavaScript, React y Node.js. Nivel de ingles B2.",
+    requirements: "Titulo de FP en DAW, DAM o similar. Conocimientos de JavaScript, React y Node.js. Nivel de ingles B2.",
   });
 
   const job2 = await storage.createJob(company1.id, {
@@ -104,7 +104,7 @@ export async function seedDatabase() {
     salaryMin: 30000,
     salaryMax: 45000,
     jobType: "FULL_TIME",
-    requirements: "Master en Data Science o similar. Experiencia con Python, TensorFlow, pandas. Conocimientos de estadistica avanzada.",
+    requirements: "FP Superior o formacion equivalente en Data Science. Experiencia con Python, TensorFlow, pandas. Conocimientos de estadistica avanzada.",
   });
 
   const job3 = await storage.createJob(company2.id, {
@@ -114,7 +114,7 @@ export async function seedDatabase() {
     salaryMin: 12000,
     salaryMax: 15000,
     jobType: "INTERNSHIP",
-    requirements: "Estudiante o recien graduado en Diseno. Portfolio de proyectos. Manejo de Figma y Adobe XD.",
+    requirements: "Estudiante o recien titulado en FP de Diseno o similar. Portfolio de proyectos. Manejo de Figma y Adobe XD.",
   });
 
   const job4 = await storage.createJob(company2.id, {
@@ -124,7 +124,7 @@ export async function seedDatabase() {
     salaryMin: 20000,
     salaryMax: 28000,
     jobType: "REMOTE",
-    requirements: "Grado en Comunicacion, Marketing o similar. Experiencia con herramientas de gestion de RRSS. Creatividad y capacidad analitica.",
+    requirements: "FP en Marketing y Publicidad, Comunicacion o similar. Experiencia con herramientas de gestion de RRSS. Creatividad y capacidad analitica.",
   });
 
   const job5 = await storage.createJob(company3.id, {
@@ -134,7 +134,7 @@ export async function seedDatabase() {
     salaryMin: 28000,
     salaryMax: 38000,
     jobType: "FULL_TIME",
-    requirements: "Grado en Ingenieria Energetica, Electrica o similar. Conocimientos en energia solar. Carnet de conducir B.",
+    requirements: "FP Superior en Energias Renovables, Electricidad o similar. Conocimientos en energia solar. Carnet de conducir B.",
   });
 
   await storage.createApplication(alumni1.id, {
