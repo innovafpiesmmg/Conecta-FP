@@ -110,6 +110,9 @@ export async function registerRoutes(
   // ============ RIGHT TO ERASURE (GDPR Art. 17) ============
   app.delete("/api/auth/account", requireAuth, async (req, res, next) => {
     try {
+      if (req.user!.role === "ADMIN") {
+        return res.status(403).json({ message: "Los administradores no pueden eliminar su propia cuenta desde aqui" });
+      }
       const userId = req.user!.id;
       req.logout(async (err) => {
         if (err) return next(err);
@@ -195,6 +198,81 @@ export async function registerRoutes(
       next(err);
     }
   });
+
+  // ============ ADMIN ROUTES ============
+
+  app.get("/api/admin/stats", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const stats = await storage.getStats();
+      res.json(stats);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.get("/api/admin/users", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      const safeUsers = allUsers.map(({ password, ...u }) => u);
+      res.json(safeUsers);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.get("/api/admin/jobs", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const allJobs = await storage.getAllJobs();
+      res.json(allJobs);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.get("/api/admin/applications", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const allApps = await storage.getAllApplications();
+      res.json(allApps);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.delete("/api/admin/users/:id", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const target = await storage.getUser(req.params.id);
+      if (!target) return res.status(404).json({ message: "Usuario no encontrado" });
+      if (target.role === "ADMIN") return res.status(403).json({ message: "No se puede eliminar un administrador" });
+      await storage.deleteUser(req.params.id);
+      res.json({ message: "Usuario eliminado" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.patch("/api/admin/jobs/:id/toggle", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const job = await storage.getJob(req.params.id);
+      if (!job) return res.status(404).json({ message: "Oferta no encontrada" });
+      const updated = await storage.toggleJobActive(job.id, !job.active);
+      res.json(updated);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.delete("/api/admin/jobs/:id", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const job = await storage.getJob(req.params.id);
+      if (!job) return res.status(404).json({ message: "Oferta no encontrada" });
+      await storage.adminDeleteJob(req.params.id);
+      res.json({ message: "Oferta eliminada" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ============ APPLICATION STATUS ROUTES ============
 
   app.patch("/api/applications/:id/status", requireRole("COMPANY"), async (req, res, next) => {
     try {

@@ -9,6 +9,17 @@ export async function seedDatabase() {
 
   const companyPassword = await bcrypt.hash("password123", 12);
   const alumniPassword = await bcrypt.hash("password123", 12);
+  const adminPassword = await bcrypt.hash("admin123", 12);
+
+  await storage.createUser({
+    email: "admin@fpempleo.es",
+    password: adminPassword,
+    role: "ADMIN",
+    name: "Administrador",
+    consentGiven: true,
+    consentTimestamp: new Date(),
+    profilePublic: false,
+  });
 
   const company1 = await storage.createUser({
     email: "empresa@techcorp.es",

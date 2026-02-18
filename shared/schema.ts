@@ -3,7 +3,7 @@ import { pgTable, text, varchar, boolean, timestamp, integer, pgEnum } from "dri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const roleEnum = pgEnum("user_role", ["ALUMNI", "COMPANY"]);
+export const roleEnum = pgEnum("user_role", ["ALUMNI", "COMPANY", "ADMIN"]);
 export const applicationStatusEnum = pgEnum("application_status", ["PENDING", "REVIEWED", "ACCEPTED", "REJECTED"]);
 export const jobTypeEnum = pgEnum("job_type", ["FULL_TIME", "PART_TIME", "INTERNSHIP", "FREELANCE", "REMOTE"]);
 

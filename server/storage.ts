@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
   users, jobOffers, applications,
@@ -26,6 +26,14 @@ export interface IStorage {
   createApplication(alumniId: string, data: InsertApplication): Promise<Application>;
   updateApplicationStatus(id: string, status: string): Promise<Application | undefined>;
   deleteApplicationsByAlumni(alumniId: string): Promise<void>;
+
+  // Admin methods
+  getAllUsers(): Promise<User[]>;
+  getAllJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string } })[]>;
+  getAllApplications(): Promise<(Application & { alumni?: { name: string; email: string }; jobOffer?: { title: string } })[]>;
+  getStats(): Promise<{ totalUsers: number; totalAlumni: number; totalCompanies: number; totalJobs: number; activeJobs: number; totalApplications: number }>;
+  toggleJobActive(id: string, active: boolean): Promise<JobOffer | undefined>;
+  adminDeleteJob(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -159,6 +167,51 @@ export class DatabaseStorage implements IStorage {
 
   async deleteApplicationsByAlumni(alumniId: string): Promise<void> {
     await db.delete(applications).where(eq(applications.alumniId, alumniId));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async getAllJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string } })[]> {
+    const jobs = await db.select().from(jobOffers).orderBy(desc(jobOffers.createdAt));
+    const result = [];
+    for (const job of jobs) {
+      const [company] = await db.select({ companyName: users.companyName, name: users.name }).from(users).where(eq(users.id, job.companyId));
+      result.push({ ...job, company: company || undefined });
+    }
+    return result;
+  }
+
+  async getAllApplications(): Promise<(Application & { alumni?: { name: string; email: string }; jobOffer?: { title: string } })[]> {
+    const apps = await db.select().from(applications).orderBy(desc(applications.appliedAt));
+    const result = [];
+    for (const app of apps) {
+      const [alumni] = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, app.alumniId));
+      const [jobOffer] = await db.select({ title: jobOffers.title }).from(jobOffers).where(eq(jobOffers.id, app.jobOfferId));
+      result.push({ ...app, alumni: alumni || undefined, jobOffer: jobOffer || undefined });
+    }
+    return result;
+  }
+
+  async getStats(): Promise<{ totalUsers: number; totalAlumni: number; totalCompanies: number; totalJobs: number; activeJobs: number; totalApplications: number }> {
+    const [{ value: totalUsers }] = await db.select({ value: count() }).from(users);
+    const [{ value: totalAlumni }] = await db.select({ value: count() }).from(users).where(eq(users.role, "ALUMNI"));
+    const [{ value: totalCompanies }] = await db.select({ value: count() }).from(users).where(eq(users.role, "COMPANY"));
+    const [{ value: totalJobs }] = await db.select({ value: count() }).from(jobOffers);
+    const [{ value: activeJobs }] = await db.select({ value: count() }).from(jobOffers).where(eq(jobOffers.active, true));
+    const [{ value: totalApplications }] = await db.select({ value: count() }).from(applications);
+    return { totalUsers, totalAlumni, totalCompanies, totalJobs, activeJobs, totalApplications };
+  }
+
+  async toggleJobActive(id: string, active: boolean): Promise<JobOffer | undefined> {
+    const [job] = await db.update(jobOffers).set({ active }).where(eq(jobOffers.id, id)).returning();
+    return job;
+  }
+
+  async adminDeleteJob(id: string): Promise<void> {
+    await db.delete(applications).where(eq(applications.jobOfferId, id));
+    await db.delete(jobOffers).where(eq(jobOffers.id, id));
   }
 }
 

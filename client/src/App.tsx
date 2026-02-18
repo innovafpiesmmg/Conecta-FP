@@ -9,6 +9,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import AlumniDashboard from "@/pages/alumni-dashboard";
 import CompanyDashboard from "@/pages/company-dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -25,6 +26,7 @@ function ProtectedRoute({ component: Component, role }: { component: React.Compo
 
   if (!user) return <Redirect to="/login" />;
   if (role && user.role !== role) {
+    if (user.role === "ADMIN") return <Redirect to="/admin" />;
     return <Redirect to={user.role === "ALUMNI" ? "/dashboard" : "/company"} />;
   }
 
@@ -43,6 +45,7 @@ function GuestRoute({ component: Component }: { component: React.ComponentType }
   }
 
   if (user) {
+    if (user.role === "ADMIN") return <Redirect to="/admin" />;
     return <Redirect to={user.role === "ALUMNI" ? "/dashboard" : "/company"} />;
   }
 
@@ -57,6 +60,7 @@ function Router() {
       <Route path="/register">{() => <GuestRoute component={Register} />}</Route>
       <Route path="/dashboard">{() => <ProtectedRoute component={AlumniDashboard} role="ALUMNI" />}</Route>
       <Route path="/company">{() => <ProtectedRoute component={CompanyDashboard} role="COMPANY" />}</Route>
+      <Route path="/admin">{() => <ProtectedRoute component={AdminDashboard} role="ADMIN" />}</Route>
       <Route component={NotFound} />
     </Switch>
   );

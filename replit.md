@@ -8,7 +8,7 @@ Portal de empleo privado para titulados de Formacion Profesional (FP) y empresas
 - **Backend**: Node.js + Express
 - **Database**: PostgreSQL (Drizzle ORM)
 - **Auth**: Passport.js local strategy + bcrypt + express-session (PgSession store)
-- **Roles**: ALUMNI (titulados FP) and COMPANY (empresas)
+- **Roles**: ALUMNI (titulados FP), COMPANY (empresas), and ADMIN (administradores)
 
 ## Project Structure
 ```
@@ -21,6 +21,7 @@ client/src/
     register.tsx   - Registration with consent checkbox (Titulado FP/Empresa tabs)
     alumni-dashboard.tsx - Job search, applications, profile management
     company-dashboard.tsx - Job creation, candidate management, company profile
+    admin-dashboard.tsx  - Admin panel: stats, user/job/application management
 server/
   index.ts         - Express server setup
   db.ts            - Database connection (drizzle + pg pool)
@@ -39,12 +40,14 @@ shared/
 - **Role-based Access**: Titulados FP see job search + applications; COMPANY sees job management + candidates
 - **FP-focused**: Tailored for Formacion Profesional graduates (CFGS DAW, ASIR, DAM, etc.)
 - **Familias Profesionales y Ciclos**: Both user profiles and job offers include familia profesional and ciclo formativo fields with cascading selectors (23 familias, each with relevant ciclos)
+- **Admin Panel**: Full admin dashboard at /admin with platform stats, user management (delete users), job management (activate/deactivate/delete), and application overview
 
 ## Important Notes
 - DB column `university` stores "Centro de FP" (kept for backwards compat)
 - DB column `graduation_year` stores "Ano de promocion" (kept for backwards compat)
 - DB columns `familia_profesional` and `ciclo_formativo` on both `users` and `job_offers` tables
 - Internal role value is "ALUMNI" but displayed as "Titulado FP" in the UI
+- ADMIN role users are redirected to /admin dashboard on login
 - `FAMILIAS_PROFESIONALES` and `CICLOS_POR_FAMILIA` constants exported from shared/schema.ts
 
 ## API Endpoints
@@ -61,7 +64,15 @@ shared/
 - GET /api/jobs/:jobId/applications - Job applicants (COMPANY only)
 - POST /api/applications - Apply to job (ALUMNI/Titulado FP only)
 - PATCH /api/applications/:id/status - Update application status (COMPANY only)
+- GET /api/admin/stats - Platform statistics (ADMIN only)
+- GET /api/admin/users - All users list (ADMIN only)
+- GET /api/admin/jobs - All jobs list (ADMIN only)
+- GET /api/admin/applications - All applications list (ADMIN only)
+- DELETE /api/admin/users/:id - Delete user (ADMIN only)
+- PATCH /api/admin/jobs/:id/toggle - Toggle job active status (ADMIN only)
+- DELETE /api/admin/jobs/:id - Delete job (ADMIN only)
 
 ## Demo Credentials
+- Admin: admin@fpempleo.es / admin123
 - Titulado FP: maria@alumni.com / password123
 - Company: empresa@techcorp.es / password123
