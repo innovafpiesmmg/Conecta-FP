@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TotpSecuritySection } from "@/components/totp-security";
 
 const statusLabels: Record<string, string> = {
   PENDING: "Pendiente",
@@ -179,6 +180,8 @@ export default function CompanyDashboard() {
 
           <TabsContent value="settings" className="space-y-6">
             <CompanyProfileForm user={user} />
+
+            <TotpSecuritySection />
 
             <Card className="p-6 border-destructive/30">
               <h3 className="font-semibold text-destructive flex items-center gap-2 mb-2">

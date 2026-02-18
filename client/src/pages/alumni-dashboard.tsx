@@ -22,6 +22,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog";
+import { TotpSecuritySection } from "@/components/totp-security";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
@@ -362,6 +363,8 @@ export default function AlumniDashboard() {
 
           <TabsContent value="profile" className="space-y-6">
             <ProfileForm user={user} onSave={(data) => updateProfileMutation.mutate(data)} isPending={updateProfileMutation.isPending} />
+
+            <TotpSecuritySection />
 
             <Card className="p-6 border-destructive/30">
               <h3 className="font-semibold text-destructive flex items-center gap-2 mb-2">

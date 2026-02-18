@@ -2,13 +2,18 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import passport from "passport";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireRole } from "./auth";
 import {
   registerAlumniSchema, registerCompanySchema, loginSchema,
   insertJobOfferSchema, insertApplicationSchema,
-  updateProfileAlumniSchema, updateProfileCompanySchema
+  updateProfileAlumniSchema, updateProfileCompanySchema,
+  smtpSettingsSchema
 } from "@shared/schema";
+import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail } from "./email";
+import * as OTPAuth from "otpauth";
+import QRCode from "qrcode";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -36,6 +41,7 @@ export async function registerRoutes(
       if (existing) return res.status(409).json({ message: "Este email ya esta registrado" });
 
       const hashedPassword = await bcrypt.hash(parsed.password, 12);
+      const verificationToken = crypto.randomBytes(32).toString("hex");
 
       const user = await storage.createUser({
         ...parsed,
@@ -43,9 +49,14 @@ export async function registerRoutes(
         consentGiven: parsed.consentGiven === true,
         consentTimestamp: parsed.consentGiven === true ? new Date() : undefined,
         profilePublic: false,
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
       });
 
-      res.status(201).json({ id: user.id, email: user.email, role: user.role });
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      sendVerificationEmail(user.email, verificationToken, baseUrl).catch(console.error);
+
+      res.status(201).json({ id: user.id, email: user.email, role: user.role, emailVerified: false });
     } catch (err: any) {
       if (err.name === "ZodError") {
         return res.status(400).json({ message: "Datos invalidos", errors: err.errors });
@@ -65,12 +76,60 @@ export async function registerRoutes(
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: info?.message || "Credenciales invalidas" });
 
+      if (!user.emailVerified) {
+        return res.status(403).json({ message: "Debes verificar tu correo electronico antes de iniciar sesion", code: "EMAIL_NOT_VERIFIED", email: user.email });
+      }
+
+      if (user.totpEnabled) {
+        (req.session as any).pendingUserId = user.id;
+        return res.status(200).json({ totpRequired: true, message: "Se requiere codigo de autenticacion" });
+      }
+
       req.logIn(user, (err) => {
         if (err) return next(err);
-        const { password, ...safeUser } = user;
+        const { password, totpSecret, ...safeUser } = user;
         res.json(safeUser);
       });
     })(req, res, next);
+  });
+
+  app.post("/api/auth/totp/verify-login", async (req, res, next) => {
+    try {
+      const { code } = req.body;
+      const pendingUserId = (req.session as any).pendingUserId;
+      if (!pendingUserId) {
+        return res.status(400).json({ message: "No hay inicio de sesion pendiente" });
+      }
+
+      const user = await storage.getUser(pendingUserId);
+      if (!user || !user.totpSecret || !user.totpEnabled) {
+        return res.status(400).json({ message: "Configuracion TOTP invalida" });
+      }
+
+      const totp = new OTPAuth.TOTP({
+        issuer: "FP Empleo",
+        label: user.email,
+        algorithm: "SHA1",
+        digits: 6,
+        period: 30,
+        secret: OTPAuth.Secret.fromBase32(user.totpSecret),
+      });
+
+      const delta = totp.validate({ token: code, window: 1 });
+      if (delta === null) {
+        return res.status(401).json({ message: "Codigo de autenticacion invalido" });
+      }
+
+      delete (req.session as any).pendingUserId;
+
+      req.logIn(user, (err) => {
+        if (err) return next(err);
+        const { password, totpSecret, ...safeUser } = user;
+        res.json(safeUser);
+      });
+    } catch (err) {
+      next(err);
+    }
   });
 
   app.post("/api/auth/logout", (req, res) => {
@@ -82,8 +141,187 @@ export async function registerRoutes(
 
   app.get("/api/auth/me", (req, res) => {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "No autenticado" });
-    const { password, ...safeUser } = req.user;
+    const { password, totpSecret, ...safeUser } = req.user;
     res.json(safeUser);
+  });
+
+  // ============ EMAIL VERIFICATION ============
+
+  app.get("/api/auth/verify-email", async (req, res, next) => {
+    try {
+      const { token } = req.query;
+      if (!token || typeof token !== "string") {
+        return res.status(400).json({ message: "Token no valido" });
+      }
+
+      const user = await storage.getUserByVerificationToken(token);
+      if (!user) {
+        return res.status(400).json({ message: "Token de verificacion invalido o expirado" });
+      }
+
+      if (user.emailVerified) {
+        return res.json({ message: "Email ya verificado" });
+      }
+
+      await storage.updateUser(user.id, { emailVerified: true, emailVerificationToken: null } as any);
+      res.json({ message: "Email verificado correctamente" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/auth/resend-verification", async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: "Email requerido" });
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || user.emailVerified) {
+        return res.json({ message: "Si el email existe y no esta verificado, se ha enviado un correo de verificacion" });
+      }
+
+      const newToken = crypto.randomBytes(32).toString("hex");
+      await storage.updateUser(user.id, { emailVerificationToken: newToken } as any);
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      sendVerificationEmail(user.email, newToken, baseUrl).catch(console.error);
+
+      res.json({ message: "Si el email existe y no esta verificado, se ha enviado un correo de verificacion" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ============ PASSWORD RESET ============
+
+  app.post("/api/auth/forgot-password", async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: "Email requerido" });
+
+      const user = await storage.getUserByEmail(email);
+      if (user) {
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const expires = new Date(Date.now() + 60 * 60 * 1000);
+        await storage.updateUser(user.id, { passwordResetToken: resetToken, passwordResetExpires: expires } as any);
+
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        sendPasswordResetEmail(user.email, resetToken, baseUrl).catch(console.error);
+      }
+
+      res.json({ message: "Si el email existe, se ha enviado un correo con instrucciones para restablecer la contrasena" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res, next) => {
+    try {
+      const { token, password } = req.body;
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token y nueva contrasena son requeridos" });
+      }
+      if (password.length < 8) {
+        return res.status(400).json({ message: "La contrasena debe tener al menos 8 caracteres" });
+      }
+
+      const user = await storage.getUserByResetToken(token);
+      if (!user || !user.passwordResetExpires || new Date(user.passwordResetExpires) < new Date()) {
+        return res.status(400).json({ message: "Token invalido o expirado" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 12);
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      } as any);
+
+      res.json({ message: "Contrasena restablecida correctamente" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ============ TOTP 2FA ============
+
+  app.post("/api/auth/totp/setup", requireAuth, async (req, res, next) => {
+    try {
+      const user = req.user!;
+      if (user.totpEnabled) {
+        return res.status(400).json({ message: "2FA ya esta activado" });
+      }
+
+      const secret = new OTPAuth.Secret({ size: 20 });
+      const totp = new OTPAuth.TOTP({
+        issuer: "FP Empleo",
+        label: user.email,
+        algorithm: "SHA1",
+        digits: 6,
+        period: 30,
+        secret,
+      });
+
+      const uri = totp.toString();
+      const qrCode = await QRCode.toDataURL(uri);
+
+      await storage.updateUser(user.id, { totpSecret: secret.base32 } as any);
+
+      res.json({ qrCode, secret: secret.base32, uri });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/auth/totp/confirm", requireAuth, async (req, res, next) => {
+    try {
+      const user = req.user!;
+      const { code } = req.body;
+
+      if (!user.totpSecret) {
+        return res.status(400).json({ message: "Primero debes iniciar la configuracion 2FA" });
+      }
+
+      const totp = new OTPAuth.TOTP({
+        issuer: "FP Empleo",
+        label: user.email,
+        algorithm: "SHA1",
+        digits: 6,
+        period: 30,
+        secret: OTPAuth.Secret.fromBase32(user.totpSecret),
+      });
+
+      const delta = totp.validate({ token: code, window: 1 });
+      if (delta === null) {
+        return res.status(401).json({ message: "Codigo invalido" });
+      }
+
+      await storage.updateUser(user.id, { totpEnabled: true } as any);
+      res.json({ message: "2FA activado correctamente" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/auth/totp/disable", requireAuth, async (req, res, next) => {
+    try {
+      const user = req.user!;
+      const { password } = req.body;
+
+      if (!password) {
+        return res.status(400).json({ message: "Se requiere la contrasena para desactivar 2FA" });
+      }
+
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Contrasena incorrecta" });
+      }
+
+      await storage.updateUser(user.id, { totpEnabled: false, totpSecret: null } as any);
+      res.json({ message: "2FA desactivado correctamente" });
+    } catch (err) {
+      next(err);
+    }
   });
 
   app.patch("/api/auth/profile", requireAuth, async (req, res, next) => {
@@ -99,7 +337,7 @@ export async function registerRoutes(
       const updated = await storage.updateUser(user.id, parsed);
       if (!updated) return res.status(404).json({ message: "Usuario no encontrado" });
 
-      const { password, ...safeUser } = updated;
+      const { password, totpSecret, ...safeUser } = updated;
       res.json(safeUser);
     } catch (err: any) {
       if (err.name === "ZodError") return res.status(400).json({ message: "Datos invalidos", errors: err.errors });
@@ -267,6 +505,51 @@ export async function registerRoutes(
       if (!job) return res.status(404).json({ message: "Oferta no encontrada" });
       await storage.adminDeleteJob(req.params.id);
       res.json({ message: "Oferta eliminada" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ============ SMTP ADMIN ROUTES ============
+
+  app.get("/api/admin/smtp", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const settings = await storage.getSmtpSettings();
+      if (!settings) return res.json(null);
+      const { password, ...safe } = settings;
+      res.json({ ...safe, password: "••••••••" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/admin/smtp", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const parsed = smtpSettingsSchema.parse(req.body);
+      const existing = await storage.getSmtpSettings();
+      let passwordToSave = parsed.password;
+      if (parsed.password === "••••••••" && existing) {
+        passwordToSave = existing.password;
+      }
+      const settings = await storage.upsertSmtpSettings({ ...parsed, password: passwordToSave });
+      const { password, ...safe } = settings;
+      res.json({ ...safe, password: "••••••••" });
+    } catch (err: any) {
+      if (err.name === "ZodError") return res.status(400).json({ message: "Datos invalidos", errors: err.errors });
+      next(err);
+    }
+  });
+
+  app.post("/api/admin/smtp/test", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: "Email de destino requerido" });
+      const sent = await sendTestEmail(email);
+      if (sent) {
+        res.json({ message: "Correo de prueba enviado correctamente" });
+      } else {
+        res.status(400).json({ message: "No se pudo enviar el correo. Verifica la configuracion SMTP." });
+      }
     } catch (err) {
       next(err);
     }

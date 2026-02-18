@@ -10,6 +10,9 @@ import Register from "@/pages/register";
 import AlumniDashboard from "@/pages/alumni-dashboard";
 import CompanyDashboard from "@/pages/company-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
+import VerifyEmail from "@/pages/verify-email";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -58,6 +61,9 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/login">{() => <GuestRoute component={Login} />}</Route>
       <Route path="/register">{() => <GuestRoute component={Register} />}</Route>
+      <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/forgot-password">{() => <GuestRoute component={ForgotPassword} />}</Route>
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/dashboard">{() => <ProtectedRoute component={AlumniDashboard} role="ALUMNI" />}</Route>
       <Route path="/company">{() => <ProtectedRoute component={CompanyDashboard} role="COMPANY" />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={AdminDashboard} role="ADMIN" />}</Route>

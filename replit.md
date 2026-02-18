@@ -8,6 +8,8 @@ Portal de empleo privado para titulados de Formacion Profesional (FP) y empresas
 - **Backend**: Node.js + Express
 - **Database**: PostgreSQL (Drizzle ORM)
 - **Auth**: Passport.js local strategy + bcrypt + express-session (PgSession store)
+- **Email**: Nodemailer with admin-configurable SMTP settings stored in DB
+- **2FA**: TOTP-based (otpauth + qrcode libraries) - optional per user
 - **Roles**: ALUMNI (titulados FP), COMPANY (empresas), and ADMIN (administradores)
 
 ## Project Structure
@@ -15,19 +17,25 @@ Portal de empleo privado para titulados de Formacion Profesional (FP) y empresas
 client/src/
   App.tsx          - Main router with protected/guest routes
   lib/auth.tsx     - Auth context provider (login, logout, user state)
+  components/
+    totp-security.tsx - Shared TOTP 2FA setup/disable component
   pages/
     landing.tsx    - Public landing page
-    login.tsx      - Login form
-    register.tsx   - Registration with consent checkbox (Titulado FP/Empresa tabs)
-    alumni-dashboard.tsx - Job search, applications, profile management
-    company-dashboard.tsx - Job creation, candidate management, company profile
-    admin-dashboard.tsx  - Admin panel: stats, user/job/application management
+    login.tsx      - Login form with TOTP step-up + forgot password link
+    register.tsx   - Registration with consent checkbox + email verification notice
+    verify-email.tsx - Email verification page (token from URL)
+    forgot-password.tsx - Request password reset email
+    reset-password.tsx  - Set new password (token from URL)
+    alumni-dashboard.tsx - Job search, applications, profile management + 2FA
+    company-dashboard.tsx - Job creation, candidate management, company profile + 2FA
+    admin-dashboard.tsx  - Admin panel: stats, user/job/app management + SMTP config
 server/
   index.ts         - Express server setup
   db.ts            - Database connection (drizzle + pg pool)
   auth.ts          - Passport.js setup, session config, middleware
   routes.ts        - All API endpoints
   storage.ts       - Database CRUD operations (IStorage interface)
+  email.ts         - Email service (nodemailer, dynamic SMTP from DB)
   seed.ts          - Seed data for demo (FP centers, titulados)
 shared/
   schema.ts        - Drizzle schema + Zod validation schemas
@@ -40,7 +48,11 @@ shared/
 - **Role-based Access**: Titulados FP see job search + applications; COMPANY sees job management + candidates
 - **FP-focused**: Tailored for Formacion Profesional graduates (CFGS DAW, ASIR, DAM, etc.)
 - **Familias Profesionales y Ciclos**: Both user profiles and job offers include familia profesional and ciclo formativo fields with cascading selectors (23 familias, each with relevant ciclos)
-- **Admin Panel**: Full admin dashboard at /admin with platform stats, user management (delete users), job management (activate/deactivate/delete), and application overview
+- **Admin Panel**: Full admin dashboard at /admin with platform stats, user management, job management, application overview, and SMTP configuration
+- **Email Verification**: New registrations require email verification before login
+- **Password Reset**: Forgot password flow sends reset link via email (1 hour expiry)
+- **TOTP 2FA**: Optional two-factor authentication via authenticator apps (Google Authenticator, Authy, etc.)
+- **Admin SMTP Config**: Admin can configure SMTP server, test email delivery, and enable/disable email sending
 
 ## Important Notes
 - DB column `university` stores "Centro de FP" (kept for backwards compat)
@@ -49,14 +61,33 @@ shared/
 - Internal role value is "ALUMNI" but displayed as "Titulado FP" in the UI
 - ADMIN role users are redirected to /admin dashboard on login
 - `FAMILIAS_PROFESIONALES` and `CICLOS_POR_FAMILIA` constants exported from shared/schema.ts
+- Existing users (pre-verification feature) have emailVerified=true
+- Forgot password always returns success to prevent email enumeration
+- TOTP uses window=1 for clock skew tolerance
+- Password reset tokens expire after 1 hour
+- DB table `smtp_settings` stores SMTP configuration (single row, id=1)
 
 ## API Endpoints
-- POST /api/auth/register - Register new user
-- POST /api/auth/login - Login
+
+### Auth
+- POST /api/auth/register - Register new user (sends verification email)
+- POST /api/auth/login - Login (returns totpRequired if 2FA enabled)
 - POST /api/auth/logout - Logout
 - GET /api/auth/me - Current user
 - PATCH /api/auth/profile - Update profile
 - DELETE /api/auth/account - Delete account (GDPR right to erasure)
+- GET /api/auth/verify-email?token= - Verify email address
+- POST /api/auth/resend-verification - Resend verification email
+- POST /api/auth/forgot-password - Request password reset email
+- POST /api/auth/reset-password - Reset password with token
+
+### TOTP 2FA
+- POST /api/auth/totp/setup - Generate TOTP secret + QR code
+- POST /api/auth/totp/confirm - Confirm TOTP setup with code
+- POST /api/auth/totp/disable - Disable TOTP (requires password)
+- POST /api/auth/totp/verify-login - Complete TOTP step during login
+
+### Jobs & Applications
 - GET /api/jobs - List active jobs
 - GET /api/jobs/mine - Company's own jobs
 - POST /api/jobs - Create job (COMPANY only)
@@ -64,6 +95,8 @@ shared/
 - GET /api/jobs/:jobId/applications - Job applicants (COMPANY only)
 - POST /api/applications - Apply to job (ALUMNI/Titulado FP only)
 - PATCH /api/applications/:id/status - Update application status (COMPANY only)
+
+### Admin
 - GET /api/admin/stats - Platform statistics (ADMIN only)
 - GET /api/admin/users - All users list (ADMIN only)
 - GET /api/admin/jobs - All jobs list (ADMIN only)
@@ -71,6 +104,9 @@ shared/
 - DELETE /api/admin/users/:id - Delete user (ADMIN only)
 - PATCH /api/admin/jobs/:id/toggle - Toggle job active status (ADMIN only)
 - DELETE /api/admin/jobs/:id - Delete job (ADMIN only)
+- GET /api/admin/smtp - Get SMTP configuration (ADMIN only)
+- POST /api/admin/smtp - Save SMTP configuration (ADMIN only)
+- POST /api/admin/smtp/test - Send test email (ADMIN only)
 
 ## Demo Credentials
 - Admin: admin@fpempleo.es / admin123

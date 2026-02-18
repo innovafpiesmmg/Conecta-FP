@@ -28,7 +28,26 @@ export const users = pgTable("users", {
   consentGiven: boolean("consent_given").notNull().default(false),
   consentTimestamp: timestamp("consent_timestamp"),
   profilePublic: boolean("profile_public").notNull().default(false),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  emailVerificationToken: text("email_verification_token"),
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpires: timestamp("password_reset_expires"),
+  totpSecret: text("totp_secret"),
+  totpEnabled: boolean("totp_enabled").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const smtpSettings = pgTable("smtp_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  host: text("host").notNull(),
+  port: integer("port").notNull().default(587),
+  username: text("username").notNull(),
+  password: text("password").notNull(),
+  fromEmail: text("from_email").notNull(),
+  fromName: text("from_name").notNull().default("FP Empleo"),
+  secure: boolean("secure").notNull().default(false),
+  enabled: boolean("enabled").notNull().default(false),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const jobOffers = pgTable("job_offers", {
@@ -126,12 +145,24 @@ export const updateProfileCompanySchema = z.object({
   companySector: z.string().optional(),
 });
 
+export const smtpSettingsSchema = z.object({
+  host: z.string().min(1, "El host es obligatorio"),
+  port: z.number().min(1).max(65535),
+  username: z.string().min(1, "El usuario es obligatorio"),
+  password: z.string().min(1, "La contrasena es obligatoria"),
+  fromEmail: z.string().email("Email no valido"),
+  fromName: z.string().min(1, "El nombre del remitente es obligatorio"),
+  secure: z.boolean(),
+  enabled: z.boolean(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type JobOffer = typeof jobOffers.$inferSelect;
 export type InsertJobOffer = z.infer<typeof insertJobOfferSchema>;
 export type Application = typeof applications.$inferSelect;
 export type InsertApplication = z.infer<typeof insertApplicationSchema>;
+export type SmtpSettings = typeof smtpSettings.$inferSelect;
 
 export const FAMILIAS_PROFESIONALES = [
   "Informatica y Comunicaciones",

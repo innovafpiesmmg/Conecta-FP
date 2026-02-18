@@ -6,7 +6,7 @@ import { registerAlumniSchema, registerCompanySchema, FAMILIAS_PROFESIONALES, CI
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
-import { Briefcase, Loader2, GraduationCap, Building2 } from "lucide-react";
+import { Briefcase, Loader2, GraduationCap, Building2, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -51,13 +51,13 @@ export default function Register() {
     },
   });
 
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+
   const handleRegister = async (data: AlumniData | CompanyData) => {
     setIsSubmitting(true);
     try {
       await apiRequest("POST", "/api/auth/register", data);
-      await login(data.email, data.password);
-      toast({ title: "Cuenta creada", description: "Bienvenido/a a FP Empleo" });
-      navigate(data.role === "ALUMNI" ? "/dashboard" : "/company");
+      setRegisteredEmail(data.email);
     } catch (err: any) {
       const msg = err.message?.includes("409") ? "Este email ya esta registrado" : "Error al crear la cuenta";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -82,7 +82,21 @@ export default function Register() {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-lg p-6 sm:p-8">
+        {registeredEmail ? (
+          <Card className="w-full max-w-md p-6 sm:p-8 text-center" data-testid="registration-success">
+            <MailCheck className="w-12 h-12 text-primary mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Revisa tu correo electronico</h2>
+            <p className="text-muted-foreground mb-6">
+              Hemos enviado un enlace de verificacion a <strong>{registeredEmail}</strong>. Haz clic en el enlace para activar tu cuenta.
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Si no recibes el correo en unos minutos, revisa tu carpeta de spam.
+            </p>
+            <Link href="/login">
+              <Button className="w-full" data-testid="button-go-login">Ir al inicio de sesion</Button>
+            </Link>
+          </Card>
+        ) : (<Card className="w-full max-w-lg p-6 sm:p-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-1">Crear Cuenta</h1>
             <p className="text-muted-foreground text-sm">Unete a FP Empleo como titulado de FP o empresa</p>
@@ -242,7 +256,7 @@ export default function Register() {
               <span className="text-primary cursor-pointer font-medium" data-testid="link-login">Inicia sesion</span>
             </Link>
           </p>
-        </Card>
+        </Card>)}
       </main>
     </div>
   );

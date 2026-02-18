@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -6,13 +6,15 @@ import type { JobOffer, User } from "@shared/schema";
 import {
   Shield, Users, Briefcase, FileText, LogOut, Loader2,
   Trash2, ToggleLeft, ToggleRight, Mail, Phone, Building2,
-  GraduationCap, MapPin, Eye, EyeOff, BarChart3
+  GraduationCap, MapPin, Eye, EyeOff, BarChart3, Settings, Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -164,6 +166,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="users" data-testid="tab-admin-users"><Users className="w-4 h-4 mr-1" /> Usuarios</TabsTrigger>
             <TabsTrigger value="jobs" data-testid="tab-admin-jobs"><Briefcase className="w-4 h-4 mr-1" /> Ofertas</TabsTrigger>
             <TabsTrigger value="applications" data-testid="tab-admin-apps"><FileText className="w-4 h-4 mr-1" /> Candidaturas</TabsTrigger>
+            <TabsTrigger value="smtp" data-testid="tab-admin-smtp"><Settings className="w-4 h-4 mr-1" /> Correo</TabsTrigger>
           </TabsList>
 
           <TabsContent value="stats">
@@ -252,6 +255,10 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="smtp">
+            <SmtpPanel />
           </TabsContent>
         </Tabs>
       </main>
@@ -421,5 +428,194 @@ function JobRow({ job, onToggle, onDelete, toggling, deleting }: {
         </div>
       </div>
     </Card>
+  );
+}
+
+function SmtpPanel() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [testEmail, setTestEmail] = useState("");
+
+  const { data: smtpData, isLoading } = useQuery<any>({
+    queryKey: ["/api/admin/smtp"],
+  });
+
+  const [form, setForm] = useState({
+    host: "", port: 587, username: "", password: "",
+    fromEmail: "", fromName: "FP Empleo", secure: false, enabled: false,
+  });
+  const [formLoaded, setFormLoaded] = useState(false);
+
+  useEffect(() => {
+    if (smtpData && !formLoaded) {
+      setForm({
+        host: smtpData.host || "",
+        port: smtpData.port || 587,
+        username: smtpData.username || "",
+        password: smtpData.password || "",
+        fromEmail: smtpData.fromEmail || "",
+        fromName: smtpData.fromName || "FP Empleo",
+        secure: smtpData.secure || false,
+        enabled: smtpData.enabled || false,
+      });
+      setFormLoaded(true);
+    }
+  }, [smtpData, formLoaded]);
+
+  const saveMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/admin/smtp", form),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/smtp"] });
+      toast({ title: "Configuracion SMTP guardada" });
+    },
+    onError: () => toast({ title: "Error al guardar configuracion", variant: "destructive" }),
+  });
+
+  const testMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/admin/smtp/test", { email: testEmail }),
+    onSuccess: () => toast({ title: "Correo de prueba enviado" }),
+    onError: () => toast({ title: "Error al enviar correo de prueba. Verifica la configuracion.", variant: "destructive" }),
+  });
+
+  if (isLoading) {
+    return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Mail className="w-5 h-5" /> Configuracion del servidor de correo (SMTP)
+        </h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          Configura un servidor SMTP para enviar correos de verificacion de registro, restablecimiento de contrasena y alertas.
+        </p>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="smtp-host">Servidor SMTP</Label>
+              <Input
+                id="smtp-host"
+                placeholder="smtp.gmail.com"
+                value={form.host}
+                onChange={(e) => setForm({ ...form, host: e.target.value })}
+                data-testid="input-smtp-host"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp-port">Puerto</Label>
+              <Input
+                id="smtp-port"
+                type="number"
+                placeholder="587"
+                value={form.port}
+                onChange={(e) => setForm({ ...form, port: parseInt(e.target.value) || 587 })}
+                data-testid="input-smtp-port"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="smtp-username">Usuario</Label>
+              <Input
+                id="smtp-username"
+                placeholder="usuario@email.com"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                data-testid="input-smtp-username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp-password">Contrasena</Label>
+              <Input
+                id="smtp-password"
+                type="password"
+                placeholder="Contrasena SMTP"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                data-testid="input-smtp-password"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="smtp-from-email">Email remitente</Label>
+              <Input
+                id="smtp-from-email"
+                type="email"
+                placeholder="noreply@fpempleo.es"
+                value={form.fromEmail}
+                onChange={(e) => setForm({ ...form, fromEmail: e.target.value })}
+                data-testid="input-smtp-from-email"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp-from-name">Nombre remitente</Label>
+              <Input
+                id="smtp-from-name"
+                placeholder="FP Empleo"
+                value={form.fromName}
+                onChange={(e) => setForm({ ...form, fromName: e.target.value })}
+                data-testid="input-smtp-from-name"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={form.secure}
+                onCheckedChange={(checked) => setForm({ ...form, secure: checked })}
+                data-testid="switch-smtp-secure"
+              />
+              <Label>TLS/SSL</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={form.enabled}
+                onCheckedChange={(checked) => setForm({ ...form, enabled: checked })}
+                data-testid="switch-smtp-enabled"
+              />
+              <Label>Correo habilitado</Label>
+            </div>
+          </div>
+
+          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} data-testid="button-smtp-save">
+            {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+            Guardar configuracion
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Send className="w-5 h-5" /> Enviar correo de prueba
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Envia un correo de prueba para verificar que la configuracion SMTP funciona correctamente.
+        </p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Input
+            placeholder="email@destino.com"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            className="max-w-sm"
+            data-testid="input-smtp-test-email"
+          />
+          <Button
+            variant="outline"
+            onClick={() => testMutation.mutate()}
+            disabled={testMutation.isPending || !testEmail}
+            data-testid="button-smtp-test"
+          >
+            {testMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
+            Enviar prueba
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 }

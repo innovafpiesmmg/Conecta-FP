@@ -1,9 +1,9 @@
 import { eq, and, desc, count, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
-  users, jobOffers, applications,
+  users, jobOffers, applications, smtpSettings,
   type User, type InsertUser, type JobOffer, type InsertJobOffer,
-  type Application, type InsertApplication
+  type Application, type InsertApplication, type SmtpSettings
 } from "@shared/schema";
 
 export interface IStorage {
@@ -34,6 +34,14 @@ export interface IStorage {
   getStats(): Promise<{ totalUsers: number; totalAlumni: number; totalCompanies: number; totalJobs: number; activeJobs: number; totalApplications: number }>;
   toggleJobActive(id: string, active: boolean): Promise<JobOffer | undefined>;
   adminDeleteJob(id: string): Promise<void>;
+
+  // SMTP settings
+  getSmtpSettings(): Promise<SmtpSettings | undefined>;
+  upsertSmtpSettings(data: Omit<SmtpSettings, "id" | "updatedAt">): Promise<SmtpSettings>;
+
+  // Email verification
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -212,6 +220,31 @@ export class DatabaseStorage implements IStorage {
   async adminDeleteJob(id: string): Promise<void> {
     await db.delete(applications).where(eq(applications.jobOfferId, id));
     await db.delete(jobOffers).where(eq(jobOffers.id, id));
+  }
+
+  async getSmtpSettings(): Promise<SmtpSettings | undefined> {
+    const [settings] = await db.select().from(smtpSettings).limit(1);
+    return settings;
+  }
+
+  async upsertSmtpSettings(data: Omit<SmtpSettings, "id" | "updatedAt">): Promise<SmtpSettings> {
+    const existing = await this.getSmtpSettings();
+    if (existing) {
+      const [updated] = await db.update(smtpSettings).set({ ...data, updatedAt: new Date() }).where(eq(smtpSettings.id, existing.id)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(smtpSettings).values({ ...data, updatedAt: new Date() }).returning();
+    return created;
+  }
+
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
+    return user;
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
+    return user;
   }
 }
 
