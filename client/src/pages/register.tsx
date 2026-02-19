@@ -75,7 +75,7 @@ export default function Register() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">FP Empleo</span>
+              <span className="font-semibold text-lg tracking-tight">Conecta FP</span>
             </div>
           </Link>
         </div>
@@ -99,7 +99,7 @@ export default function Register() {
         ) : (<Card className="w-full max-w-lg p-6 sm:p-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-1">Crear Cuenta</h1>
-            <p className="text-muted-foreground text-sm">Unete a FP Empleo como titulado de FP o empresa</p>
+            <p className="text-muted-foreground text-sm">Unete a Conecta FP como titulado de FP o empresa</p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>

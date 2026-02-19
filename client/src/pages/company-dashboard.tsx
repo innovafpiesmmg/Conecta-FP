@@ -106,7 +106,7 @@ export default function CompanyDashboard() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">FP Empleo</span>
+              <span className="font-semibold text-lg tracking-tight">Conecta FP</span>
             </div>
           </Link>
           <div className="flex items-center gap-3 flex-wrap">

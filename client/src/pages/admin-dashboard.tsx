@@ -149,7 +149,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-3">
             <Shield className="w-6 h-6 text-primary" />
             <div>
-              <h1 className="text-lg font-bold">FP Empleo - Admin</h1>
+              <h1 className="text-lg font-bold">Conecta FP - Admin</h1>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
           </div>
@@ -442,7 +442,7 @@ function SmtpPanel() {
 
   const [form, setForm] = useState({
     host: "", port: 587, username: "", password: "",
-    fromEmail: "", fromName: "FP Empleo", secure: false, enabled: false,
+    fromEmail: "", fromName: "Conecta FP", secure: false, enabled: false,
   });
   const [formLoaded, setFormLoaded] = useState(false);
 
@@ -454,7 +454,7 @@ function SmtpPanel() {
         username: smtpData.username || "",
         password: smtpData.password || "",
         fromEmail: smtpData.fromEmail || "",
-        fromName: smtpData.fromName || "FP Empleo",
+        fromName: smtpData.fromName || "Conecta FP",
         secure: smtpData.secure || false,
         enabled: smtpData.enabled || false,
       });
@@ -546,7 +546,7 @@ function SmtpPanel() {
               <Input
                 id="smtp-from-email"
                 type="email"
-                placeholder="noreply@fpempleo.es"
+                placeholder="noreply@conectafp.es"
                 value={form.fromEmail}
                 onChange={(e) => setForm({ ...form, fromEmail: e.target.value })}
                 data-testid="input-smtp-from-email"
@@ -556,7 +556,7 @@ function SmtpPanel() {
               <Label htmlFor="smtp-from-name">Nombre remitente</Label>
               <Input
                 id="smtp-from-name"
-                placeholder="FP Empleo"
+                placeholder="Conecta FP"
                 value={form.fromName}
                 onChange={(e) => setForm({ ...form, fromName: e.target.value })}
                 data-testid="input-smtp-from-name"

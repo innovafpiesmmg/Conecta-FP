@@ -16,7 +16,7 @@ export default function Landing() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">FP Empleo</span>
+              <span className="font-semibold text-lg tracking-tight">Conecta FP</span>
             </div>
           </Link>
           <nav className="flex items-center gap-2 flex-wrap">
@@ -187,7 +187,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Briefcase className="w-4 h-4" />
-            <span>FP Empleo - Portal de Empleo Privado</span>
+            <span>Conecta FP - Portal de Empleo Privado</span>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             <span>Protegido por RGPD</span>

@@ -12,7 +12,7 @@ export async function seedDatabase() {
   const adminPassword = await bcrypt.hash("admin123", 12);
 
   await storage.createUser({
-    email: "admin@fpempleo.es",
+    email: "admin@conectafp.es",
     password: adminPassword,
     role: "ADMIN",
     name: "Administrador",

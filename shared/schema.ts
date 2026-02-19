@@ -46,7 +46,7 @@ export const smtpSettings = pgTable("smtp_settings", {
   username: text("username").notNull(),
   password: text("password").notNull(),
   fromEmail: text("from_email").notNull(),
-  fromName: text("from_name").notNull().default("FP Empleo"),
+  fromName: text("from_name").notNull().default("Conecta FP"),
   secure: boolean("secure").notNull().default(false),
   enabled: boolean("enabled").notNull().default(false),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

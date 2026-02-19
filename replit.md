@@ -1,4 +1,4 @@
-# FP Empleo - Portal de Empleo Privado
+# Conecta FP - Portal de Empleo Privado
 
 ## Overview
 Portal de empleo privado para titulados de Formacion Profesional (FP) y empresas. Implementa funcionalidades de privacidad RGPD incluyendo consentimiento explicito, visibilidad selectiva de perfiles, y derecho al olvido.
@@ -128,6 +128,6 @@ shared/
 - deleteFileIfExists enforces path stays within uploads/ directory (prevents path traversal deletion)
 
 ## Demo Credentials
-- Admin: admin@fpempleo.es / admin123
+- Admin: admin@conectafp.es / admin123
 - Titulado FP: maria@alumni.com / password123
 - Company: empresa@techcorp.es / password123
