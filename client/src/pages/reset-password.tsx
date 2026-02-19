@@ -38,8 +38,8 @@ export default function ResetPassword() {
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <Card className="w-full max-w-md p-6 sm:p-8 text-center">
             <XCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">Enlace invalido</h2>
-            <p className="text-muted-foreground mb-4">El enlace de restablecimiento no es valido.</p>
+            <h2 className="text-xl font-bold mb-2">Enlace inválido</h2>
+            <p className="text-muted-foreground mb-4">El enlace de restablecimiento no es válido.</p>
             <Link href="/forgot-password">
               <Button variant="outline" className="w-full">Solicitar nuevo enlace</Button>
             </Link>
@@ -52,11 +52,11 @@ export default function ResetPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast({ title: "Error", description: "Las contrasenas no coinciden", variant: "destructive" });
+      toast({ title: "Error", description: "Las contraseñas no coinciden", variant: "destructive" });
       return;
     }
     if (password.length < 8) {
-      toast({ title: "Error", description: "La contrasena debe tener al menos 8 caracteres", variant: "destructive" });
+      toast({ title: "Error", description: "La contraseña debe tener al menos 8 caracteres", variant: "destructive" });
       return;
     }
 
@@ -91,17 +91,17 @@ export default function ResetPassword() {
           {status === "success" ? (
             <div className="text-center space-y-4" data-testid="reset-success">
               <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto" />
-              <h2 className="text-xl font-bold">Contrasena restablecida</h2>
-              <p className="text-muted-foreground">Tu contrasena ha sido actualizada correctamente.</p>
+              <h2 className="text-xl font-bold">Contraseña restablecida</h2>
+              <p className="text-muted-foreground">Tu contraseña ha sido actualizada correctamente.</p>
               <Link href="/login">
-                <Button className="w-full" data-testid="button-go-login">Iniciar sesion</Button>
+                <Button className="w-full" data-testid="button-go-login">Iniciar sesión</Button>
               </Link>
             </div>
           ) : status === "error" ? (
             <div className="text-center space-y-4" data-testid="reset-error">
               <XCircle className="w-12 h-12 text-destructive mx-auto" />
               <h2 className="text-xl font-bold">Error</h2>
-              <p className="text-muted-foreground">El enlace ha expirado o no es valido.</p>
+              <p className="text-muted-foreground">El enlace ha expirado o no es válido.</p>
               <Link href="/forgot-password">
                 <Button variant="outline" className="w-full" data-testid="button-request-new">Solicitar nuevo enlace</Button>
               </Link>
@@ -110,17 +110,17 @@ export default function ResetPassword() {
             <>
               <div className="text-center mb-6">
                 <Lock className="w-10 h-10 text-primary mx-auto mb-3" />
-                <h1 className="text-2xl font-bold mb-1">Nueva contrasena</h1>
-                <p className="text-muted-foreground text-sm">Introduce tu nueva contrasena.</p>
+                <h1 className="text-2xl font-bold mb-1">Nueva contraseña</h1>
+                <p className="text-muted-foreground text-sm">Introduce tu nueva contraseña.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">Nueva contrasena</Label>
+                  <Label htmlFor="new-password">Nueva contraseña</Label>
                   <Input
                     id="new-password"
                     type="password"
-                    placeholder="Minimo 8 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -128,11 +128,11 @@ export default function ResetPassword() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirmar contrasena</Label>
+                  <Label htmlFor="confirm-password">Confirmar contraseña</Label>
                   <Input
                     id="confirm-password"
                     type="password"
-                    placeholder="Repite la contrasena"
+                    placeholder="Repite la contraseña"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
@@ -141,7 +141,7 @@ export default function ResetPassword() {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting} data-testid="button-reset-submit">
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Restablecer contrasena"}
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Restablecer contraseña"}
                 </Button>
               </form>
             </>

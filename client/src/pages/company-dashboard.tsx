@@ -47,7 +47,7 @@ const statusVariants: Record<string, "default" | "secondary" | "destructive" | "
 const jobTypeLabels: Record<string, string> = {
   FULL_TIME: "Jornada completa",
   PART_TIME: "Media jornada",
-  INTERNSHIP: "Practicas",
+  INTERNSHIP: "Prácticas",
   FREELANCE: "Freelance",
   REMOTE: "Remoto",
 };
@@ -188,7 +188,7 @@ export default function CompanyDashboard() {
                 <Trash2 className="w-4 h-4" /> Zona peligrosa
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Eliminar tu cuenta borrara permanentemente todos tus datos: ofertas publicadas, datos de candidatos recibidos y cualquier informacion asociada.
+                Eliminar tu cuenta borrará permanentemente todos tus datos: ofertas publicadas, datos de candidatos recibidos y cualquier información asociada.
               </p>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -200,7 +200,7 @@ export default function CompanyDashboard() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Eliminar cuenta permanentemente?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esta accion es irreversible. Se eliminaran: tu perfil de empresa, todas tus ofertas publicadas y los datos de candidatura asociados.
+                      Esta acción es irreversible. Se eliminarán: tu perfil de empresa, todas tus ofertas publicadas y los datos de candidatura asociados.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -289,7 +289,7 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
               {[1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
           ) : applications.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Aun no hay candidatos para esta oferta</p>
+            <p className="text-sm text-muted-foreground text-center py-4">Aún no hay candidatos para esta oferta</p>
           ) : (
             <div className="space-y-3">
               {applications.map((app) => (
@@ -385,17 +385,17 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Titulo del puesto *</Label>
+        <Label>Título del puesto *</Label>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Desarrollador Full-Stack" required data-testid="input-job-title" />
       </div>
       <div className="space-y-2">
-        <Label>Descripcion *</Label>
+        <Label>Descripción *</Label>
         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe el puesto y las responsabilidades..." rows={4} required data-testid="textarea-job-description" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Ubicacion *</Label>
-          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Madrid, Espana" required data-testid="input-job-location" />
+          <Label>Ubicación *</Label>
+          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Madrid, España" required data-testid="input-job-location" />
         </div>
         <div className="space-y-2">
           <Label>Tipo de contrato</Label>
@@ -406,7 +406,7 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
             <SelectContent>
               <SelectItem value="FULL_TIME">Jornada completa</SelectItem>
               <SelectItem value="PART_TIME">Media jornada</SelectItem>
-              <SelectItem value="INTERNSHIP">Practicas</SelectItem>
+              <SelectItem value="INTERNSHIP">Prácticas</SelectItem>
               <SelectItem value="FREELANCE">Freelance</SelectItem>
               <SelectItem value="REMOTE">Remoto</SelectItem>
             </SelectContent>
@@ -453,17 +453,17 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Salario minimo (EUR)</Label>
+          <Label>Salario mínimo (EUR)</Label>
           <Input type="number" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} placeholder="25000" data-testid="input-job-salary-min" />
         </div>
         <div className="space-y-2">
-          <Label>Salario maximo (EUR)</Label>
+          <Label>Salario máximo (EUR)</Label>
           <Input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} placeholder="40000" data-testid="input-job-salary-max" />
         </div>
       </div>
       <div className="space-y-2">
         <Label>Requisitos</Label>
-        <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} placeholder="Experiencia, tecnologias, idiomas..." rows={2} data-testid="textarea-job-requirements" />
+        <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} placeholder="Experiencia, tecnologías, idiomas..." rows={2} data-testid="textarea-job-requirements" />
       </div>
       <DialogFooter>
         <Button type="submit" disabled={isPending} data-testid="button-submit-job">
@@ -632,7 +632,7 @@ function CompanyProfileForm({ user }: { user: User }) {
             <Input value={name} onChange={(e) => setName(e.target.value)} data-testid="input-company-contact" />
           </div>
           <div className="space-y-2">
-            <Label>Telefono</Label>
+            <Label>Teléfono</Label>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} data-testid="input-company-phone" />
           </div>
           <div className="space-y-2">
@@ -649,7 +649,7 @@ function CompanyProfileForm({ user }: { user: User }) {
           <Input value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} data-testid="input-company-website-edit" />
         </div>
         <div className="space-y-2">
-          <Label>Descripcion de la empresa</Label>
+          <Label>Descripción de la empresa</Label>
           <Textarea value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} rows={3} data-testid="textarea-company-description" />
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 rounded-md border">

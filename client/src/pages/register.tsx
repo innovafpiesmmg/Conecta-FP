@@ -59,7 +59,7 @@ export default function Register() {
       await apiRequest("POST", "/api/auth/register", data);
       setRegisteredEmail(data.email);
     } catch (err: any) {
-      const msg = err.message?.includes("409") ? "Este email ya esta registrado" : "Error al crear la cuenta";
+      const msg = err.message?.includes("409") ? "Este email ya está registrado" : "Error al crear la cuenta";
       toast({ title: "Error", description: msg, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
@@ -85,21 +85,21 @@ export default function Register() {
         {registeredEmail ? (
           <Card className="w-full max-w-md p-6 sm:p-8 text-center" data-testid="registration-success">
             <MailCheck className="w-12 h-12 text-primary mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">Revisa tu correo electronico</h2>
+            <h2 className="text-xl font-bold mb-2">Revisa tu correo electrónico</h2>
             <p className="text-muted-foreground mb-6">
-              Hemos enviado un enlace de verificacion a <strong>{registeredEmail}</strong>. Haz clic en el enlace para activar tu cuenta.
+              Hemos enviado un enlace de verificación a <strong>{registeredEmail}</strong>. Haz clic en el enlace para activar tu cuenta.
             </p>
             <p className="text-sm text-muted-foreground mb-6">
               Si no recibes el correo en unos minutos, revisa tu carpeta de spam.
             </p>
             <Link href="/login">
-              <Button className="w-full" data-testid="button-go-login">Ir al inicio de sesion</Button>
+              <Button className="w-full" data-testid="button-go-login">Ir al inicio de sesión</Button>
             </Link>
           </Card>
         ) : (<Card className="w-full max-w-lg p-6 sm:p-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-1">Crear Cuenta</h1>
-            <p className="text-muted-foreground text-sm">Unete a Conecta FP como titulado de FP o empresa</p>
+            <p className="text-muted-foreground text-sm">Únete a Conecta FP como titulado de FP o empresa</p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -125,8 +125,8 @@ export default function Register() {
                   {alumniForm.formState.errors.email && <p className="text-sm text-destructive">{alumniForm.formState.errors.email.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="alumni-password">Contrasena</Label>
-                  <Input id="alumni-password" type="password" placeholder="Minimo 8 caracteres" data-testid="input-alumni-password" {...alumniForm.register("password")} />
+                  <Label htmlFor="alumni-password">Contraseña</Label>
+                  <Input id="alumni-password" type="password" placeholder="Mínimo 8 caracteres" data-testid="input-alumni-password" {...alumniForm.register("password")} />
                   {alumniForm.formState.errors.password && <p className="text-sm text-destructive">{alumniForm.formState.errors.password.message}</p>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -173,7 +173,7 @@ export default function Register() {
                     <Input id="alumni-university" placeholder="Tu centro de FP" data-testid="input-alumni-university" {...alumniForm.register("university")} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="alumni-year">Ano de promocion</Label>
+                    <Label htmlFor="alumni-year">Año de promoción</Label>
                     <Input id="alumni-year" type="number" placeholder="2024" data-testid="input-alumni-year" {...alumniForm.register("graduationYear", { valueAsNumber: true })} />
                   </div>
                 </div>
@@ -186,9 +186,9 @@ export default function Register() {
                     onCheckedChange={(checked) => alumniForm.setValue("consentGiven", checked === true ? true : undefined as any, { shouldValidate: true })}
                   />
                   <label htmlFor="alumni-consent" className="text-sm leading-relaxed cursor-pointer">
-                    He leido y acepto los{" "}
-                    <Link href="/terms"><span className="text-primary underline font-medium" data-testid="link-terms-alumni">Terminos, Condiciones y Politica de Privacidad</span></Link>.
-                    Entiendo que mis datos de perfil solo seran visibles para las empresas en las ofertas a las que me postule voluntariamente. Puedo ejercer mi derecho al olvido en cualquier momento.
+                    He leído y acepto los{" "}
+                    <Link href="/terms"><span className="text-primary underline font-medium" data-testid="link-terms-alumni">Términos, Condiciones y Política de Privacidad</span></Link>.
+                    Entiendo que mis datos de perfil solo serán visibles para las empresas en las ofertas a las que me postule voluntariamente. Puedo ejercer mi derecho al olvido en cualquier momento.
                   </label>
                 </div>
                 {alumniForm.formState.errors.consentGiven && <p className="text-sm text-destructive">{alumniForm.formState.errors.consentGiven.message}</p>}
@@ -217,14 +217,14 @@ export default function Register() {
                   {companyForm.formState.errors.email && <p className="text-sm text-destructive">{companyForm.formState.errors.email.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="company-password">Contrasena</Label>
-                  <Input id="company-password" type="password" placeholder="Minimo 8 caracteres" data-testid="input-company-password" {...companyForm.register("password")} />
+                  <Label htmlFor="company-password">Contraseña</Label>
+                  <Input id="company-password" type="password" placeholder="Mínimo 8 caracteres" data-testid="input-company-password" {...companyForm.register("password")} />
                   {companyForm.formState.errors.password && <p className="text-sm text-destructive">{companyForm.formState.errors.password.message}</p>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="company-sector">Sector</Label>
-                    <Input id="company-sector" placeholder="Tecnologia, Salud..." data-testid="input-company-sector" {...companyForm.register("companySector")} />
+                    <Input id="company-sector" placeholder="Tecnología, Salud..." data-testid="input-company-sector" {...companyForm.register("companySector")} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="company-website">Sitio web</Label>
@@ -240,9 +240,9 @@ export default function Register() {
                     onCheckedChange={(checked) => companyForm.setValue("consentGiven", checked === true ? true : undefined as any, { shouldValidate: true })}
                   />
                   <label htmlFor="company-consent" className="text-sm leading-relaxed cursor-pointer">
-                    He leido y acepto los{" "}
-                    <Link href="/terms"><span className="text-primary underline font-medium" data-testid="link-terms-company">Terminos, Condiciones y Politica de Privacidad</span></Link>.
-                    Me comprometo a utilizar los datos de los candidatos exclusivamente para los procesos de seleccion y a no compartirlos con terceros.
+                    He leído y acepto los{" "}
+                    <Link href="/terms"><span className="text-primary underline font-medium" data-testid="link-terms-company">Términos, Condiciones y Política de Privacidad</span></Link>.
+                    Me comprometo a utilizar los datos de los candidatos exclusivamente para los procesos de selección y a no compartirlos con terceros.
                   </label>
                 </div>
                 {companyForm.formState.errors.consentGiven && <p className="text-sm text-destructive">{companyForm.formState.errors.consentGiven.message}</p>}
@@ -257,7 +257,7 @@ export default function Register() {
           <p className="text-center text-sm text-muted-foreground mt-6">
             Ya tienes cuenta?{" "}
             <Link href="/login">
-              <span className="text-primary cursor-pointer font-medium" data-testid="link-login">Inicia sesion</span>
+              <span className="text-primary cursor-pointer font-medium" data-testid="link-login">Inicia sesión</span>
             </Link>
           </p>
         </Card>)}

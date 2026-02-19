@@ -15,7 +15,7 @@ export default function VerifyEmail() {
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("Token de verificacion no proporcionado");
+      setMessage("Token de verificación no proporcionado");
       return;
     }
 
@@ -32,7 +32,7 @@ export default function VerifyEmail() {
       })
       .catch(() => {
         setStatus("error");
-        setMessage("Error de conexion");
+        setMessage("Error de conexión");
       });
   }, [token]);
 
@@ -56,26 +56,26 @@ export default function VerifyEmail() {
           {status === "loading" && (
             <div className="space-y-4" data-testid="verify-loading">
               <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-              <p className="text-muted-foreground">Verificando tu correo electronico...</p>
+              <p className="text-muted-foreground">Verificando tu correo electrónico...</p>
             </div>
           )}
           {status === "success" && (
             <div className="space-y-4" data-testid="verify-success">
               <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto" />
               <h2 className="text-xl font-bold">{message}</h2>
-              <p className="text-muted-foreground">Ya puedes iniciar sesion en tu cuenta.</p>
+              <p className="text-muted-foreground">Ya puedes iniciar sesión en tu cuenta.</p>
               <Link href="/login">
-                <Button className="w-full" data-testid="button-go-login">Iniciar sesion</Button>
+                <Button className="w-full" data-testid="button-go-login">Iniciar sesión</Button>
               </Link>
             </div>
           )}
           {status === "error" && (
             <div className="space-y-4" data-testid="verify-error">
               <XCircle className="w-12 h-12 text-destructive mx-auto" />
-              <h2 className="text-xl font-bold">Error de verificacion</h2>
+              <h2 className="text-xl font-bold">Error de verificación</h2>
               <p className="text-muted-foreground">{message}</p>
               <Link href="/login">
-                <Button variant="outline" className="w-full" data-testid="button-go-login">Ir al inicio de sesion</Button>
+                <Button variant="outline" className="w-full" data-testid="button-go-login">Ir al inicio de sesión</Button>
               </Link>
             </div>
           )}

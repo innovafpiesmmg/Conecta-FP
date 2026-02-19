@@ -51,7 +51,7 @@ export default function Login() {
       }
 
       if (!res.ok) {
-        toast({ title: "Error", description: body.message || "Credenciales invalidas", variant: "destructive" });
+        toast({ title: "Error", description: body.message || "Credenciales inválidas", variant: "destructive" });
         return;
       }
 
@@ -61,9 +61,9 @@ export default function Login() {
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      toast({ title: "Bienvenido/a", description: "Inicio de sesion correcto" });
+      toast({ title: "Bienvenido/a", description: "Inicio de sesión correcto" });
     } catch {
-      toast({ title: "Error", description: "Error al iniciar sesion", variant: "destructive" });
+      toast({ title: "Error", description: "Error al iniciar sesión", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -82,14 +82,14 @@ export default function Login() {
       const body = await res.json();
 
       if (!res.ok) {
-        toast({ title: "Error", description: body.message || "Codigo invalido", variant: "destructive" });
+        toast({ title: "Error", description: body.message || "Código inválido", variant: "destructive" });
         return;
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      toast({ title: "Bienvenido/a", description: "Inicio de sesion correcto" });
+      toast({ title: "Bienvenido/a", description: "Inicio de sesión correcto" });
     } catch {
-      toast({ title: "Error", description: "Error al verificar codigo", variant: "destructive" });
+      toast({ title: "Error", description: "Error al verificar código", variant: "destructive" });
     } finally {
       setTotpSubmitting(false);
     }
@@ -100,9 +100,9 @@ export default function Login() {
     setResendingVerification(true);
     try {
       await apiRequest("POST", "/api/auth/resend-verification", { email: unverifiedEmail });
-      toast({ title: "Correo enviado", description: "Se ha reenviado el correo de verificacion" });
+      toast({ title: "Correo enviado", description: "Se ha reenviado el correo de verificación" });
     } catch {
-      toast({ title: "Error", description: "Error al reenviar verificacion", variant: "destructive" });
+      toast({ title: "Error", description: "Error al reenviar verificación", variant: "destructive" });
     } finally {
       setResendingVerification(false);
     }
@@ -128,9 +128,9 @@ export default function Login() {
           {unverifiedEmail ? (
             <div className="text-center space-y-4" data-testid="unverified-email-notice">
               <Mail className="w-12 h-12 text-primary mx-auto" />
-              <h2 className="text-xl font-bold">Verifica tu correo electronico</h2>
+              <h2 className="text-xl font-bold">Verifica tu correo electrónico</h2>
               <p className="text-muted-foreground">
-                Tu cuenta aun no ha sido verificada. Revisa tu bandeja de entrada en <strong>{unverifiedEmail}</strong> y haz clic en el enlace de verificacion.
+                Tu cuenta aún no ha sido verificada. Revisa tu bandeja de entrada en <strong>{unverifiedEmail}</strong> y haz clic en el enlace de verificación.
               </p>
               <Button
                 variant="outline"
@@ -140,23 +140,23 @@ export default function Login() {
                 data-testid="button-resend-verification"
               >
                 {resendingVerification ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-                Reenviar correo de verificacion
+                Reenviar correo de verificación
               </Button>
               <Button variant="ghost" className="w-full" onClick={() => setUnverifiedEmail(null)} data-testid="button-back-login-form">
-                Volver al inicio de sesion
+                Volver al inicio de sesión
               </Button>
             </div>
           ) : totpStep ? (
             <div data-testid="totp-step">
               <div className="text-center mb-6">
                 <ShieldCheck className="w-10 h-10 text-primary mx-auto mb-3" />
-                <h1 className="text-2xl font-bold mb-1">Verificacion en dos pasos</h1>
-                <p className="text-muted-foreground text-sm">Introduce el codigo de tu aplicacion de autenticacion.</p>
+                <h1 className="text-2xl font-bold mb-1">Verificación en dos pasos</h1>
+                <p className="text-muted-foreground text-sm">Introduce el código de tu aplicación de autenticación.</p>
               </div>
 
               <form onSubmit={handleTotpSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="totp-code">Codigo de autenticacion</Label>
+                  <Label htmlFor="totp-code">Código de autenticación</Label>
                   <Input
                     id="totp-code"
                     type="text"
@@ -177,7 +177,7 @@ export default function Login() {
               </form>
 
               <Button variant="ghost" className="w-full mt-4" onClick={() => { setTotpStep(false); setTotpCode(""); }} data-testid="button-back-login">
-                Volver al inicio de sesion
+                Volver al inicio de sesión
               </Button>
             </div>
           ) : (
@@ -204,15 +204,15 @@ export default function Login() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <Label htmlFor="password">Contrasena</Label>
+                    <Label htmlFor="password">Contraseña</Label>
                     <Link href="/forgot-password">
-                      <span className="text-xs text-primary cursor-pointer" data-testid="link-forgot-password">Has olvidado tu contrasena?</span>
+                      <span className="text-xs text-primary cursor-pointer" data-testid="link-forgot-password">Has olvidado tu contraseña?</span>
                     </Link>
                   </div>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Tu contrasena"
+                    placeholder="Tu contraseña"
                     data-testid="input-password"
                     {...form.register("password")}
                   />
@@ -229,7 +229,7 @@ export default function Login() {
               <p className="text-center text-sm text-muted-foreground mt-6">
                 No tienes cuenta?{" "}
                 <Link href="/register">
-                  <span className="text-primary cursor-pointer font-medium" data-testid="link-register">Registrate aqui</span>
+                  <span className="text-primary cursor-pointer font-medium" data-testid="link-register">Regístrate aquí</span>
                 </Link>
               </p>
             </>

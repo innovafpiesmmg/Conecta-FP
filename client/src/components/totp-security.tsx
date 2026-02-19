@@ -30,29 +30,29 @@ export function TotpSecuritySection() {
       return res.json();
     },
     onSuccess: (data) => setSetupData(data),
-    onError: () => toast({ title: "Error al iniciar configuracion 2FA", variant: "destructive" }),
+    onError: () => toast({ title: "Error al iniciar configuración 2FA", variant: "destructive" }),
   });
 
   const confirmMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/auth/totp/confirm", { code: confirmCode }),
     onSuccess: () => {
-      toast({ title: "Autenticacion de dos factores activada" });
+      toast({ title: "Autenticación de dos factores activada" });
       setSetupData(null);
       setConfirmCode("");
       refetch();
     },
-    onError: () => toast({ title: "Codigo invalido. Intentalo de nuevo.", variant: "destructive" }),
+    onError: () => toast({ title: "Código inválido. Inténtalo de nuevo.", variant: "destructive" }),
   });
 
   const disableMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/auth/totp/disable", { password: disablePassword }),
     onSuccess: () => {
-      toast({ title: "Autenticacion de dos factores desactivada" });
+      toast({ title: "Autenticación de dos factores desactivada" });
       setDisablePassword("");
       setDisableOpen(false);
       refetch();
     },
-    onError: () => toast({ title: "Contrasena incorrecta", variant: "destructive" }),
+    onError: () => toast({ title: "Contraseña incorrecta", variant: "destructive" }),
   });
 
   const copySecret = () => {
@@ -71,9 +71,9 @@ export function TotpSecuritySection() {
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-5 h-5 text-primary" />
           <div>
-            <h3 className="font-semibold">Autenticacion de dos factores (2FA)</h3>
+            <h3 className="font-semibold">Autenticación de dos factores (2FA)</h3>
             <p className="text-sm text-muted-foreground">
-              Protege tu cuenta con una aplicacion de autenticacion (Google Authenticator, Authy, etc.)
+              Protege tu cuenta con una aplicación de autenticación (Google Authenticator, Authy, etc.)
             </p>
           </div>
         </div>
@@ -93,17 +93,17 @@ export function TotpSecuritySection() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Desactivar autenticacion de dos factores</DialogTitle>
+              <DialogTitle>Desactivar autenticación de dos factores</DialogTitle>
               <DialogDescription>
-                Introduce tu contrasena para confirmar la desactivacion de 2FA. Tu cuenta sera menos segura.
+                Introduce tu contraseña para confirmar la desactivación de 2FA. Tu cuenta será menos segura.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-4">
-              <Label htmlFor="disable-password">Contrasena</Label>
+              <Label htmlFor="disable-password">Contraseña</Label>
               <Input
                 id="disable-password"
                 type="password"
-                placeholder="Tu contrasena actual"
+                placeholder="Tu contraseña actual"
                 value={disablePassword}
                 onChange={(e) => setDisablePassword(e.target.value)}
                 data-testid="input-disable-2fa-password"
@@ -125,10 +125,10 @@ export function TotpSecuritySection() {
       ) : setupData ? (
         <div className="space-y-4" data-testid="totp-setup-form">
           <p className="text-sm text-muted-foreground">
-            Escanea el codigo QR con tu aplicacion de autenticacion, o introduce la clave manualmente.
+            Escanea el código QR con tu aplicación de autenticación, o introduce la clave manualmente.
           </p>
           <div className="flex justify-center">
-            <img src={setupData.qrCode} alt="Codigo QR para 2FA" className="w-48 h-48 rounded-md border" data-testid="img-qr-code" />
+            <img src={setupData.qrCode} alt="Código QR para 2FA" className="w-48 h-48 rounded-md border" data-testid="img-qr-code" />
           </div>
           <div className="flex items-center gap-2 p-3 rounded-md bg-accent/50 border">
             <code className="text-xs flex-1 break-all" data-testid="text-totp-secret">{setupData.secret}</code>
@@ -137,7 +137,7 @@ export function TotpSecuritySection() {
             </Button>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm-totp">Codigo de verificacion</Label>
+            <Label htmlFor="confirm-totp">Código de verificación</Label>
             <Input
               id="confirm-totp"
               type="text"

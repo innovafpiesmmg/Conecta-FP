@@ -47,7 +47,7 @@ const statusVariants: Record<string, "default" | "secondary" | "destructive" | "
 const jobTypeLabels: Record<string, string> = {
   FULL_TIME: "Jornada completa",
   PART_TIME: "Media jornada",
-  INTERNSHIP: "Practicas",
+  INTERNSHIP: "Prácticas",
   FREELANCE: "Freelance",
   REMOTE: "Remoto",
 };
@@ -79,7 +79,7 @@ export default function AlumniDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/applications/mine"] });
-      toast({ title: "Postulacion enviada", description: "La empresa podra ver tu perfil" });
+      toast({ title: "Postulación enviada", description: "La empresa podrá ver tu perfil" });
       setApplyJobId(null);
       setCoverLetter("");
     },
@@ -177,7 +177,7 @@ export default function AlumniDashboard() {
               <div className="relative flex-1 min-w-[200px] max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por titulo, ubicacion, empresa..."
+                  placeholder="Buscar por título, ubicación, empresa..."
                   className="pl-9"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -270,18 +270,18 @@ export default function AlumniDashboard() {
                               <DialogHeader>
                                 <DialogTitle>Postularse a: {job.title}</DialogTitle>
                                 <DialogDescription>
-                                  Al postularte, la empresa podra ver tu nombre, email, CV y datos de perfil para esta oferta.
+                                  Al postularte, la empresa podrá ver tu nombre, email, CV y datos de perfil para esta oferta.
                                 </DialogDescription>
                               </DialogHeader>
                               <div className="space-y-3 py-2">
                                 <div className="p-3 rounded-md bg-accent/50 border text-sm flex items-start gap-2">
                                   <Shield className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
-                                  <span>Tus datos solo seran visibles para esta empresa y solo para esta oferta concreta.</span>
+                                  <span>Tus datos solo serán visibles para esta empresa y solo para esta oferta concreta.</span>
                                 </div>
                                 <div className="space-y-2">
-                                  <Label>Carta de presentacion (opcional)</Label>
+                                  <Label>Carta de presentación (opcional)</Label>
                                   <Textarea
-                                    placeholder="Cuentale a la empresa por que eres un buen candidato..."
+                                    placeholder="Cuéntale a la empresa por qué eres un buen candidato..."
                                     value={coverLetter}
                                     onChange={(e) => setCoverLetter(e.target.value)}
                                     rows={4}
@@ -296,7 +296,7 @@ export default function AlumniDashboard() {
                                   disabled={applyMutation.isPending}
                                   data-testid="button-confirm-apply"
                                 >
-                                  {applyMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmar postulacion"}
+                                  {applyMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmar postulación"}
                                 </Button>
                               </DialogFooter>
                             </DialogContent>
@@ -329,7 +329,7 @@ export default function AlumniDashboard() {
               <Card className="p-8 text-center">
                 <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <p className="font-medium mb-1">Sin candidaturas</p>
-                <p className="text-sm text-muted-foreground">Explora las ofertas y postulate</p>
+                <p className="text-sm text-muted-foreground">Explora las ofertas y postúlate</p>
               </Card>
             ) : (
               <div className="space-y-3">
@@ -371,7 +371,7 @@ export default function AlumniDashboard() {
                 <Trash2 className="w-4 h-4" /> Zona peligrosa
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Eliminar tu cuenta borrara permanentemente todos tus datos: perfil, candidaturas y cualquier informacion asociada. Esta accion es irreversible.
+                Eliminar tu cuenta borrará permanentemente todos tus datos: perfil, candidaturas y cualquier información asociada. Esta acción es irreversible.
               </p>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -383,7 +383,7 @@ export default function AlumniDashboard() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Eliminar cuenta permanentemente?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esta accion es irreversible. Se eliminaran: tu perfil, todas tus candidaturas y cualquier dato personal almacenado. Esto cumple con tu derecho al olvido (Art. 17 RGPD).
+                      Esta acción es irreversible. Se eliminarán: tu perfil, todas tus candidaturas y cualquier dato personal almacenado. Esto cumple con tu derecho al olvido (Art. 17 RGPD).
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -517,7 +517,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
         </div>
         <div className="space-y-1">
           <p className="text-sm font-medium">Foto de perfil</p>
-          <p className="text-xs text-muted-foreground">JPG, PNG o WebP. Maximo 5MB.</p>
+          <p className="text-xs text-muted-foreground">JPG, PNG o WebP. Máximo 5MB.</p>
           <div className="flex items-center gap-2 flex-wrap">
             <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} data-testid="button-upload-photo">
               {uploadingPhoto ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
@@ -539,7 +539,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
             <Input value={name} onChange={(e) => setName(e.target.value)} data-testid="input-profile-name" />
           </div>
           <div className="space-y-2">
-            <Label>Telefono</Label>
+            <Label>Teléfono</Label>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+34 600 000 000" data-testid="input-profile-phone" />
           </div>
         </div>
@@ -587,7 +587,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
             <Input value={university} onChange={(e) => setUniversity(e.target.value)} data-testid="input-profile-university" />
           </div>
           <div className="space-y-2">
-            <Label>Ano de promocion</Label>
+            <Label>Año de promoción</Label>
             <Input type="number" value={graduationYear} onChange={(e) => setGraduationYear(e.target.value)} data-testid="input-profile-year" />
           </div>
         </div>
@@ -596,8 +596,8 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
           <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="JavaScript, Python, React..." data-testid="input-profile-skills" />
         </div>
         <div className="space-y-2">
-          <Label>Biografia</Label>
-          <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Cuentanos sobre ti..." rows={3} data-testid="textarea-profile-bio" />
+          <Label>Biografía</Label>
+          <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Cuéntanos sobre ti..." rows={3} data-testid="textarea-profile-bio" />
         </div>
 
         <div className="space-y-2">
@@ -627,13 +627,13 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
               </Button>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">Solo PDF. Maximo 10MB.</p>
+          <p className="text-xs text-muted-foreground">Solo PDF. Máximo 10MB.</p>
         </div>
 
         <div className="flex items-center justify-between gap-4 p-3 rounded-md bg-accent/50 border">
           <div>
-            <p className="text-sm font-medium">Perfil publico</p>
-            <p className="text-xs text-muted-foreground">Si esta activado, tu perfil basico sera visible en la plataforma</p>
+            <p className="text-sm font-medium">Perfil público</p>
+            <p className="text-xs text-muted-foreground">Si está activado, tu perfil básico será visible en la plataforma</p>
           </div>
           <Switch checked={profilePublic} onCheckedChange={setProfilePublic} data-testid="switch-profile-public" />
         </div>

@@ -51,19 +51,19 @@ export default function ForgotPassword() {
               <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto" />
               <h2 className="text-xl font-bold">Correo enviado</h2>
               <p className="text-muted-foreground">
-                Si existe una cuenta con el email <strong>{email}</strong>, recibiras un correo con instrucciones para restablecer tu contrasena.
+                Si existe una cuenta con el email <strong>{email}</strong>, recibirás un correo con instrucciones para restablecer tu contraseña.
               </p>
               <Link href="/login">
-                <Button variant="outline" className="w-full" data-testid="button-back-login">Volver al inicio de sesion</Button>
+                <Button variant="outline" className="w-full" data-testid="button-back-login">Volver al inicio de sesión</Button>
               </Link>
             </div>
           ) : (
             <>
               <div className="text-center mb-6">
                 <Mail className="w-10 h-10 text-primary mx-auto mb-3" />
-                <h1 className="text-2xl font-bold mb-1">Recuperar contrasena</h1>
+                <h1 className="text-2xl font-bold mb-1">Recuperar contraseña</h1>
                 <p className="text-muted-foreground text-sm">
-                  Introduce tu email y te enviaremos un enlace para restablecer tu contrasena.
+                  Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.
                 </p>
               </div>
 
@@ -82,13 +82,13 @@ export default function ForgotPassword() {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting || !email} data-testid="button-forgot-submit">
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enviar enlace de recuperacion"}
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enviar enlace de recuperación"}
                 </Button>
               </form>
 
               <p className="text-center text-sm text-muted-foreground mt-6">
                 <Link href="/login">
-                  <span className="text-primary cursor-pointer font-medium" data-testid="link-login">Volver al inicio de sesion</span>
+                  <span className="text-primary cursor-pointer font-medium" data-testid="link-login">Volver al inicio de sesión</span>
                 </Link>
               </p>
             </>

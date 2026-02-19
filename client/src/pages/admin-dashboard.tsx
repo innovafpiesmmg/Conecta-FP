@@ -66,7 +66,7 @@ const statusVariants: Record<string, "default" | "secondary" | "outline" | "dest
 const jobTypeLabels: Record<string, string> = {
   FULL_TIME: "Jornada completa",
   PART_TIME: "Media jornada",
-  INTERNSHIP: "Practicas",
+  INTERNSHIP: "Prácticas",
   FREELANCE: "Freelance",
   REMOTE: "Remoto",
 };
@@ -154,7 +154,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => logout()} data-testid="button-admin-logout">
-            <LogOut className="w-4 h-4 mr-1" /> Cerrar sesion
+            <LogOut className="w-4 h-4 mr-1" /> Cerrar sesión
           </Button>
         </div>
       </header>
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               <div className="flex items-center gap-4 flex-wrap">
                 <Input
-                  placeholder="Buscar por titulo, ubicacion o empresa..."
+                  placeholder="Buscar por título, ubicación o empresa..."
                   value={jobSearch}
                   onChange={(e) => setJobSearch(e.target.value)}
                   className="max-w-sm"
@@ -335,7 +335,7 @@ function UserRow({ user, onDelete, deleting }: { user: Omit<User, "password">; o
               <AlertDialogHeader>
                 <AlertDialogTitle>Eliminar usuario</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Se eliminara permanentemente la cuenta de <strong>{user.name}</strong> ({user.email}) y todos sus datos asociados. Esta accion no se puede deshacer.
+                  Se eliminará permanentemente la cuenta de <strong>{user.name}</strong> ({user.email}) y todos sus datos asociados. Esta acción no se puede deshacer.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -410,7 +410,7 @@ function JobRow({ job, onToggle, onDelete, toggling, deleting }: {
               <AlertDialogHeader>
                 <AlertDialogTitle>Eliminar oferta</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Se eliminara permanentemente la oferta <strong>{job.title}</strong> y todas las candidaturas asociadas. Esta accion no se puede deshacer.
+                  Se eliminará permanentemente la oferta <strong>{job.title}</strong> y todas las candidaturas asociadas. Esta acción no se puede deshacer.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -466,15 +466,15 @@ function SmtpPanel() {
     mutationFn: () => apiRequest("POST", "/api/admin/smtp", form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/smtp"] });
-      toast({ title: "Configuracion SMTP guardada" });
+      toast({ title: "Configuración SMTP guardada" });
     },
-    onError: () => toast({ title: "Error al guardar configuracion", variant: "destructive" }),
+    onError: () => toast({ title: "Error al guardar configuración", variant: "destructive" }),
   });
 
   const testMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/admin/smtp/test", { email: testEmail }),
     onSuccess: () => toast({ title: "Correo de prueba enviado" }),
-    onError: () => toast({ title: "Error al enviar correo de prueba. Verifica la configuracion.", variant: "destructive" }),
+    onError: () => toast({ title: "Error al enviar correo de prueba. Verifica la configuración.", variant: "destructive" }),
   });
 
   if (isLoading) {
@@ -485,10 +485,10 @@ function SmtpPanel() {
     <div className="space-y-6 max-w-2xl">
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Mail className="w-5 h-5" /> Configuracion del servidor de correo (SMTP)
+          <Mail className="w-5 h-5" /> Configuración del servidor de correo (SMTP)
         </h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Configura un servidor SMTP para enviar correos de verificacion de registro, restablecimiento de contrasena y alertas.
+          Configura un servidor SMTP para enviar correos de verificación de registro, restablecimiento de contraseña y alertas.
         </p>
 
         <div className="space-y-4">
@@ -528,11 +528,11 @@ function SmtpPanel() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="smtp-password">Contrasena</Label>
+              <Label htmlFor="smtp-password">Contraseña</Label>
               <Input
                 id="smtp-password"
                 type="password"
-                placeholder="Contrasena SMTP"
+                placeholder="Contraseña SMTP"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 data-testid="input-smtp-password"
@@ -585,7 +585,7 @@ function SmtpPanel() {
 
           <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} data-testid="button-smtp-save">
             {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
-            Guardar configuracion
+            Guardar configuración
           </Button>
         </div>
       </Card>
@@ -595,7 +595,7 @@ function SmtpPanel() {
           <Send className="w-5 h-5" /> Enviar correo de prueba
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Envia un correo de prueba para verificar que la configuracion SMTP funciona correctamente.
+          Envía un correo de prueba para verificar que la configuración SMTP funciona correctamente.
         </p>
         <div className="flex items-center gap-3 flex-wrap">
           <Input
