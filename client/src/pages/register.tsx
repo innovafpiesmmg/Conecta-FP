@@ -46,7 +46,8 @@ export default function Register() {
     resolver: zodResolver(registerCompanySchema),
     defaultValues: {
       email: "", password: "", name: "", role: "COMPANY",
-      companyName: "", companySector: "", companyWebsite: "",
+      companyName: "", companyEmail: "", companyCif: "",
+      companySector: "", companyWebsite: "",
       consentGiven: undefined as any,
     },
   });
@@ -212,7 +213,7 @@ export default function Register() {
                   {companyForm.formState.errors.companyName && <p className="text-sm text-destructive">{companyForm.formState.errors.companyName.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="company-email">Email corporativo</Label>
+                  <Label htmlFor="company-email">Email de acceso</Label>
                   <Input id="company-email" type="email" placeholder="empresa@email.com" data-testid="input-company-email" {...companyForm.register("email")} />
                   {companyForm.formState.errors.email && <p className="text-sm text-destructive">{companyForm.formState.errors.email.message}</p>}
                 </div>
@@ -220,6 +221,16 @@ export default function Register() {
                   <Label htmlFor="company-password">Contraseña</Label>
                   <Input id="company-password" type="password" placeholder="Mínimo 8 caracteres" data-testid="input-company-password" {...companyForm.register("password")} />
                   {companyForm.formState.errors.password && <p className="text-sm text-destructive">{companyForm.formState.errors.password.message}</p>}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="company-corp-email">Email corporativo</Label>
+                    <Input id="company-corp-email" type="email" placeholder="info@empresa.com" data-testid="input-company-corp-email" {...companyForm.register("companyEmail")} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company-cif">CIF/NIF</Label>
+                    <Input id="company-cif" placeholder="B12345678" data-testid="input-company-cif" {...companyForm.register("companyCif")} />
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">

@@ -463,6 +463,31 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/jobs/:id", requireRole("COMPANY"), async (req, res, next) => {
+    try {
+      const job = await storage.getJob(req.params.id);
+      if (!job || job.companyId !== req.user!.id) {
+        return res.status(403).json({ message: "No autorizado" });
+      }
+      const body = { ...req.body };
+      if (body.expiresAt && typeof body.expiresAt === "string") {
+        body.expiresAt = new Date(body.expiresAt);
+      }
+      const allowedFields = ["title", "description", "location", "salaryMin", "salaryMax", "jobType", "requirements", "familiaProfesional", "cicloFormativo", "expiresAt"];
+      const updateData: any = {};
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          updateData[field] = body[field];
+        }
+      }
+      const updated = await storage.updateJob(req.params.id, updateData);
+      res.json(updated);
+    } catch (err: any) {
+      if (err.name === "ZodError") return res.status(400).json({ message: "Datos inválidos", errors: err.errors });
+      next(err);
+    }
+  });
+
   // ============ APPLICATION ROUTES ============
 
   app.get("/api/applications/mine", requireRole("ALUMNI"), async (req, res, next) => {

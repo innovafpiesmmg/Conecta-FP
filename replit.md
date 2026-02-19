@@ -48,7 +48,11 @@ shared/
 - **Right to Erasure**: Users can permanently delete their account and all associated data
 - **Role-based Access**: Titulados FP see job search + applications; COMPANY sees job management + candidates
 - **FP-focused**: Tailored for Formacion Profesional graduates (CFGS DAW, ASIR, DAM, etc.)
-- **Familias Profesionales y Ciclos**: Both user profiles and job offers include familia profesional and ciclo formativo fields with cascading selectors (23 familias, each with relevant ciclos)
+- **Familias Profesionales y Ciclos**: Both user profiles and job offers include familia profesional and ciclo formativo fields with cascading selectors (23 familias, each with relevant ciclos). All names use proper Spanish characters (ñ, á, é, í, ó, ú)
+- **Editable Job Offers**: Companies can edit their job offers (title, description, location, salary, requirements, etc.)
+- **Company Details**: Companies have companyEmail and companyCif fields in registration and profile
+- **Required Expiry Dates**: All job offers must have an expiry date (expiresAt is NOT NULL)
+- **Search/Filter**: All dashboards (alumni, company, admin) include search and filter functionality
 - **Admin Panel**: Full admin dashboard at /admin with platform stats, user management, job management, application overview, and SMTP configuration
 - **Email Verification**: New registrations require email verification before login
 - **Password Reset**: Forgot password flow sends reset link via email (1 hour expiry)
@@ -62,6 +66,7 @@ shared/
 - DB column `university` stores "Centro de FP" (kept for backwards compat)
 - DB column `graduation_year` stores "Ano de promocion" (kept for backwards compat)
 - DB columns `familia_profesional` and `ciclo_formativo` on both `users` and `job_offers` tables
+- DB columns `company_email` and `company_cif` on `users` table for company details
 - Internal role value is "ALUMNI" but displayed as "Titulado FP" in the UI
 - ADMIN role users are redirected to /admin dashboard on login
 - `FAMILIAS_PROFESIONALES` and `CICLOS_POR_FAMILIA` constants exported from shared/schema.ts
@@ -103,6 +108,7 @@ shared/
 - GET /api/jobs - List active jobs
 - GET /api/jobs/mine - Company's own jobs
 - POST /api/jobs - Create job (COMPANY only)
+- PATCH /api/jobs/:id - Edit job (COMPANY only, own jobs)
 - GET /api/applications/mine - Titulado FP's applications
 - GET /api/jobs/:jobId/applications - Job applicants (COMPANY only)
 - POST /api/applications - Apply to job (ALUMNI/Titulado FP only)

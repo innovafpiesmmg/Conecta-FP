@@ -18,6 +18,7 @@ export interface IStorage {
   getJobsByCompany(companyId: string): Promise<JobOffer[]>;
   getJob(id: string): Promise<JobOffer | undefined>;
   createJob(companyId: string, data: InsertJobOffer): Promise<JobOffer>;
+  updateJob(id: string, data: Partial<InsertJobOffer>): Promise<JobOffer | undefined>;
   deleteJobsByCompany(companyId: string): Promise<void>;
 
   getApplicationsByAlumni(alumniId: string): Promise<(Application & { jobOffer?: JobOffer & { company?: { companyName: string | null; name: string } } })[]>;
@@ -114,6 +115,11 @@ export class DatabaseStorage implements IStorage {
     return job;
   }
 
+  async updateJob(id: string, data: Partial<InsertJobOffer>): Promise<JobOffer | undefined> {
+    const [job] = await db.update(jobOffers).set(data).where(eq(jobOffers.id, id)).returning();
+    return job;
+  }
+
   async deleteJobsByCompany(companyId: string): Promise<void> {
     await db.delete(jobOffers).where(eq(jobOffers.companyId, companyId));
   }
@@ -160,6 +166,9 @@ export class DatabaseStorage implements IStorage {
         companyDescription: null,
         companyWebsite: null,
         companySector: null,
+        companyLogoUrl: alumni.companyLogoUrl,
+        companyEmail: null,
+        companyCif: null,
         consentGiven: false,
         consentTimestamp: null,
         createdAt: alumni.createdAt,

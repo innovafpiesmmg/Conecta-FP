@@ -8,7 +8,8 @@ import { FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
 import {
   Briefcase, Plus, Users, LogOut, Loader2, MapPin, Clock, Building2,
   Mail, Phone, GraduationCap, FileText, ChevronDown, ChevronUp,
-  Trash2, Shield, ExternalLink, Eye, Camera, Upload, X, User as UserIcon, Image
+  Trash2, Shield, ExternalLink, Eye, Camera, Upload, X, User as UserIcon, Image,
+  Search, Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -63,6 +64,8 @@ export default function CompanyDashboard() {
   const queryClient = useQueryClient();
   const [showCreateJob, setShowCreateJob] = useState(false);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterFamilia, setFilterFamilia] = useState("");
 
   const { data: myJobs = [], isLoading: jobsLoading } = useQuery<JobOffer[]>({
     queryKey: ["/api/jobs/mine"],
@@ -150,6 +153,30 @@ export default function CompanyDashboard() {
               </Dialog>
             </div>
 
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por título o descripción..."
+                  className="pl-9"
+                  data-testid="input-search-jobs"
+                />
+              </div>
+              <Select value={filterFamilia} onValueChange={setFilterFamilia}>
+                <SelectTrigger className="w-[240px]" data-testid="select-filter-familia-jobs">
+                  <SelectValue placeholder="Todas las familias" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las familias</SelectItem>
+                  {FAMILIAS_PROFESIONALES.map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {jobsLoading ? (
               <div className="space-y-4">
                 {[1, 2].map((i) => (
@@ -168,7 +195,12 @@ export default function CompanyDashboard() {
               </Card>
             ) : (
               <div className="space-y-3">
-                {myJobs.map((job) => (
+                {myJobs.filter((job) => {
+                  const q = searchQuery.toLowerCase();
+                  const matchesSearch = !q || job.title.toLowerCase().includes(q) || job.description.toLowerCase().includes(q);
+                  const matchesFamilia = !filterFamilia || filterFamilia === "all" || job.familiaProfesional === filterFamilia;
+                  return matchesSearch && matchesFamilia;
+                }).map((job) => (
                   <JobCard
                     key={job.id}
                     job={job}
@@ -228,6 +260,20 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
   const [viewCvAlumniName, setViewCvAlumniName] = useState("");
   const [showExtend, setShowExtend] = useState(false);
   const [newExpiryDate, setNewExpiryDate] = useState("");
+  const [showEdit, setShowEdit] = useState(false);
+
+  const editJobMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", `/api/jobs/${job.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs/mine"] });
+      toast({ title: "Oferta actualizada" });
+      setShowEdit(false);
+    },
+    onError: () => toast({ title: "Error", description: "No se pudo actualizar la oferta", variant: "destructive" }),
+  });
 
   const { data: applications = [], isLoading } = useQuery<ApplicationWithAlumni[]>({
     queryKey: ["/api/jobs", job.id, "applications"],
@@ -294,6 +340,20 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Dialog open={showEdit} onOpenChange={setShowEdit}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1" data-testid={`button-edit-job-${job.id}`}>
+                  <Pencil className="w-3.5 h-3.5" /> Editar
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Editar oferta</DialogTitle>
+                  <DialogDescription>Modifica los datos de la oferta "{job.title}"</DialogDescription>
+                </DialogHeader>
+                <EditJobForm job={job} onSubmit={(data) => editJobMutation.mutate(data)} isPending={editJobMutation.isPending} />
+              </DialogContent>
+            </Dialog>
             {job.expiresAt && (
               <Dialog open={showExtend} onOpenChange={setShowExtend}>
                 <DialogTrigger asChild>
@@ -541,13 +601,136 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
         <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} placeholder="Experiencia, tecnologías, idiomas..." rows={2} data-testid="textarea-job-requirements" />
       </div>
       <div className="space-y-2">
-        <Label>Fecha de expiración (opcional)</Label>
-        <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split("T")[0]} data-testid="input-job-expires-at" />
-        <p className="text-xs text-muted-foreground">Si se establece, la oferta se desactivará automáticamente en esta fecha. Recibirás un aviso por correo 7 días antes.</p>
+        <Label>Fecha de expiración *</Label>
+        <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split("T")[0]} required data-testid="input-job-expires-at" />
+        <p className="text-xs text-muted-foreground">La oferta se desactivará automáticamente en esta fecha. Recibirás un aviso por correo 7 días antes.</p>
       </div>
       <DialogFooter>
         <Button type="submit" disabled={isPending} data-testid="button-submit-job">
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Publicar oferta"}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+function EditJobForm({ job, onSubmit, isPending }: { job: JobOffer; onSubmit: (data: any) => void; isPending: boolean }) {
+  const [title, setTitle] = useState(job.title);
+  const [description, setDescription] = useState(job.description);
+  const [location, setLocation] = useState(job.location);
+  const [salaryMin, setSalaryMin] = useState(job.salaryMin?.toString() || "");
+  const [salaryMax, setSalaryMax] = useState(job.salaryMax?.toString() || "");
+  const [jobType, setJobType] = useState(job.jobType);
+  const [requirements, setRequirements] = useState(job.requirements || "");
+  const [familiaProfesional, setFamiliaProfesional] = useState(job.familiaProfesional || "");
+  const [cicloFormativo, setCicloFormativo] = useState(job.cicloFormativo || "");
+  const [expiresAt, setExpiresAt] = useState(job.expiresAt ? new Date(job.expiresAt).toISOString().split("T")[0] : "");
+
+  const ciclosDisponibles = familiaProfesional ? CICLOS_POR_FAMILIA[familiaProfesional] || [] : [];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      title, description, location, jobType, requirements,
+      salaryMin: salaryMin ? parseInt(salaryMin) : undefined,
+      salaryMax: salaryMax ? parseInt(salaryMax) : undefined,
+      familiaProfesional: familiaProfesional || undefined,
+      cicloFormativo: cicloFormativo || undefined,
+      expiresAt: expiresAt || undefined,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label>Título del puesto *</Label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Desarrollador Full-Stack" required data-testid="input-edit-job-title" />
+      </div>
+      <div className="space-y-2">
+        <Label>Descripción *</Label>
+        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe el puesto y las responsabilidades..." rows={4} required data-testid="textarea-edit-job-description" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Ubicación *</Label>
+          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Madrid, España" required data-testid="input-edit-job-location" />
+        </div>
+        <div className="space-y-2">
+          <Label>Tipo de contrato</Label>
+          <Select value={jobType} onValueChange={setJobType}>
+            <SelectTrigger data-testid="select-edit-job-type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="FULL_TIME">Jornada completa</SelectItem>
+              <SelectItem value="PART_TIME">Media jornada</SelectItem>
+              <SelectItem value="INTERNSHIP">Prácticas</SelectItem>
+              <SelectItem value="FREELANCE">Freelance</SelectItem>
+              <SelectItem value="REMOTE">Remoto</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Familia Profesional</Label>
+          <Select
+            value={familiaProfesional}
+            onValueChange={(val) => {
+              setFamiliaProfesional(val);
+              setCicloFormativo("");
+            }}
+          >
+            <SelectTrigger data-testid="select-edit-job-familia">
+              <SelectValue placeholder="Selecciona familia" />
+            </SelectTrigger>
+            <SelectContent>
+              {FAMILIAS_PROFESIONALES.map((f) => (
+                <SelectItem key={f} value={f}>{f}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Ciclo Formativo</Label>
+          <Select
+            value={cicloFormativo}
+            onValueChange={setCicloFormativo}
+            disabled={ciclosDisponibles.length === 0}
+          >
+            <SelectTrigger data-testid="select-edit-job-ciclo">
+              <SelectValue placeholder="Selecciona ciclo" />
+            </SelectTrigger>
+            <SelectContent>
+              {ciclosDisponibles.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Salario mínimo (EUR)</Label>
+          <Input type="number" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} placeholder="25000" data-testid="input-edit-job-salary-min" />
+        </div>
+        <div className="space-y-2">
+          <Label>Salario máximo (EUR)</Label>
+          <Input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} placeholder="40000" data-testid="input-edit-job-salary-max" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Requisitos</Label>
+        <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} placeholder="Experiencia, tecnologías, idiomas..." rows={2} data-testid="textarea-edit-job-requirements" />
+      </div>
+      <div className="space-y-2">
+        <Label>Fecha de expiración *</Label>
+        <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split("T")[0]} required data-testid="input-edit-job-expires-at" />
+        <p className="text-xs text-muted-foreground">La oferta se desactivará automáticamente en esta fecha.</p>
+      </div>
+      <DialogFooter>
+        <Button type="submit" disabled={isPending} data-testid="button-submit-edit-job">
+          {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar cambios"}
         </Button>
       </DialogFooter>
     </form>
@@ -565,6 +748,8 @@ function CompanyProfileForm({ user }: { user: User }) {
   const [companyDescription, setCompanyDescription] = useState(user.companyDescription || "");
   const [companyWebsite, setCompanyWebsite] = useState(user.companyWebsite || "");
   const [companySector, setCompanySector] = useState(user.companySector || "");
+  const [companyEmail, setCompanyEmail] = useState(user.companyEmail || "");
+  const [companyCif, setCompanyCif] = useState(user.companyCif || "");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
@@ -582,7 +767,7 @@ function CompanyProfileForm({ user }: { user: User }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate({ name, phone, companyName, companyDescription, companyWebsite, companySector });
+    updateMutation.mutate({ name, phone, companyName, companyDescription, companyWebsite, companySector, companyEmail, companyCif });
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -722,6 +907,14 @@ function CompanyProfileForm({ user }: { user: User }) {
           <div className="space-y-2">
             <Label>Sector</Label>
             <Input value={companySector} onChange={(e) => setCompanySector(e.target.value)} data-testid="input-company-sector-edit" />
+          </div>
+          <div className="space-y-2">
+            <Label>Email corporativo</Label>
+            <Input type="email" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} data-testid="input-company-email-edit" />
+          </div>
+          <div className="space-y-2">
+            <Label>CIF/NIF</Label>
+            <Input value={companyCif} onChange={(e) => setCompanyCif(e.target.value)} data-testid="input-company-cif-edit" />
           </div>
         </div>
         <div className="space-y-2">
