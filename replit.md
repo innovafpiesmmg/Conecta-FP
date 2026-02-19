@@ -10,6 +10,7 @@ Portal de empleo privado para titulados de Formacion Profesional (FP) y empresas
 - **Auth**: Passport.js local strategy + bcrypt + express-session (PgSession store)
 - **Email**: Nodemailer with admin-configurable SMTP settings stored in DB
 - **2FA**: TOTP-based (otpauth + qrcode libraries) - optional per user
+- **File Uploads**: Multer with local disk storage (uploads/ directory)
 - **Roles**: ALUMNI (titulados FP), COMPANY (empresas), and ADMIN (administradores)
 
 ## Project Structure
@@ -87,6 +88,14 @@ shared/
 - POST /api/auth/totp/disable - Disable TOTP (requires password)
 - POST /api/auth/totp/verify-login - Complete TOTP step during login
 
+### File Uploads
+- POST /api/uploads/profile-photo - Upload profile photo (authenticated, JPG/PNG/WebP, max 5MB)
+- DELETE /api/uploads/profile-photo - Delete profile photo (authenticated)
+- POST /api/uploads/company-logo - Upload company logo (COMPANY only, JPG/PNG/WebP, max 5MB)
+- DELETE /api/uploads/company-logo - Delete company logo (COMPANY only)
+- POST /api/uploads/cv - Upload CV (ALUMNI only, PDF, max 10MB)
+- DELETE /api/uploads/cv - Delete CV (ALUMNI only)
+
 ### Jobs & Applications
 - GET /api/jobs - List active jobs
 - GET /api/jobs/mine - Company's own jobs
@@ -107,6 +116,16 @@ shared/
 - GET /api/admin/smtp - Get SMTP configuration (ADMIN only)
 - POST /api/admin/smtp - Save SMTP configuration (ADMIN only)
 - POST /api/admin/smtp/test - Send test email (ADMIN only)
+
+## File Upload Details
+- Uploads stored in `uploads/` directory (avatars/, logos/, cvs/ subdirectories)
+- Profile photos and logos served statically at `/uploads/avatars/...` and `/uploads/logos/...`
+- CVs served via authenticated endpoint: GET /api/uploads/cv/:filename (requires login; alumni can only access own CV, companies/admin can access all)
+- DB columns: `profile_photo_url`, `company_logo_url`, `cv_url` on users table
+- Old files automatically deleted when replaced or account deleted
+- Images: JPG/PNG/WebP, max 5MB; CV: PDF only, max 10MB
+- Filenames randomized (crypto.randomBytes) to prevent conflicts and path traversal
+- deleteFileIfExists enforces path stays within uploads/ directory (prevents path traversal deletion)
 
 ## Demo Credentials
 - Admin: admin@fpempleo.es / admin123

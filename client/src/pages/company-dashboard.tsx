@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import { FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
 import {
   Briefcase, Plus, Users, LogOut, Loader2, MapPin, Clock, Building2,
   Mail, Phone, GraduationCap, FileText, ChevronDown, ChevronUp,
-  Trash2, Shield, ExternalLink, Eye
+  Trash2, Shield, ExternalLink, Eye, Camera, Upload, X, User as UserIcon, Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -328,7 +328,7 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                         </p>
                       )}
                       {app.alumni?.cvUrl && (
-                        <a href={app.alumni.cvUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary flex items-center gap-1 mt-1">
+                        <a href={`/api/uploads/cv/${app.alumni.cvUrl.split("/").pop()}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary flex items-center gap-1 mt-1">
                           <ExternalLink className="w-3 h-3" /> Ver CV
                         </a>
                       )}
@@ -477,12 +477,16 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
 function CompanyProfileForm({ user }: { user: User }) {
   const { refetch } = useAuth();
   const { toast } = useToast();
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone || "");
   const [companyName, setCompanyName] = useState(user.companyName || "");
   const [companyDescription, setCompanyDescription] = useState(user.companyDescription || "");
   const [companyWebsite, setCompanyWebsite] = useState(user.companyWebsite || "");
   const [companySector, setCompanySector] = useState(user.companySector || "");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -501,11 +505,126 @@ function CompanyProfileForm({ user }: { user: User }) {
     updateMutation.mutate({ name, phone, companyName, companyDescription, companyWebsite, companySector });
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/uploads/profile-photo", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) { const data = await res.json(); throw new Error(data.message || "Error"); }
+      await refetch();
+      toast({ title: "Foto de perfil actualizada" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    try {
+      const res = await fetch("/api/uploads/profile-photo", { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error("Error");
+      await refetch();
+      toast({ title: "Foto eliminada" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/uploads/company-logo", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) { const data = await res.json(); throw new Error(data.message || "Error"); }
+      await refetch();
+      toast({ title: "Logo de empresa actualizado" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteLogo = async () => {
+    try {
+      const res = await fetch("/api/uploads/company-logo", { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error("Error");
+      await refetch();
+      toast({ title: "Logo eliminado" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
   return (
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
         <Building2 className="w-5 h-5" /> Datos de la Empresa
       </h2>
+
+      <div className="flex flex-col sm:flex-row gap-6 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-20 rounded-md bg-accent flex items-center justify-center overflow-hidden border">
+            {user.profilePhotoUrl ? (
+              <img src={user.profilePhotoUrl} alt="Foto de perfil" className="w-full h-full object-cover" data-testid="img-company-profile-photo" />
+            ) : (
+              <UserIcon className="w-8 h-8 text-muted-foreground" />
+            )}
+          </div>
+          <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoUpload} data-testid="input-upload-company-photo" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Foto de contacto</p>
+            <p className="text-xs text-muted-foreground">JPG, PNG, WebP. Max 5MB.</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} data-testid="button-upload-company-photo">
+                {uploadingPhoto ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                {user.profilePhotoUrl ? "Cambiar" : "Subir"}
+              </Button>
+              {user.profilePhotoUrl && (
+                <Button type="button" variant="ghost" size="sm" className="gap-1 text-destructive" onClick={handleDeletePhoto} data-testid="button-delete-company-photo">
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-20 rounded-md bg-accent flex items-center justify-center overflow-hidden border">
+            {user.companyLogoUrl ? (
+              <img src={user.companyLogoUrl} alt="Logo de empresa" className="w-full h-full object-cover" data-testid="img-company-logo" />
+            ) : (
+              <Image className="w-8 h-8 text-muted-foreground" />
+            )}
+          </div>
+          <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogoUpload} data-testid="input-upload-company-logo" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Logo de empresa</p>
+            <p className="text-xs text-muted-foreground">JPG, PNG, WebP. Max 5MB.</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-company-logo">
+                {uploadingLogo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                {user.companyLogoUrl ? "Cambiar" : "Subir"}
+              </Button>
+              {user.companyLogoUrl && (
+                <Button type="button" variant="ghost" size="sm" className="gap-1 text-destructive" onClick={handleDeleteLogo} data-testid="button-delete-company-logo">
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">

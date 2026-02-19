@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,7 +7,7 @@ import type { JobOffer, Application, User } from "@shared/schema";
 import { FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
 import {
   Briefcase, Search, User as UserIcon, FileText, LogOut, Loader2, MapPin,
-  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink
+  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -403,23 +403,28 @@ export default function AlumniDashboard() {
 }
 
 function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: any) => void; isPending: boolean }) {
+  const { refetch: refetchUser } = useAuth();
+  const { toast } = useToast();
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const cvInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone || "");
   const [bio, setBio] = useState(user.bio || "");
-  const [cvUrl, setCvUrl] = useState(user.cvUrl || "");
   const [university, setUniversity] = useState(user.university || "");
   const [graduationYear, setGraduationYear] = useState(user.graduationYear?.toString() || "");
   const [familiaProfesional, setFamiliaProfesional] = useState(user.familiaProfesional || "");
   const [cicloFormativo, setCicloFormativo] = useState(user.cicloFormativo || "");
   const [skills, setSkills] = useState(user.skills || "");
   const [profilePublic, setProfilePublic] = useState(user.profilePublic);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingCv, setUploadingCv] = useState(false);
 
   const ciclosDisponibles = familiaProfesional ? CICLOS_POR_FAMILIA[familiaProfesional] || [] : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
-      name, phone, bio, cvUrl, university,
+      name, phone, bio, university,
       graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
       familiaProfesional: familiaProfesional || undefined,
       cicloFormativo: cicloFormativo || undefined,
@@ -427,11 +432,106 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
     });
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/uploads/profile-photo", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Error al subir la foto");
+      }
+      await refetchUser();
+      toast({ title: "Foto de perfil actualizada" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    try {
+      const res = await fetch("/api/uploads/profile-photo", { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error("Error al eliminar la foto");
+      await refetchUser();
+      toast({ title: "Foto de perfil eliminada" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCv(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/uploads/cv", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Error al subir el CV");
+      }
+      await refetchUser();
+      toast({ title: "CV actualizado" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingCv(false);
+      if (cvInputRef.current) cvInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteCv = async () => {
+    try {
+      const res = await fetch("/api/uploads/cv", { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error("Error al eliminar el CV");
+      await refetchUser();
+      toast({ title: "CV eliminado" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
   return (
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
         <UserIcon className="w-5 h-5" /> Mi Perfil
       </h2>
+
+      <div className="flex items-center gap-4 mb-6">
+        <div className="relative">
+          <div className="w-20 h-20 rounded-md bg-accent flex items-center justify-center overflow-hidden border">
+            {user.profilePhotoUrl ? (
+              <img src={user.profilePhotoUrl} alt="Foto de perfil" className="w-full h-full object-cover" data-testid="img-profile-photo" />
+            ) : (
+              <UserIcon className="w-8 h-8 text-muted-foreground" />
+            )}
+          </div>
+          <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoUpload} data-testid="input-upload-photo" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Foto de perfil</p>
+          <p className="text-xs text-muted-foreground">JPG, PNG o WebP. Maximo 5MB.</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} data-testid="button-upload-photo">
+              {uploadingPhoto ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+              {user.profilePhotoUrl ? "Cambiar" : "Subir foto"}
+            </Button>
+            {user.profilePhotoUrl && (
+              <Button type="button" variant="ghost" size="sm" className="gap-1 text-destructive" onClick={handleDeletePhoto} data-testid="button-delete-photo">
+                <X className="w-3.5 h-3.5" /> Eliminar
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -499,9 +599,35 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
           <Label>Biografia</Label>
           <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Cuentanos sobre ti..." rows={3} data-testid="textarea-profile-bio" />
         </div>
+
         <div className="space-y-2">
-          <Label>Enlace a CV (URL)</Label>
-          <Input value={cvUrl} onChange={(e) => setCvUrl(e.target.value)} placeholder="https://drive.google.com/..." data-testid="input-profile-cv" />
+          <Label>Curriculum Vitae (PDF)</Label>
+          <div className="flex items-center gap-3 flex-wrap">
+            {user.cvUrl ? (
+              <div className="flex items-center gap-2 p-2 rounded-md border bg-accent/30 flex-1 min-w-0">
+                <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                <a href={`/api/uploads/cv/${user.cvUrl.split("/").pop()}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary truncate flex items-center gap-1" data-testid="link-cv">
+                  Ver CV <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 p-2 rounded-md border bg-accent/20 flex-1 min-w-0">
+                <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm text-muted-foreground">Sin CV subido</span>
+              </div>
+            )}
+            <input ref={cvInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleCvUpload} data-testid="input-upload-cv" />
+            <Button type="button" variant="outline" size="sm" className="gap-1 flex-shrink-0" onClick={() => cvInputRef.current?.click()} disabled={uploadingCv} data-testid="button-upload-cv">
+              {uploadingCv ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+              {user.cvUrl ? "Cambiar CV" : "Subir CV"}
+            </Button>
+            {user.cvUrl && (
+              <Button type="button" variant="ghost" size="sm" className="gap-1 text-destructive flex-shrink-0" onClick={handleDeleteCv} data-testid="button-delete-cv">
+                <X className="w-3.5 h-3.5" /> Eliminar
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">Solo PDF. Maximo 10MB.</p>
         </div>
 
         <div className="flex items-center justify-between gap-4 p-3 rounded-md bg-accent/50 border">

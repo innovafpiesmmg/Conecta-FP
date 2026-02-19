@@ -1,8 +1,11 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import passport from "passport";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import path from "path";
+import fs from "fs";
+import multer from "multer";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireRole } from "./auth";
 import {
@@ -14,6 +17,59 @@ import {
 import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail } from "./email";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
+
+const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_CV_TYPES = ["application/pdf"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_CV_SIZE = 10 * 1024 * 1024;
+
+for (const dir of ["avatars", "logos", "cvs"]) {
+  const dirPath = path.join(UPLOADS_DIR, dir);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+}
+
+function createUploadMiddleware(subfolder: string, allowedTypes: string[], maxSize: number) {
+  const diskStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, path.join(UPLOADS_DIR, subfolder));
+    },
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      const uniqueName = `${crypto.randomBytes(16).toString("hex")}${ext}`;
+      cb(null, uniqueName);
+    },
+  });
+
+  return multer({
+    storage: diskStorage,
+    limits: { fileSize: maxSize },
+    fileFilter: (_req, file, cb) => {
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`Tipo de archivo no permitido. Tipos aceptados: ${allowedTypes.join(", ")}`));
+      }
+    },
+  });
+}
+
+const uploadAvatar = createUploadMiddleware("avatars", ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
+const uploadLogo = createUploadMiddleware("logos", ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE);
+const uploadCv = createUploadMiddleware("cvs", ALLOWED_CV_TYPES, MAX_CV_SIZE);
+
+function deleteFileIfExists(filePath: string | null | undefined) {
+  if (!filePath) return;
+  const relativePath = filePath.startsWith("/") ? filePath.slice(1) : filePath;
+  const fullPath = path.resolve(process.cwd(), relativePath);
+  const uploadsRoot = path.resolve(UPLOADS_DIR);
+  if (!fullPath.startsWith(uploadsRoot)) return;
+  if (fs.existsSync(fullPath)) {
+    fs.unlinkSync(fullPath);
+  }
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -352,8 +408,14 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Los administradores no pueden eliminar su propia cuenta desde aqui" });
       }
       const userId = req.user!.id;
+      const userProfilePhoto = req.user!.profilePhotoUrl;
+      const userCvUrl = req.user!.cvUrl;
+      const userCompanyLogo = req.user!.companyLogoUrl;
       req.logout(async (err) => {
         if (err) return next(err);
+        deleteFileIfExists(userProfilePhoto as string);
+        deleteFileIfExists(userCvUrl as string);
+        deleteFileIfExists(userCompanyLogo as string);
         await storage.deleteUser(userId);
         req.session.destroy((err) => {
           if (err) console.error("Error destroying session:", err);
@@ -550,6 +612,127 @@ export async function registerRoutes(
       } else {
         res.status(400).json({ message: "No se pudo enviar el correo. Verifica la configuracion SMTP." });
       }
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ============ FILE UPLOAD ROUTES ============
+
+  app.use("/uploads/avatars", express.static(path.join(UPLOADS_DIR, "avatars")));
+  app.use("/uploads/logos", express.static(path.join(UPLOADS_DIR, "logos")));
+
+  app.get("/api/uploads/cv/:filename", requireAuth, async (req, res) => {
+    const user = req.user as User;
+    if (user.role !== "COMPANY" && user.role !== "ADMIN") {
+      if (!user.cvUrl || !user.cvUrl.endsWith(req.params.filename)) {
+        return res.status(403).json({ message: "No autorizado" });
+      }
+    }
+    const filePath = path.resolve(UPLOADS_DIR, "cvs", req.params.filename);
+    const uploadsRoot = path.resolve(UPLOADS_DIR);
+    if (!filePath.startsWith(uploadsRoot)) return res.status(400).json({ message: "Ruta no valida" });
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: "Archivo no encontrado" });
+    res.sendFile(filePath);
+  });
+
+  app.post("/api/uploads/profile-photo", requireAuth, (req, res, next) => {
+    uploadAvatar.single("file")(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({ message: "El archivo es demasiado grande. Maximo 5MB." });
+        }
+        return res.status(400).json({ message: err.message || "Error al subir el archivo" });
+      }
+      if (!req.file) return res.status(400).json({ message: "No se ha proporcionado ningun archivo" });
+
+      const fileUrl = `/uploads/avatars/${req.file.filename}`;
+      deleteFileIfExists(req.user!.profilePhotoUrl);
+      storage.updateUser(req.user!.id, { profilePhotoUrl: fileUrl } as any)
+        .then((updated) => {
+          if (!updated) return res.status(404).json({ message: "Usuario no encontrado" });
+          const { password, totpSecret, ...safeUser } = updated;
+          res.json(safeUser);
+        })
+        .catch(next);
+    });
+  });
+
+  app.delete("/api/uploads/profile-photo", requireAuth, async (req, res, next) => {
+    try {
+      deleteFileIfExists(req.user!.profilePhotoUrl);
+      const updated = await storage.updateUser(req.user!.id, { profilePhotoUrl: null } as any);
+      if (!updated) return res.status(404).json({ message: "Usuario no encontrado" });
+      const { password, totpSecret, ...safeUser } = updated;
+      res.json(safeUser);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/uploads/company-logo", requireRole("COMPANY"), (req, res, next) => {
+    uploadLogo.single("file")(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({ message: "El archivo es demasiado grande. Maximo 5MB." });
+        }
+        return res.status(400).json({ message: err.message || "Error al subir el archivo" });
+      }
+      if (!req.file) return res.status(400).json({ message: "No se ha proporcionado ningun archivo" });
+
+      const fileUrl = `/uploads/logos/${req.file.filename}`;
+      deleteFileIfExists(req.user!.companyLogoUrl);
+      storage.updateUser(req.user!.id, { companyLogoUrl: fileUrl } as any)
+        .then((updated) => {
+          if (!updated) return res.status(404).json({ message: "Usuario no encontrado" });
+          const { password, totpSecret, ...safeUser } = updated;
+          res.json(safeUser);
+        })
+        .catch(next);
+    });
+  });
+
+  app.delete("/api/uploads/company-logo", requireRole("COMPANY"), async (req, res, next) => {
+    try {
+      deleteFileIfExists(req.user!.companyLogoUrl);
+      const updated = await storage.updateUser(req.user!.id, { companyLogoUrl: null } as any);
+      if (!updated) return res.status(404).json({ message: "Usuario no encontrado" });
+      const { password, totpSecret, ...safeUser } = updated;
+      res.json(safeUser);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/uploads/cv", requireRole("ALUMNI"), (req, res, next) => {
+    uploadCv.single("file")(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({ message: "El archivo es demasiado grande. Maximo 10MB." });
+        }
+        return res.status(400).json({ message: err.message || "Error al subir el archivo" });
+      }
+      if (!req.file) return res.status(400).json({ message: "No se ha proporcionado ningun archivo" });
+
+      const fileUrl = `/uploads/cvs/${req.file.filename}`;
+      deleteFileIfExists(req.user!.cvUrl);
+      storage.updateUser(req.user!.id, { cvUrl: fileUrl } as any)
+        .then((updated) => {
+          if (!updated) return res.status(404).json({ message: "Usuario no encontrado" });
+          const { password, totpSecret, ...safeUser } = updated;
+          res.json(safeUser);
+        })
+        .catch(next);
+    });
+  });
+
+  app.delete("/api/uploads/cv", requireRole("ALUMNI"), async (req, res, next) => {
+    try {
+      deleteFileIfExists(req.user!.cvUrl);
+      const updated = await storage.updateUser(req.user!.id, { cvUrl: null } as any);
+      if (!updated) return res.status(404).json({ message: "Usuario no encontrado" });
+      const { password, totpSecret, ...safeUser } = updated;
+      res.json(safeUser);
     } catch (err) {
       next(err);
     }
