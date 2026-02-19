@@ -7,7 +7,7 @@ import type { JobOffer, Application, User } from "@shared/schema";
 import { FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
 import {
   Briefcase, Search, User as UserIcon, FileText, LogOut, Loader2, MapPin,
-  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X
+  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X, ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CvBuilder } from "@/components/cv-builder";
 
 const statusLabels: Record<string, string> = {
   PENDING: "Pendiente",
@@ -160,12 +161,15 @@ export default function AlumniDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-lg grid-cols-4">
             <TabsTrigger value="jobs" className="gap-2" data-testid="tab-jobs">
               <Search className="w-4 h-4" /> Ofertas
             </TabsTrigger>
             <TabsTrigger value="applications" className="gap-2" data-testid="tab-applications">
               <FileText className="w-4 h-4" /> Candidaturas
+            </TabsTrigger>
+            <TabsTrigger value="cv" className="gap-2" data-testid="tab-cv">
+              <ClipboardList className="w-4 h-4" /> Mi CV
             </TabsTrigger>
             <TabsTrigger value="profile" className="gap-2" data-testid="tab-profile">
               <UserIcon className="w-4 h-4" /> Perfil
@@ -359,6 +363,16 @@ export default function AlumniDashboard() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="cv" className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold mb-1">Mi CV dinámico</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Construye tu CV de forma estructurada. Las empresas podrán ver esta información cuando te postules a sus ofertas.
+              </p>
+            </div>
+            <CvBuilder />
           </TabsContent>
 
           <TabsContent value="profile" className="space-y-6">

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, timestamp, integer, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, timestamp, integer, pgEnum, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   passwordResetExpires: timestamp("password_reset_expires"),
   totpSecret: text("totp_secret"),
   totpEnabled: boolean("totp_enabled").notNull().default(false),
+  cvData: jsonb("cv_data"),
+  cvLastUpdatedAt: timestamp("cv_last_updated_at"),
+  cvReminderSentAt: timestamp("cv_reminder_sent_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -65,6 +68,8 @@ export const jobOffers = pgTable("job_offers", {
   familiaProfesional: text("familia_profesional"),
   cicloFormativo: text("ciclo_formativo"),
   active: boolean("active").notNull().default(true),
+  expiresAt: timestamp("expires_at"),
+  expiryReminderSentAt: timestamp("expiry_reminder_sent_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -116,6 +121,7 @@ export const insertJobOfferSchema = createInsertSchema(jobOffers).omit({
   companyId: true,
   createdAt: true,
   active: true,
+  expiryReminderSentAt: true,
 });
 
 export const insertApplicationSchema = createInsertSchema(applications).omit({
@@ -156,6 +162,40 @@ export const smtpSettingsSchema = z.object({
   secure: z.boolean(),
   enabled: z.boolean(),
 });
+
+export const cvEducationSchema = z.object({
+  institution: z.string(),
+  title: z.string(),
+  startYear: z.number(),
+  endYear: z.number().optional(),
+  description: z.string().optional(),
+});
+
+export const cvExperienceSchema = z.object({
+  company: z.string(),
+  position: z.string(),
+  startDate: z.string(),
+  endDate: z.string().optional(),
+  current: z.boolean().optional(),
+  description: z.string().optional(),
+});
+
+export const cvLanguageSchema = z.object({
+  language: z.string(),
+  level: z.string(),
+});
+
+export const cvDataSchema = z.object({
+  education: z.array(cvEducationSchema).optional().default([]),
+  experience: z.array(cvExperienceSchema).optional().default([]),
+  languages: z.array(cvLanguageSchema).optional().default([]),
+  additionalInfo: z.string().optional().default(""),
+});
+
+export type CvData = z.infer<typeof cvDataSchema>;
+export type CvEducation = z.infer<typeof cvEducationSchema>;
+export type CvExperience = z.infer<typeof cvExperienceSchema>;
+export type CvLanguage = z.infer<typeof cvLanguageSchema>;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;

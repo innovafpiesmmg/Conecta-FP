@@ -12,8 +12,9 @@ import {
   registerAlumniSchema, registerCompanySchema, loginSchema,
   insertJobOfferSchema, insertApplicationSchema,
   updateProfileAlumniSchema, updateProfileCompanySchema,
-  smtpSettingsSchema
+  smtpSettingsSchema, cvDataSchema
 } from "@shared/schema";
+import type { User } from "@shared/schema";
 import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail } from "./email";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
@@ -449,7 +450,11 @@ export async function registerRoutes(
 
   app.post("/api/jobs", requireRole("COMPANY"), async (req, res, next) => {
     try {
-      const parsed = insertJobOfferSchema.parse(req.body);
+      const body = { ...req.body };
+      if (body.expiresAt && typeof body.expiresAt === "string") {
+        body.expiresAt = new Date(body.expiresAt);
+      }
+      const parsed = insertJobOfferSchema.parse(body);
       const job = await storage.createJob(req.user!.id, parsed);
       res.status(201).json(job);
     } catch (err: any) {
@@ -495,6 +500,70 @@ export async function registerRoutes(
       res.status(201).json(app);
     } catch (err: any) {
       if (err.name === "ZodError") return res.status(400).json({ message: "Datos invalidos", errors: err.errors });
+      next(err);
+    }
+  });
+
+  // ============ CV BUILDER ROUTES ============
+
+  app.get("/api/cv", requireRole("ALUMNI"), async (req, res, next) => {
+    try {
+      const user = req.user as User;
+      res.json({ cvData: user.cvData || null, cvLastUpdatedAt: user.cvLastUpdatedAt || null });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.put("/api/cv", requireRole("ALUMNI"), async (req, res, next) => {
+    try {
+      const parsed = cvDataSchema.parse(req.body);
+      const updated = await storage.updateUserCv(req.user!.id, parsed);
+      res.json({ cvData: updated.cvData, cvLastUpdatedAt: updated.cvLastUpdatedAt });
+    } catch (err: any) {
+      if (err.name === "ZodError") return res.status(400).json({ message: "Datos del CV inválidos", errors: err.errors });
+      next(err);
+    }
+  });
+
+  app.get("/api/cv/:alumniId", requireAuth, async (req, res, next) => {
+    try {
+      const user = req.user as User;
+      const alumniId = req.params.alumniId;
+      if (user.role === "ALUMNI" && user.id !== alumniId) {
+        return res.status(403).json({ message: "No autorizado" });
+      }
+      if (user.role === "COMPANY") {
+        const hasApplication = await storage.hasApplicationFromAlumni(alumniId, user.id);
+        if (!hasApplication) {
+          return res.status(403).json({ message: "Solo puedes ver el CV de candidatos que se han postulado a tus ofertas" });
+        }
+      }
+      const alumni = await storage.getUser(alumniId);
+      if (!alumni || alumni.role !== "ALUMNI") {
+        return res.status(404).json({ message: "Candidato no encontrado" });
+      }
+      res.json({ cvData: alumni.cvData || null, cvLastUpdatedAt: alumni.cvLastUpdatedAt || null });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // ============ JOB EXPIRY ROUTES ============
+
+  app.patch("/api/jobs/:id/extend", requireRole("COMPANY"), async (req, res, next) => {
+    try {
+      const job = await storage.getJob(req.params.id);
+      if (!job || job.companyId !== req.user!.id) {
+        return res.status(403).json({ message: "No autorizado" });
+      }
+      const { expiresAt } = req.body;
+      if (!expiresAt) return res.status(400).json({ message: "Fecha de expiración requerida" });
+      const newDate = new Date(expiresAt);
+      if (newDate <= new Date()) return res.status(400).json({ message: "La fecha de expiración debe ser futura" });
+      const updated = await storage.extendJobExpiry(req.params.id, newDate);
+      res.json(updated);
+    } catch (err) {
       next(err);
     }
   });

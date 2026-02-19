@@ -29,6 +29,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TotpSecuritySection } from "@/components/totp-security";
+import { CvBuilder } from "@/components/cv-builder";
+import { CalendarDays } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
   PENDING: "Pendiente",
@@ -222,6 +224,10 @@ export default function CompanyDashboard() {
 function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean; onToggle: () => void }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [viewCvAlumniId, setViewCvAlumniId] = useState<string | null>(null);
+  const [viewCvAlumniName, setViewCvAlumniName] = useState("");
+  const [showExtend, setShowExtend] = useState(false);
+  const [newExpiryDate, setNewExpiryDate] = useState("");
 
   const { data: applications = [], isLoading } = useQuery<ApplicationWithAlumni[]>({
     queryKey: ["/api/jobs", job.id, "applications"],
@@ -237,6 +243,20 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
       queryClient.invalidateQueries({ queryKey: ["/api/jobs", job.id, "applications"] });
       toast({ title: "Estado actualizado" });
     },
+  });
+
+  const extendMutation = useMutation({
+    mutationFn: async (expiresAt: string) => {
+      const res = await apiRequest("PATCH", `/api/jobs/${job.id}/extend`, { expiresAt });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs/mine"] });
+      toast({ title: "Fecha de expiración actualizada" });
+      setShowExtend(false);
+      setNewExpiryDate("");
+    },
+    onError: () => toast({ title: "Error al ampliar la fecha", variant: "destructive" }),
   });
 
   return (
@@ -265,13 +285,45 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                 </span>
               )}
               <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(job.createdAt).toLocaleDateString("es-ES")}</span>
+              {job.expiresAt && (
+                <span className={`flex items-center gap-1 ${new Date(job.expiresAt) < new Date() ? "text-destructive" : ""}`}>
+                  <CalendarDays className="w-3 h-3" />
+                  {new Date(job.expiresAt) < new Date() ? "Expirada" : `Expira: ${new Date(job.expiresAt).toLocaleDateString("es-ES")}`}
+                </span>
+              )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="gap-1" onClick={onToggle} data-testid={`button-toggle-candidates-${job.id}`}>
-            <Users className="w-4 h-4" />
-            Candidatos
-            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {job.expiresAt && (
+              <Dialog open={showExtend} onOpenChange={setShowExtend}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1" data-testid={`button-extend-expiry-${job.id}`}>
+                    <CalendarDays className="w-3.5 h-3.5" /> Ampliar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Ampliar fecha de expiración</DialogTitle>
+                    <DialogDescription>Selecciona la nueva fecha de expiración para "{job.title}"</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3 py-2">
+                    <Label>Nueva fecha de expiración</Label>
+                    <Input type="date" value={newExpiryDate} onChange={e => setNewExpiryDate(e.target.value)} min={new Date().toISOString().split("T")[0]} data-testid="input-new-expiry-date" />
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={() => extendMutation.mutate(newExpiryDate)} disabled={!newExpiryDate || extendMutation.isPending} data-testid="button-confirm-extend">
+                      {extendMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ampliar"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+            <Button variant="ghost" size="sm" className="gap-1" onClick={onToggle} data-testid={`button-toggle-candidates-${job.id}`}>
+              <Users className="w-4 h-4" />
+              Candidatos
+              {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -327,11 +379,22 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                           <FileText className="w-3 h-3 inline mr-1" />{app.coverLetter}
                         </p>
                       )}
-                      {app.alumni?.cvUrl && (
-                        <a href={`/api/uploads/cv/${app.alumni.cvUrl.split("/").pop()}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary flex items-center gap-1 mt-1">
-                          <ExternalLink className="w-3 h-3" /> Ver CV
-                        </a>
-                      )}
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        {app.alumni?.cvUrl && (
+                          <a href={`/api/uploads/cv/${app.alumni.cvUrl.split("/").pop()}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary flex items-center gap-1">
+                            <ExternalLink className="w-3 h-3" /> Ver CV (PDF)
+                          </a>
+                        )}
+                        {!!(app.alumni?.cvData) && (
+                          <button
+                            onClick={() => { setViewCvAlumniId(app.alumni!.id); setViewCvAlumniName(app.alumni!.name); }}
+                            className="text-xs text-primary flex items-center gap-1"
+                            data-testid={`button-view-dynamic-cv-${app.id}`}
+                          >
+                            <FileText className="w-3 h-3" /> Ver CV dinámico
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <Select
                       value={app.status}
@@ -354,6 +417,16 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
           )}
         </div>
       )}
+
+      <Dialog open={!!viewCvAlumniId} onOpenChange={(open) => { if (!open) setViewCvAlumniId(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>CV de {viewCvAlumniName}</DialogTitle>
+            <DialogDescription>CV dinámico del candidato</DialogDescription>
+          </DialogHeader>
+          {viewCvAlumniId && <CvBuilder readOnly alumniId={viewCvAlumniId} />}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -368,6 +441,7 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
   const [requirements, setRequirements] = useState("");
   const [familiaProfesional, setFamiliaProfesional] = useState("");
   const [cicloFormativo, setCicloFormativo] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
 
   const ciclosDisponibles = familiaProfesional ? CICLOS_POR_FAMILIA[familiaProfesional] || [] : [];
 
@@ -379,6 +453,7 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
       salaryMax: salaryMax ? parseInt(salaryMax) : undefined,
       familiaProfesional: familiaProfesional || undefined,
       cicloFormativo: cicloFormativo || undefined,
+      expiresAt: expiresAt || undefined,
     });
   };
 
@@ -464,6 +539,11 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
       <div className="space-y-2">
         <Label>Requisitos</Label>
         <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} placeholder="Experiencia, tecnologías, idiomas..." rows={2} data-testid="textarea-job-requirements" />
+      </div>
+      <div className="space-y-2">
+        <Label>Fecha de expiración (opcional)</Label>
+        <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} min={new Date().toISOString().split("T")[0]} data-testid="input-job-expires-at" />
+        <p className="text-xs text-muted-foreground">Si se establece, la oferta se desactivará automáticamente en esta fecha. Recibirás un aviso por correo 7 días antes.</p>
       </div>
       <DialogFooter>
         <Button type="submit" disabled={isPending} data-testid="button-submit-job">

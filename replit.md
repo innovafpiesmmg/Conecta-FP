@@ -54,6 +54,9 @@ shared/
 - **Password Reset**: Forgot password flow sends reset link via email (1 hour expiry)
 - **TOTP 2FA**: Optional two-factor authentication via authenticator apps (Google Authenticator, Authy, etc.)
 - **Admin SMTP Config**: Admin can configure SMTP server, test email delivery, and enable/disable email sending
+- **Dynamic CV Builder**: Alumni can build structured CVs (education, experience, languages, additional info) stored as JSONB
+- **Annual CV Reminders**: Scheduler sends email reminders to alumni who haven't updated CV in 1+ year
+- **Job Expiry System**: Companies can set expiry dates on job offers; auto-deactivated when expired; 7-day email reminders
 
 ## Important Notes
 - DB column `university` stores "Centro de FP" (kept for backwards compat)
@@ -104,6 +107,14 @@ shared/
 - GET /api/jobs/:jobId/applications - Job applicants (COMPANY only)
 - POST /api/applications - Apply to job (ALUMNI/Titulado FP only)
 - PATCH /api/applications/:id/status - Update application status (COMPANY only)
+
+### CV Builder
+- GET /api/cv - Get own CV data (ALUMNI only)
+- PUT /api/cv - Save/update CV data (ALUMNI only)
+- GET /api/cv/:alumniId - View alumni CV (authenticated; companies only if alumni applied to their jobs)
+
+### Job Expiry
+- PATCH /api/jobs/:id/extend - Extend job expiry date (COMPANY only, own jobs)
 
 ### Admin
 - GET /api/admin/stats - Platform statistics (ADMIN only)

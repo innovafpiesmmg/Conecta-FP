@@ -1,9 +1,10 @@
-import { eq, and, desc, count, sql } from "drizzle-orm";
+import { eq, and, desc, count, sql, lt, isNull, isNotNull, lte } from "drizzle-orm";
 import { db } from "./db";
 import {
   users, jobOffers, applications, smtpSettings,
   type User, type InsertUser, type JobOffer, type InsertJobOffer,
-  type Application, type InsertApplication, type SmtpSettings
+  type Application, type InsertApplication, type SmtpSettings,
+  type CvData
 } from "@shared/schema";
 
 export interface IStorage {
@@ -42,6 +43,20 @@ export interface IStorage {
   // Email verification
   getUserByVerificationToken(token: string): Promise<User | undefined>;
   getUserByResetToken(token: string): Promise<User | undefined>;
+
+  // CV builder
+  updateUserCv(id: string, cvData: CvData): Promise<User>;
+  hasApplicationFromAlumni(alumniId: string, companyId: string): Promise<boolean>;
+
+  // Job expiry
+  extendJobExpiry(id: string, expiresAt: Date): Promise<JobOffer>;
+  getExpiringJobs(daysBeforeExpiry: number): Promise<(JobOffer & { company?: User })[]>;
+  getExpiredJobs(): Promise<JobOffer[]>;
+
+  // CV reminder
+  getAlumniNeedingCvReminder(): Promise<User[]>;
+  markCvReminderSent(userId: string): Promise<void>;
+  markExpiryReminderSent(jobId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -137,6 +152,9 @@ export class DatabaseStorage implements IStorage {
         skills: alumni.skills,
         role: alumni.role,
         profilePublic: alumni.profilePublic,
+        profilePhotoUrl: alumni.profilePhotoUrl,
+        cvData: alumni.cvData,
+        cvLastUpdatedAt: alumni.cvLastUpdatedAt,
         password: "",
         companyName: null,
         companyDescription: null,
@@ -245,6 +263,79 @@ export class DatabaseStorage implements IStorage {
   async getUserByResetToken(token: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
     return user;
+  }
+
+  async updateUserCv(id: string, cvData: CvData): Promise<User> {
+    const [user] = await db.update(users).set({
+      cvData: cvData as any,
+      cvLastUpdatedAt: new Date(),
+      cvReminderSentAt: null,
+    }).where(eq(users.id, id)).returning();
+    return user;
+  }
+
+  async hasApplicationFromAlumni(alumniId: string, companyId: string): Promise<boolean> {
+    const result = await db.select({ id: applications.id })
+      .from(applications)
+      .innerJoin(jobOffers, eq(applications.jobOfferId, jobOffers.id))
+      .where(and(eq(applications.alumniId, alumniId), eq(jobOffers.companyId, companyId)))
+      .limit(1);
+    return result.length > 0;
+  }
+
+  async extendJobExpiry(id: string, expiresAt: Date): Promise<JobOffer> {
+    const [job] = await db.update(jobOffers).set({
+      expiresAt,
+      expiryReminderSentAt: null,
+    }).where(eq(jobOffers.id, id)).returning();
+    return job;
+  }
+
+  async getExpiringJobs(daysBeforeExpiry: number): Promise<(JobOffer & { company?: User })[]> {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + daysBeforeExpiry);
+    const jobs = await db.select().from(jobOffers)
+      .where(and(
+        eq(jobOffers.active, true),
+        isNotNull(jobOffers.expiresAt),
+        lte(jobOffers.expiresAt, targetDate),
+        isNull(jobOffers.expiryReminderSentAt)
+      ));
+    const result: (JobOffer & { company?: User })[] = [];
+    for (const job of jobs) {
+      const [company] = await db.select().from(users).where(eq(users.id, job.companyId));
+      result.push({ ...job, company: company || undefined });
+    }
+    return result;
+  }
+
+  async getExpiredJobs(): Promise<JobOffer[]> {
+    const now = new Date();
+    return db.select().from(jobOffers)
+      .where(and(
+        eq(jobOffers.active, true),
+        isNotNull(jobOffers.expiresAt),
+        lte(jobOffers.expiresAt, now)
+      ));
+  }
+
+  async getAlumniNeedingCvReminder(): Promise<User[]> {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    return db.select().from(users).where(and(
+      eq(users.role, "ALUMNI"),
+      isNotNull(users.cvLastUpdatedAt),
+      lte(users.cvLastUpdatedAt, oneYearAgo),
+      isNull(users.cvReminderSentAt)
+    ));
+  }
+
+  async markCvReminderSent(userId: string): Promise<void> {
+    await db.update(users).set({ cvReminderSentAt: new Date() }).where(eq(users.id, userId));
+  }
+
+  async markExpiryReminderSent(jobId: string): Promise<void> {
+    await db.update(jobOffers).set({ expiryReminderSentAt: new Date() }).where(eq(jobOffers.id, jobId));
   }
 }
 

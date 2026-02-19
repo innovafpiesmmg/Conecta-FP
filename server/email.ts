@@ -80,6 +80,50 @@ export async function sendVerificationEmail(to: string, token: string, baseUrl: 
   );
 }
 
+export async function sendCvUpdateReminderEmail(to: string, name: string, baseUrl: string): Promise<boolean> {
+  const dashboardUrl = `${baseUrl}/alumni`;
+  return sendEmail(
+    to,
+    "Conecta FP - Recordatorio: Actualiza tu CV",
+    `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Hola ${name}, es hora de actualizar tu CV</h2>
+      <p>Ha pasado más de un año desde la última vez que actualizaste tu CV en <strong>Conecta FP</strong>.</p>
+      <p>Mantener tu CV actualizado aumenta tus posibilidades de ser seleccionado por las empresas que buscan talento FP.</p>
+      <p style="margin: 30px 0;">
+        <a href="${dashboardUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+          Actualizar mi CV
+        </a>
+      </p>
+      <p style="color: #666; font-size: 14px;">Te recomendamos añadir nueva experiencia, formación o habilidades que hayas adquirido.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+    </div>`
+  );
+}
+
+export async function sendJobExpiryReminderEmail(to: string, companyName: string, jobTitle: string, expiresAt: Date, baseUrl: string): Promise<boolean> {
+  const dashboardUrl = `${baseUrl}/company`;
+  const formattedDate = expiresAt.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  return sendEmail(
+    to,
+    `Conecta FP - Tu oferta "${jobTitle}" expira pronto`,
+    `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Tu oferta de empleo expira pronto</h2>
+      <p>Hola ${companyName},</p>
+      <p>Tu oferta de empleo <strong>"${jobTitle}"</strong> expirará el <strong>${formattedDate}</strong>.</p>
+      <p>Si deseas mantenerla activa, puedes ampliar la fecha de expiración desde tu panel de empresa.</p>
+      <p style="margin: 30px 0;">
+        <a href="${dashboardUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+          Gestionar mis ofertas
+        </a>
+      </p>
+      <p style="color: #666; font-size: 14px;">Si no amplías la fecha, la oferta se desactivará automáticamente cuando expire.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+    </div>`
+  );
+}
+
 export async function sendPasswordResetEmail(to: string, token: string, baseUrl: string): Promise<boolean> {
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
   return sendEmail(
