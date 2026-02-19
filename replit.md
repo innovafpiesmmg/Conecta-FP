@@ -62,6 +62,15 @@ shared/
 - **Annual CV Reminders**: Scheduler sends email reminders to alumni who haven't updated CV in 1+ year
 - **Job Expiry System**: Companies can set expiry dates on job offers; auto-deactivated when expired; 7-day email reminders
 
+## Deployment (Ubuntu Server)
+- `install.sh` autoinstaller script for Ubuntu 22.04/24.04
+- Uses systemd (not PM2) for process management
+- Config stored in `/etc/conectafp/env` (survives git pull)
+- Nginx as reverse proxy on port 80 -> localhost:5000
+- Optional Cloudflare Tunnel support for HTTPS
+- `SECURE_COOKIES` env var controls cookie secure flag (false for HTTP, true for HTTPS)
+- `trust proxy` enabled in Express for correct IP forwarding behind nginx
+
 ## Important Notes
 - DB column `university` stores "Centro de FP" (kept for backwards compat)
 - DB column `graduation_year` stores "Ano de promocion" (kept for backwards compat)
