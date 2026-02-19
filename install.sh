@@ -32,7 +32,7 @@ APP_PORT="5000"
 APP_USER="conectafp"
 DB_NAME="conectafp"
 DB_USER="conectafp"
-GITHUB_REPO="https://github.com/USUARIO/conectafp.git"  # <-- CAMBIAR POR TU REPO
+GITHUB_REPO="https://github.com/innovafpiesmmg/Conecta-FP.git"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Verificaciones iniciales
@@ -74,20 +74,6 @@ if [ -f "$CONFIG_DIR/env" ]; then
 else
     print_status "Instalación nueva detectada"
     echo ""
-fi
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Preguntar URL del repositorio
-# ─────────────────────────────────────────────────────────────────────────────
-if [ "$GITHUB_REPO" = "https://github.com/USUARIO/conectafp.git" ]; then
-    echo -e "${YELLOW}No se ha configurado la URL del repositorio en el script.${NC}"
-    read -p "Introduce la URL del repositorio Git: " USER_REPO
-    if [ -n "$USER_REPO" ]; then
-        GITHUB_REPO="$USER_REPO"
-    else
-        print_error "Se necesita una URL de repositorio válida"
-        exit 1
-    fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
