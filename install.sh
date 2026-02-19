@@ -77,6 +77,16 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 1. Dependencias del sistema
+# ─────────────────────────────────────────────────────────────────────────────
+print_header "1/7 - Instalando dependencias del sistema"
+
+apt-get update -qq
+apt-get install -y -qq ca-certificates curl wget gnupg git openssl nginx postgresql postgresql-contrib build-essential
+apt-mark manual nginx
+print_success "Dependencias del sistema instaladas"
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Generar credenciales (solo instalación nueva)
 # ─────────────────────────────────────────────────────────────────────────────
 if [ "$IS_UPDATE" = false ]; then
@@ -84,16 +94,6 @@ if [ "$IS_UPDATE" = false ]; then
     SESSION_SECRET=$(openssl rand -base64 32)
     print_success "Credenciales generadas automáticamente"
 fi
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 1. Dependencias del sistema
-# ─────────────────────────────────────────────────────────────────────────────
-print_header "1/7 - Instalando dependencias del sistema"
-
-apt-get update -qq
-apt-get install -y -qq curl git nginx postgresql postgresql-contrib build-essential
-apt-mark manual nginx
-print_success "Dependencias del sistema instaladas"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. Node.js 20.x
