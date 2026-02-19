@@ -190,8 +190,10 @@ export default function Landing() {
             <span>Conecta FP - Portal de Empleo Privado</span>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
+            <Link href="/terms">
+              <span className="cursor-pointer hover:text-foreground transition-colors" data-testid="link-terms-footer">Terminos y Privacidad</span>
+            </Link>
             <span>Protegido por RGPD</span>
-            <span>Datos cifrados</span>
           </div>
         </div>
       </footer>

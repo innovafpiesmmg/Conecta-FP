@@ -186,7 +186,9 @@ export default function Register() {
                     onCheckedChange={(checked) => alumniForm.setValue("consentGiven", checked === true ? true : undefined as any, { shouldValidate: true })}
                   />
                   <label htmlFor="alumni-consent" className="text-sm leading-relaxed cursor-pointer">
-                    Acepto el tratamiento de mis datos personales conforme al RGPD. Entiendo que mis datos de perfil solo seran visibles para las empresas en las ofertas a las que me postule voluntariamente. Puedo ejercer mi derecho al olvido en cualquier momento.
+                    He leido y acepto los{" "}
+                    <Link href="/terms"><span className="text-primary underline font-medium" data-testid="link-terms-alumni">Terminos, Condiciones y Politica de Privacidad</span></Link>.
+                    Entiendo que mis datos de perfil solo seran visibles para las empresas en las ofertas a las que me postule voluntariamente. Puedo ejercer mi derecho al olvido en cualquier momento.
                   </label>
                 </div>
                 {alumniForm.formState.errors.consentGiven && <p className="text-sm text-destructive">{alumniForm.formState.errors.consentGiven.message}</p>}
@@ -238,7 +240,9 @@ export default function Register() {
                     onCheckedChange={(checked) => companyForm.setValue("consentGiven", checked === true ? true : undefined as any, { shouldValidate: true })}
                   />
                   <label htmlFor="company-consent" className="text-sm leading-relaxed cursor-pointer">
-                    Acepto el tratamiento de datos conforme al RGPD. Me comprometo a utilizar los datos de los candidatos exclusivamente para los procesos de seleccion y a no compartirlos con terceros.
+                    He leido y acepto los{" "}
+                    <Link href="/terms"><span className="text-primary underline font-medium" data-testid="link-terms-company">Terminos, Condiciones y Politica de Privacidad</span></Link>.
+                    Me comprometo a utilizar los datos de los candidatos exclusivamente para los procesos de seleccion y a no compartirlos con terceros.
                   </label>
                 </div>
                 {companyForm.formState.errors.consentGiven && <p className="text-sm text-destructive">{companyForm.formState.errors.consentGiven.message}</p>}

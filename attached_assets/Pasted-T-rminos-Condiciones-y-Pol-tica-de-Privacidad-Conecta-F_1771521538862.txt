@@ -1,0 +1,57 @@
+Términos, Condiciones y Política de Privacidad: Conecta-FP
+
+Bienvenido/a a Conecta-FP. El uso de esta plataforma implica la aceptación íntegra de los términos y condiciones aquí descritos. Este documento constituye el marco legal que garantiza la seguridad y transparencia en la relación entre los centros educativos, el alumnado titulado y el tejido empresarial.
+
+1. Responsable del Tratamiento de Datos
+
+El Responsable del tratamiento de sus datos personales es el Centro de Enseñanza IES MANUEL MARTÍN GONZÁLEZ, con domicilio en el Sur de Tenerife, conforme a las directrices de la Consejería de Educación, Formación Profesional, Actividad Física y Deportes del Gobierno de Canarias.
+
+2. Finalidad del Tratamiento
+
+La recogida y tratamiento de datos personales a través de esta plataforma tiene como única finalidad:
+
+Facilitar la inserción laboral de los titulados de FP.
+
+Gestionar la relación entre empresas y candidatos en el marco de la nueva FP Dual.
+
+Proporcionar analíticas de empleabilidad (de forma agregada y anónima) para la mejora de la oferta formativa.
+
+3. Base Jurídica y Consentimiento (RGPD)
+
+En cumplimiento del Reglamento General de Protección de Datos (RGPD - UE 2016/679) y la Ley Orgánica 3/2018 (LOPDGDD), el tratamiento de sus datos se basa en su consentimiento explícito. Al marcar la casilla de aceptación, usted autoriza el tratamiento de sus datos conforme a los fines aquí descritos.
+
+4. Política de Visibilidad y Privacidad (Control del Usuario)
+
+Para garantizar la soberanía del usuario sobre su propia información, Conecta-FP Sur 2026 opera bajo un modelo de postulación voluntaria:
+
+Privacidad del Perfil: Los datos personales, de contacto y el portafolio del usuario no son públicos ni indexables por motores de búsqueda externos.
+
+Visibilidad Restringida: Su perfil solo será visible para una empresa específica en el momento en que usted decida postularse voluntariamente a una oferta publicada por dicha entidad.
+
+Acceso Empresarial: Las empresas registradas no podrán realizar búsquedas masivas de datos identificativos de los alumnos, salvo que el alumno haya iniciado previamente un proceso de contacto mediante la postulación.
+
+5. Derechos del Usuario (ARCO+)
+
+Usted tiene derecho a acceder, rectificar, limitar y portar sus datos. Especialmente, destacamos:
+
+Derecho al Olvido (Derecho de Supresión): Usted puede ejercer su derecho al olvido en cualquier momento. Al solicitar la supresión de su cuenta, todos sus datos personales, académicos y profesionales serán eliminados de forma definitiva e irreversible de nuestros servidores activos y copias de seguridad en un plazo máximo de 30 días.
+
+Revocación del Consentimiento: Puede retirar su consentimiento para el tratamiento de sus datos en cualquier momento sin que ello afecte a la licitud del tratamiento previo.
+
+6. Seguridad de la Información
+
+El sistema utiliza una arquitectura Express.js y base de datos PostgreSQL con cifrado en tránsito y en reposo. Se aplican políticas de seguridad a nivel de fila (Row Level Security) para asegurar que nadie acceda a datos para los que no tiene permiso explícito.
+
+7. Declaración de Aceptación
+
+Al registrarme en la plataforma y pulsar el botón de aceptación, declaro expresamente que:
+
+ACEPTO el tratamiento de mis datos personales conforme al marco del RGPD detallado anteriormente.
+
+ENTIENDO que mis datos de perfil solo serán visibles para las empresas en aquellas ofertas a las que me postule voluntariamente.
+
+RECONOZCO que puedo ejercer mi derecho al olvido y solicitar la eliminación total de mi información en cualquier momento a través del panel de configuración de mi cuenta o mediante comunicación directa al Responsable del Tratamiento.
+
+Fecha de última actualización: Febrero de 2026
+
+Proyecto: Conecta-FP | Red de Innovación de la FP Canaria IES MANUEL MARTÍN GONZÁLEZ
