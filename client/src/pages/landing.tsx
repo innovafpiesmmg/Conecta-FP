@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useAuth } from "@/lib/auth";
-import { Briefcase, Shield, Users, GraduationCap, Building2, ArrowRight, Lock, Eye, Trash2 } from "lucide-react";
+import { Briefcase, Shield, Users, GraduationCap, Building2, ArrowRight, Lock, Eye, Trash2, MessageSquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -193,6 +193,12 @@ export default function Landing() {
             <span>Conecta FP - Portal de Empleo Privado</span>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
+            <Link href="/sugerencias">
+              <span className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1" data-testid="link-suggestions-footer">
+                <MessageSquarePlus className="w-3.5 h-3.5" />
+                Sugerencias
+              </span>
+            </Link>
             <Link href="/terms">
               <span className="cursor-pointer hover:text-foreground transition-colors" data-testid="link-terms-footer">Términos y Privacidad</span>
             </Link>

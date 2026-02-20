@@ -15,6 +15,7 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import Terms from "@/pages/terms";
 import Directory from "@/pages/directory";
+import Suggestions from "@/pages/suggestions";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -68,6 +69,7 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/terms" component={Terms} />
       <Route path="/directorio" component={Directory} />
+      <Route path="/sugerencias" component={Suggestions} />
       <Route path="/dashboard">{() => <ProtectedRoute component={AlumniDashboard} role="ALUMNI" />}</Route>
       <Route path="/company">{() => <ProtectedRoute component={CompanyDashboard} role="COMPANY" />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={AdminDashboard} role="ADMIN" />}</Route>

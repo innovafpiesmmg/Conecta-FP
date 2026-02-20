@@ -179,6 +179,67 @@ export async function sendApplicationStatusEmail(
   );
 }
 
+export async function sendSuggestionEmail(
+  senderName: string,
+  senderEmail: string,
+  category: string,
+  message: string
+): Promise<boolean> {
+  const categoryLabels: Record<string, string> = {
+    general: "Sugerencia General",
+    bug: "Reporte de Error",
+    feature: "Nueva Funcionalidad",
+    ux: "Mejora de Usabilidad",
+    other: "Otro",
+  };
+  const categoryLabel = categoryLabels[category] || category;
+  const date = new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  return sendEmail(
+    "conectafpcanarias@gmail.com",
+    `Conecta FP - Sugerencia: ${categoryLabel}`,
+    `<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 640px; margin: 0 auto; background-color: #ffffff;">
+      <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); padding: 32px 24px; border-radius: 8px 8px 0 0;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">
+          Nueva Sugerencia Recibida
+        </h1>
+        <p style="color: #dbeafe; margin: 8px 0 0; font-size: 14px;">${date}</p>
+      </div>
+
+      <div style="padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr>
+            <td style="padding: 10px 12px; background-color: #f8fafc; border: 1px solid #e5e7eb; font-weight: 600; color: #374151; width: 140px; font-size: 14px;">Nombre</td>
+            <td style="padding: 10px 12px; border: 1px solid #e5e7eb; color: #1f2937; font-size: 14px;">${senderName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 12px; background-color: #f8fafc; border: 1px solid #e5e7eb; font-weight: 600; color: #374151; font-size: 14px;">Email</td>
+            <td style="padding: 10px 12px; border: 1px solid #e5e7eb; color: #1f2937; font-size: 14px;">
+              <a href="mailto:${senderEmail}" style="color: #2563eb; text-decoration: none;">${senderEmail}</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 12px; background-color: #f8fafc; border: 1px solid #e5e7eb; font-weight: 600; color: #374151; font-size: 14px;">Categoría</td>
+            <td style="padding: 10px 12px; border: 1px solid #e5e7eb; color: #1f2937; font-size: 14px;">
+              <span style="background-color: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: 500;">${categoryLabel}</span>
+            </td>
+          </tr>
+        </table>
+
+        <div style="margin-top: 16px;">
+          <h3 style="color: #374151; font-size: 15px; margin: 0 0 10px; font-weight: 600;">Mensaje:</h3>
+          <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; color: #1f2937; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${message}</div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">
+          Este mensaje fue enviado desde el formulario de sugerencias de Conecta FP
+        </p>
+      </div>
+    </div>`
+  );
+}
+
 export async function sendPasswordResetEmail(to: string, token: string, baseUrl: string): Promise<boolean> {
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
   return sendEmail(

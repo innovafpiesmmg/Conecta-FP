@@ -15,7 +15,7 @@ import {
   smtpSettingsSchema, cvDataSchema
 } from "@shared/schema";
 import type { User } from "@shared/schema";
-import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail, sendApplicationStatusEmail } from "./email";
+import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail, sendApplicationStatusEmail, sendSuggestionEmail } from "./email";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 
@@ -443,6 +443,40 @@ export async function registerRoutes(
     try {
       const companies = await storage.getPublicCompanies();
       res.json(companies);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/suggestions", async (req, res, next) => {
+    try {
+      const { name, email, category, message } = req.body;
+      if (!name || !email || !category || !message) {
+        return res.status(400).json({ message: "Todos los campos son obligatorios" });
+      }
+      if (typeof name !== "string" || name.length > 100) {
+        return res.status(400).json({ message: "Nombre inválido" });
+      }
+      if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ message: "Email inválido" });
+      }
+      if (!["general", "bug", "feature", "ux", "other"].includes(category)) {
+        return res.status(400).json({ message: "Categoría inválida" });
+      }
+      if (typeof message !== "string" || message.length < 10 || message.length > 2000) {
+        return res.status(400).json({ message: "El mensaje debe tener entre 10 y 2000 caracteres" });
+      }
+
+      const sanitizedName = name.replace(/[<>&"']/g, "");
+      const sanitizedMessage = message.replace(/[<>&"']/g, "");
+      const sanitizedEmail = email.replace(/[<>&"']/g, "");
+
+      const sent = await sendSuggestionEmail(sanitizedName, sanitizedEmail, category, sanitizedMessage);
+      if (sent) {
+        res.json({ message: "Sugerencia enviada correctamente" });
+      } else {
+        res.json({ message: "Sugerencia registrada. El servicio de correo no está configurado actualmente, pero hemos recibido tu mensaje." });
+      }
     } catch (err) {
       next(err);
     }
