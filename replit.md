@@ -145,6 +145,7 @@ shared/
 - DELETE /api/admin/users/:id - Delete user (ADMIN only)
 - PATCH /api/admin/jobs/:id/toggle - Toggle job active status (ADMIN only)
 - DELETE /api/admin/jobs/:id - Delete job (ADMIN only)
+- GET /api/admin/metrics - Analytics metrics by familia, ciclo, location (ADMIN only)
 - GET /api/admin/smtp - Get SMTP configuration (ADMIN only)
 - POST /api/admin/smtp - Save SMTP configuration (ADMIN only)
 - POST /api/admin/smtp/test - Send test email (ADMIN only)

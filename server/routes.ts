@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import multer from "multer";
 import { storage } from "./storage";
+import { pool } from "./db";
 import { setupAuth, requireAuth, requireRole } from "./auth";
 import {
   registerAlumniSchema, registerCompanySchema, loginSchema,
@@ -651,6 +652,66 @@ export async function registerRoutes(
     try {
       const stats = await storage.getStats();
       res.json(stats);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.get("/api/admin/metrics", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const jobsByFamilia = await pool.query(`
+        SELECT familia_profesional AS name, COUNT(*) AS job_count,
+          COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
+          COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.familia_profesional = jo.familia_profesional), 0) AS application_count
+        FROM job_offers jo
+        WHERE familia_profesional IS NOT NULL AND familia_profesional != ''
+        GROUP BY familia_profesional
+        ORDER BY job_count DESC
+      `);
+
+      const jobsByCiclo = await pool.query(`
+        SELECT ciclo_formativo AS name, familia_profesional AS familia, COUNT(*) AS job_count,
+          COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
+          COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.ciclo_formativo = jo.ciclo_formativo), 0) AS application_count
+        FROM job_offers jo
+        WHERE ciclo_formativo IS NOT NULL AND ciclo_formativo != ''
+        GROUP BY ciclo_formativo, familia_profesional
+        ORDER BY job_count DESC
+      `);
+
+      const jobsByLocation = await pool.query(`
+        SELECT location AS name, COUNT(*) AS job_count,
+          COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
+          COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.location = jo.location), 0) AS application_count
+        FROM job_offers jo
+        WHERE location IS NOT NULL AND location != ''
+        GROUP BY location
+        ORDER BY job_count DESC
+      `);
+
+      const alumniByFamilia = await pool.query(`
+        SELECT familia_profesional AS name, COUNT(*) AS alumni_count
+        FROM users
+        WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND familia_profesional != ''
+        GROUP BY familia_profesional
+        ORDER BY alumni_count DESC
+      `);
+
+      const alumniByCiclo = await pool.query(`
+        SELECT ciclo_formativo AS name, familia_profesional AS familia, COUNT(*) AS alumni_count
+        FROM users
+        WHERE role = 'ALUMNI' AND ciclo_formativo IS NOT NULL AND ciclo_formativo != ''
+        GROUP BY ciclo_formativo, familia_profesional
+        ORDER BY alumni_count DESC
+      `);
+
+      res.json({
+        jobsByFamilia: jobsByFamilia.rows.map(r => ({ name: r.name, jobCount: Number(r.job_count), activeJobs: Number(r.active_jobs), applicationCount: Number(r.application_count) })),
+        jobsByCiclo: jobsByCiclo.rows.map(r => ({ name: r.name, familia: r.familia, jobCount: Number(r.job_count), activeJobs: Number(r.active_jobs), applicationCount: Number(r.application_count) })),
+        jobsByLocation: jobsByLocation.rows.map(r => ({ name: r.name, jobCount: Number(r.job_count), activeJobs: Number(r.active_jobs), applicationCount: Number(r.application_count) })),
+        alumniByFamilia: alumniByFamilia.rows.map(r => ({ name: r.name, alumniCount: Number(r.alumni_count) })),
+        alumniByCiclo: alumniByCiclo.rows.map(r => ({ name: r.name, familia: r.familia, alumniCount: Number(r.alumni_count) })),
+      });
     } catch (err) {
       next(err);
     }

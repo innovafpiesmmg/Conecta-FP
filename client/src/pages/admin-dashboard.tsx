@@ -6,7 +6,8 @@ import type { JobOffer, User } from "@shared/schema";
 import {
   Shield, Users, Briefcase, FileText, LogOut, Loader2,
   Trash2, ToggleLeft, ToggleRight, Mail, Phone, Building2,
-  GraduationCap, MapPin, Eye, EyeOff, BarChart3, Settings, Send, MessageCircle
+  GraduationCap, MapPin, Eye, EyeOff, BarChart3, Settings, Send, MessageCircle,
+  TrendingUp, ChevronDown, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -163,6 +164,7 @@ export default function AdminDashboard() {
         <Tabs defaultValue="stats">
           <TabsList className="mb-6">
             <TabsTrigger value="stats" data-testid="tab-admin-stats"><BarChart3 className="w-4 h-4 mr-1" /> Resumen</TabsTrigger>
+            <TabsTrigger value="metrics" data-testid="tab-admin-metrics"><TrendingUp className="w-4 h-4 mr-1" /> Métricas</TabsTrigger>
             <TabsTrigger value="users" data-testid="tab-admin-users"><Users className="w-4 h-4 mr-1" /> Usuarios</TabsTrigger>
             <TabsTrigger value="jobs" data-testid="tab-admin-jobs"><Briefcase className="w-4 h-4 mr-1" /> Ofertas</TabsTrigger>
             <TabsTrigger value="applications" data-testid="tab-admin-apps"><FileText className="w-4 h-4 mr-1" /> Candidaturas</TabsTrigger>
@@ -171,6 +173,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="stats">
             <StatsPanel stats={stats} isLoading={statsLoading} />
+          </TabsContent>
+
+          <TabsContent value="metrics">
+            <MetricsPanel />
           </TabsContent>
 
           <TabsContent value="users">
@@ -447,6 +453,205 @@ function JobRow({ job, onToggle, onDelete, toggling, deleting }: {
         </div>
       </div>
     </Card>
+  );
+}
+
+type MetricRow = { name: string; familia?: string; jobCount?: number; activeJobs?: number; applicationCount?: number; alumniCount?: number };
+type MetricsData = {
+  jobsByFamilia: MetricRow[];
+  jobsByCiclo: MetricRow[];
+  jobsByLocation: MetricRow[];
+  alumniByFamilia: MetricRow[];
+  alumniByCiclo: MetricRow[];
+};
+
+function MetricBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = max > 0 ? Math.max((value / max) * 100, 2) : 0;
+  return (
+    <div className="w-full bg-muted rounded-full h-5 relative overflow-hidden">
+      <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
+      <span className="absolute inset-0 flex items-center justify-center text-xs font-medium">{value}</span>
+    </div>
+  );
+}
+
+function MetricTable({ title, icon, data, columns }: {
+  title: string;
+  icon: React.ReactNode;
+  data: MetricRow[];
+  columns: { key: string; label: string; color: string }[];
+}) {
+  const [expanded, setExpanded] = useState(true);
+  if (data.length === 0) {
+    return (
+      <Card className="p-4" data-testid={`metric-card-${title.toLowerCase().replace(/\s/g, "-")}`}>
+        <div className="flex items-center gap-2">
+          {icon}
+          <h3 className="font-semibold">{title}</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mt-2">No hay datos disponibles.</p>
+      </Card>
+    );
+  }
+
+  const maxValues: Record<string, number> = {};
+  columns.forEach(col => {
+    maxValues[col.key] = Math.max(...data.map(r => (r as any)[col.key] || 0), 1);
+  });
+
+  return (
+    <Card className="p-4" data-testid={`metric-card-${title.toLowerCase().replace(/\s/g, "-")}`}>
+      <button
+        className="flex items-center gap-2 w-full text-left"
+        onClick={() => setExpanded(!expanded)}
+        data-testid={`button-toggle-metric-${title.toLowerCase().replace(/\s/g, "-")}`}
+      >
+        {icon}
+        <h3 className="font-semibold flex-1">{title}</h3>
+        <Badge variant="secondary" className="text-xs">{data.length}</Badge>
+        {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+      </button>
+
+      {expanded && (
+        <div className="mt-4 space-y-3">
+          <div className="hidden sm:grid gap-2" style={{ gridTemplateColumns: `1fr ${columns.map(() => "120px").join(" ")}` }}>
+            <span className="text-xs font-medium text-muted-foreground" />
+            {columns.map(col => (
+              <span key={col.key} className="text-xs font-medium text-muted-foreground text-center">{col.label}</span>
+            ))}
+          </div>
+          {data.map((row, idx) => (
+            <div key={idx} className="space-y-1 sm:space-y-0 sm:grid gap-2 items-center border-b pb-2 last:border-b-0 last:pb-0" style={{ gridTemplateColumns: `1fr ${columns.map(() => "120px").join(" ")}` }}>
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate" title={row.name}>{row.name}</p>
+                {row.familia && <p className="text-xs text-muted-foreground truncate" title={row.familia}>{row.familia}</p>}
+              </div>
+              {columns.map(col => (
+                <div key={col.key} className="flex items-center gap-2 sm:gap-0">
+                  <span className="text-xs text-muted-foreground sm:hidden w-20 flex-shrink-0">{col.label}:</span>
+                  <div className="flex-1 sm:w-full">
+                    <MetricBar value={(row as any)[col.key] || 0} max={maxValues[col.key]} color={col.color} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function MetricsPanel() {
+  const { data: metrics, isLoading } = useQuery<MetricsData>({
+    queryKey: ["/api/admin/metrics"],
+  });
+
+  if (isLoading || !metrics) {
+    return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  }
+
+  const totalJobs = metrics.jobsByFamilia.reduce((s, r) => s + (r.jobCount || 0), 0);
+  const totalApps = metrics.jobsByFamilia.reduce((s, r) => s + (r.applicationCount || 0), 0);
+  const totalAlumni = metrics.alumniByFamilia.reduce((s, r) => s + (r.alumniCount || 0), 0);
+  const totalLocations = metrics.jobsByLocation.length;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4" data-testid="metric-summary-jobs">
+          <div className="flex items-center gap-3">
+            <Briefcase className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+            <div>
+              <p className="text-2xl font-bold">{totalJobs}</p>
+              <p className="text-xs text-muted-foreground">Ofertas con familia</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4" data-testid="metric-summary-apps">
+          <div className="flex items-center gap-3">
+            <FileText className="w-7 h-7 text-purple-600 dark:text-purple-400" />
+            <div>
+              <p className="text-2xl font-bold">{totalApps}</p>
+              <p className="text-xs text-muted-foreground">Candidaturas</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4" data-testid="metric-summary-alumni">
+          <div className="flex items-center gap-3">
+            <GraduationCap className="w-7 h-7 text-green-600 dark:text-green-400" />
+            <div>
+              <p className="text-2xl font-bold">{totalAlumni}</p>
+              <p className="text-xs text-muted-foreground">Titulados con familia</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4" data-testid="metric-summary-locations">
+          <div className="flex items-center gap-3">
+            <MapPin className="w-7 h-7 text-orange-600 dark:text-orange-400" />
+            <div>
+              <p className="text-2xl font-bold">{totalLocations}</p>
+              <p className="text-xs text-muted-foreground">Localidades</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MetricTable
+          title="Ofertas por Familia Profesional"
+          icon={<Briefcase className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
+          data={metrics.jobsByFamilia}
+          columns={[
+            { key: "jobCount", label: "Ofertas", color: "bg-blue-500" },
+            { key: "activeJobs", label: "Activas", color: "bg-emerald-500" },
+            { key: "applicationCount", label: "Candidaturas", color: "bg-purple-500" },
+          ]}
+        />
+
+        <MetricTable
+          title="Titulados por Familia Profesional"
+          icon={<GraduationCap className="w-5 h-5 text-green-600 dark:text-green-400" />}
+          data={metrics.alumniByFamilia}
+          columns={[
+            { key: "alumniCount", label: "Titulados", color: "bg-green-500" },
+          ]}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MetricTable
+          title="Ofertas por Ciclo Formativo"
+          icon={<GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
+          data={metrics.jobsByCiclo}
+          columns={[
+            { key: "jobCount", label: "Ofertas", color: "bg-indigo-500" },
+            { key: "activeJobs", label: "Activas", color: "bg-emerald-500" },
+            { key: "applicationCount", label: "Candidaturas", color: "bg-purple-500" },
+          ]}
+        />
+
+        <MetricTable
+          title="Titulados por Ciclo Formativo"
+          icon={<GraduationCap className="w-5 h-5 text-teal-600 dark:text-teal-400" />}
+          data={metrics.alumniByCiclo}
+          columns={[
+            { key: "alumniCount", label: "Titulados", color: "bg-teal-500" },
+          ]}
+        />
+      </div>
+
+      <MetricTable
+        title="Ofertas por Localidad"
+        icon={<MapPin className="w-5 h-5 text-orange-600 dark:text-orange-400" />}
+        data={metrics.jobsByLocation}
+        columns={[
+          { key: "jobCount", label: "Ofertas", color: "bg-orange-500" },
+          { key: "activeJobs", label: "Activas", color: "bg-emerald-500" },
+          { key: "applicationCount", label: "Candidaturas", color: "bg-purple-500" },
+        ]}
+      />
+    </div>
   );
 }
 
