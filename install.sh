@@ -304,7 +304,7 @@ print_success "Aplicación compilada"
 
 print_status "Ejecutando migraciones de base de datos..."
 cd "$APP_DIR"
-yes | sudo -u "$APP_USER" DATABASE_URL="$DATABASE_URL" npx drizzle-kit push 2>&1 | tail -5
+sudo -u "$APP_USER" DATABASE_URL="$DATABASE_URL" npx tsx server/migrate.ts 2>&1
 print_success "Esquema de base de datos actualizado"
 
 if [ "$IS_UPDATE" = false ] && [ -n "$ADMIN_EMAIL" ]; then
