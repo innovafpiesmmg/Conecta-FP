@@ -116,6 +116,9 @@ export default function CompanyDashboard() {
             </div>
           </Link>
           <div className="flex items-center gap-3 flex-wrap">
+            {user.companyLogoUrl && (
+              <img src={user.companyLogoUrl} alt="Logo" className="w-8 h-8 rounded-md object-cover border" data-testid="img-company-logo-header" />
+            )}
             <span className="text-sm text-muted-foreground hidden sm:inline">{user.companyName || user.name}</span>
             <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="button-logout">
               <LogOut className="w-4 h-4" />
@@ -428,10 +431,10 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                         {app.alumni?.email && (
-                          <a href={`mailto:${app.alumni.email}`} className="flex items-center gap-1 hover:text-primary transition-colors"><Mail className="w-3 h-3" />{app.alumni.email}</a>
+                          <a href={`mailto:${app.alumni.email}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors"><Mail className="w-3 h-3" />{app.alumni.email}</a>
                         )}
                         {app.alumni?.phone && (
-                          <a href={`tel:${app.alumni.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors"><Phone className="w-3 h-3" />{app.alumni.phone}</a>
+                          <a href={`tel:${app.alumni.phone}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors"><Phone className="w-3 h-3" />{app.alumni.phone}</a>
                         )}
                         {app.alumni?.whatsapp && (
                           <a href={`https://wa.me/${app.alumni.whatsapp.replace(/[^0-9+]/g, "").replace("+", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-green-600 transition-colors"><MessageCircle className="w-3 h-3" />{app.alumni.whatsapp}</a>
@@ -540,11 +543,11 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">Contacto</h4>
                 <div className="space-y-1.5 text-sm">
-                  <a href={`mailto:${viewProfileAlumni.email}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <a href={`mailto:${viewProfileAlumni.email}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
                     <Mail className="w-4 h-4" />{viewProfileAlumni.email}
                   </a>
                   {viewProfileAlumni.phone && (
-                    <a href={`tel:${viewProfileAlumni.phone}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                    <a href={`tel:${viewProfileAlumni.phone}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
                       <Phone className="w-4 h-4" />{viewProfileAlumni.phone}
                     </a>
                   )}

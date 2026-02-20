@@ -198,7 +198,7 @@ export default function Directory() {
                     {(a.phone || a.whatsapp) && (
                       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-2">
                         {a.phone && (
-                          <a href={`tel:${a.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+                          <a href={`tel:${a.phone}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors">
                             <Phone className="w-3 h-3" />{a.phone}
                           </a>
                         )}
@@ -303,6 +303,7 @@ export default function Directory() {
                       {c.companyEmail && (
                         <a
                           href={`mailto:${c.companyEmail}`}
+                          target="_blank" rel="noopener noreferrer"
                           className="flex items-center gap-1 hover:text-primary transition-colors"
                           data-testid={`link-email-${c.id}`}
                         >
@@ -311,7 +312,7 @@ export default function Directory() {
                         </a>
                       )}
                       {c.phone && (
-                        <a href={`tel:${c.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+                        <a href={`tel:${c.phone}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors">
                           <Phone className="w-3 h-3" />
                           Llamar
                         </a>

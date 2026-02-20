@@ -317,8 +317,8 @@ function UserRow({ user, onDelete, deleting }: { user: Omit<User, "password">; o
             </Badge>
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-            <a href={`mailto:${user.email}`} className="flex items-center gap-1 hover:text-primary transition-colors"><Mail className="w-3 h-3" />{user.email}</a>
-            {user.phone && <a href={`tel:${user.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors"><Phone className="w-3 h-3" />{user.phone}</a>}
+            <a href={`mailto:${user.email}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors"><Mail className="w-3 h-3" />{user.email}</a>
+            {user.phone && <a href={`tel:${user.phone}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors"><Phone className="w-3 h-3" />{user.phone}</a>}
             {user.whatsapp && <a href={`https://wa.me/${user.whatsapp.replace(/[^0-9+]/g, "").replace("+", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-green-600 transition-colors"><MessageCircle className="w-3 h-3" />{user.whatsapp}</a>}
             {user.companyName && <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{user.companyName}</span>}
             {user.university && <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{user.university}</span>}
