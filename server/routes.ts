@@ -430,6 +430,24 @@ export async function registerRoutes(
 
   // ============ JOB ROUTES ============
 
+  app.get("/api/public/alumni", async (_req, res, next) => {
+    try {
+      const alumni = await storage.getPublicAlumni();
+      res.json(alumni);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.get("/api/public/companies", async (_req, res, next) => {
+    try {
+      const companies = await storage.getPublicCompanies();
+      res.json(companies);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   app.get("/api/jobs", requireAuth, async (req, res, next) => {
     try {
       const jobs = await storage.getActiveJobs();

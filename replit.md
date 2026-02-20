@@ -101,6 +101,10 @@ shared/
 - POST /api/auth/forgot-password - Request password reset email
 - POST /api/auth/reset-password - Reset password with token
 
+### Public Directory
+- GET /api/public/alumni - List public alumni profiles (no auth required)
+- GET /api/public/companies - List public company profiles (no auth required)
+
 ### TOTP 2FA
 - POST /api/auth/totp/setup - Generate TOTP secret + QR code
 - POST /api/auth/totp/confirm - Confirm TOTP setup with code

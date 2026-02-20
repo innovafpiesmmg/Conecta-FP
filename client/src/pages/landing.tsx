@@ -20,8 +20,11 @@ export default function Landing() {
             </div>
           </Link>
           <nav className="flex items-center gap-2 flex-wrap">
+            <Link href="/directorio">
+              <Button variant="ghost" data-testid="button-directory">Directorio</Button>
+            </Link>
             {user ? (
-              <Link href={user.role === "ALUMNI" ? "/dashboard" : "/company"}>
+              <Link href={user.role === "ADMIN" ? "/admin" : user.role === "ALUMNI" ? "/dashboard" : "/company"}>
                 <Button data-testid="button-dashboard">Mi Panel</Button>
               </Link>
             ) : (

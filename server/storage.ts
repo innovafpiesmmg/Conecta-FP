@@ -29,6 +29,10 @@ export interface IStorage {
   updateApplicationStatus(id: string, status: string): Promise<Application | undefined>;
   deleteApplicationsByAlumni(alumniId: string): Promise<void>;
 
+  // Public profiles
+  getPublicAlumni(): Promise<{ id: string; name: string; bio: string | null; university: string | null; graduationYear: number | null; familiaProfesional: string | null; cicloFormativo: string | null; skills: string | null; profilePhotoUrl: string | null }[]>;
+  getPublicCompanies(): Promise<{ id: string; name: string; companyName: string | null; companyDescription: string | null; companyWebsite: string | null; companySector: string | null; companyLogoUrl: string | null; companyEmail: string | null; profilePhotoUrl: string | null }[]>;
+
   // Admin methods
   getAllUsers(): Promise<User[]>;
   getAllJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } })[]>;
@@ -203,6 +207,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteApplicationsByAlumni(alumniId: string): Promise<void> {
     await db.delete(applications).where(eq(applications.alumniId, alumniId));
+  }
+
+  async getPublicAlumni() {
+    const result = await db.select({
+      id: users.id, name: users.name, bio: users.bio, university: users.university,
+      graduationYear: users.graduationYear, familiaProfesional: users.familiaProfesional,
+      cicloFormativo: users.cicloFormativo, skills: users.skills, profilePhotoUrl: users.profilePhotoUrl,
+    }).from(users).where(and(eq(users.role, "ALUMNI"), eq(users.profilePublic, true))).orderBy(desc(users.createdAt));
+    return result;
+  }
+
+  async getPublicCompanies() {
+    const result = await db.select({
+      id: users.id, name: users.name, companyName: users.companyName,
+      companyDescription: users.companyDescription, companyWebsite: users.companyWebsite,
+      companySector: users.companySector, companyLogoUrl: users.companyLogoUrl,
+      companyEmail: users.companyEmail, profilePhotoUrl: users.profilePhotoUrl,
+    }).from(users).where(and(eq(users.role, "COMPANY"), eq(users.profilePublic, true))).orderBy(desc(users.createdAt));
+    return result;
   }
 
   async getAllUsers(): Promise<User[]> {

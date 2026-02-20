@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
@@ -750,6 +751,7 @@ function CompanyProfileForm({ user }: { user: User }) {
   const [companySector, setCompanySector] = useState(user.companySector || "");
   const [companyEmail, setCompanyEmail] = useState(user.companyEmail || "");
   const [companyCif, setCompanyCif] = useState(user.companyCif || "");
+  const [profilePublic, setProfilePublic] = useState(user.profilePublic);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
@@ -767,7 +769,7 @@ function CompanyProfileForm({ user }: { user: User }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate({ name, phone, companyName, companyDescription, companyWebsite, companySector, companyEmail, companyCif });
+    updateMutation.mutate({ name, phone, companyName, companyDescription, companyWebsite, companySector, companyEmail, companyCif, profilePublic });
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -924,6 +926,13 @@ function CompanyProfileForm({ user }: { user: User }) {
         <div className="space-y-2">
           <Label>Descripción de la empresa</Label>
           <Textarea value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} rows={3} data-testid="textarea-company-description" />
+        </div>
+        <div className="flex items-center justify-between p-3 rounded-md border">
+          <div>
+            <p className="text-sm font-medium">Perfil público</p>
+            <p className="text-xs text-muted-foreground">Tu empresa aparecerá en el directorio público de la plataforma</p>
+          </div>
+          <Switch checked={profilePublic} onCheckedChange={setProfilePublic} data-testid="switch-company-profile-public" />
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 rounded-md border">
           <Shield className="w-3.5 h-3.5 flex-shrink-0" />

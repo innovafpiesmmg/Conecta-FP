@@ -156,6 +156,7 @@ export const updateProfileCompanySchema = z.object({
   companyDescription: z.string().optional(),
   companyWebsite: z.string().optional(),
   companySector: z.string().optional(),
+  profilePublic: z.boolean().optional(),
 });
 
 export const smtpSettingsSchema = z.object({

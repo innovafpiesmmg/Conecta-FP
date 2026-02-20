@@ -665,7 +665,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
         <div className="flex items-center justify-between gap-4 p-3 rounded-md bg-accent/50 border">
           <div>
             <p className="text-sm font-medium">Perfil público</p>
-            <p className="text-xs text-muted-foreground">Si está activado, tu perfil básico será visible en la plataforma</p>
+            <p className="text-xs text-muted-foreground">Tu perfil aparecerá en el directorio público de la plataforma</p>
           </div>
           <Switch checked={profilePublic} onCheckedChange={setProfilePublic} data-testid="switch-profile-public" />
         </div>
