@@ -124,6 +124,32 @@ export async function sendJobExpiryReminderEmail(to: string, companyName: string
   );
 }
 
+export async function sendNewApplicationEmail(
+  to: string,
+  companyName: string,
+  alumniName: string,
+  jobTitle: string,
+  baseUrl: string
+): Promise<boolean> {
+  const dashboardUrl = `${baseUrl}/company`;
+  return sendEmail(
+    to,
+    `Conecta FP - Nueva candidatura para "${jobTitle}"`,
+    `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Nueva candidatura recibida</h2>
+      <p style="color: #555;">Hola ${companyName},</p>
+      <p style="color: #555;">El titulado <strong>${alumniName}</strong> se ha postulado a tu oferta:</p>
+      <div style="background: #f8f9fa; border-left: 4px solid #2563eb; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+        <p style="margin: 0; font-weight: bold; color: #333;">${jobTitle}</p>
+      </div>
+      <p style="color: #555;">Accede a tu panel para revisar la candidatura y el perfil del candidato.</p>
+      <a href="${dashboardUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 24px; border-radius: 6px; text-decoration: none; margin: 16px 0;">Ver candidaturas</a>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+    </div>`
+  );
+}
+
 export async function sendApplicationStatusEmail(
   to: string,
   alumniName: string,

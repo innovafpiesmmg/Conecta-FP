@@ -16,7 +16,7 @@ import {
   smtpSettingsSchema, cvDataSchema
 } from "@shared/schema";
 import type { User } from "@shared/schema";
-import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail, sendApplicationStatusEmail, sendSuggestionEmail } from "./email";
+import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail, sendApplicationStatusEmail, sendNewApplicationEmail, sendSuggestionEmail } from "./email";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 
@@ -576,6 +576,22 @@ export async function registerRoutes(
 
       const app = await storage.createApplication(req.user!.id, parsed);
       res.status(201).json(app);
+
+      try {
+        const company = await storage.getUser(job.companyId);
+        if (company) {
+          const alumniUser = req.user as User;
+          const baseUrl = `${req.protocol}://${req.get("host")}`;
+          const companyEmail = company.companyEmail || company.email;
+          sendNewApplicationEmail(
+            companyEmail,
+            company.companyName || company.name,
+            alumniUser.name,
+            job.title,
+            baseUrl
+          ).catch(() => {});
+        }
+      } catch (_) {}
     } catch (err: any) {
       if (err.name === "ZodError") return res.status(400).json({ message: "Datos invalidos", errors: err.errors });
       next(err);
