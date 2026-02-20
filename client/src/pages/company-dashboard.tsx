@@ -31,6 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TotpSecuritySection } from "@/components/totp-security";
+import { ChangePasswordSection } from "@/components/change-password";
 import { CvBuilder } from "@/components/cv-builder";
 import { CalendarDays } from "lucide-react";
 
@@ -219,6 +220,8 @@ export default function CompanyDashboard() {
 
           <TabsContent value="settings" className="space-y-6">
             <CompanyProfileForm user={user} />
+
+            <ChangePasswordSection />
 
             <TotpSecuritySection />
 

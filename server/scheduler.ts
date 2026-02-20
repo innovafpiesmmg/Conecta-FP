@@ -1,9 +1,8 @@
 import { storage } from "./storage";
 import { sendCvUpdateReminderEmail, sendJobExpiryReminderEmail } from "./email";
+import { getBaseUrl } from "./utils";
 
-const BASE_URL = process.env.REPLIT_DEV_DOMAIN
-  ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-  : `http://localhost:${process.env.PORT || 5000}`;
+const BASE_URL = getBaseUrl();
 
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 

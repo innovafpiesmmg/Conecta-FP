@@ -73,6 +73,7 @@ shared/
 - Nginx as reverse proxy on port 80 -> localhost:5000
 - Optional Cloudflare Tunnel support for HTTPS
 - `SECURE_COOKIES` env var controls cookie secure flag (false for HTTP, true for HTTPS)
+- `APP_URL` env var sets the public base URL for email links (e.g., https://conectafp.midominio.es). Falls back to x-forwarded headers or localhost.
 - `trust proxy` enabled in Express for correct IP forwarding behind nginx
 
 ## Important Notes

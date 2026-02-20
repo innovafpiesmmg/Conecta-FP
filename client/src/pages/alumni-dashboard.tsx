@@ -23,6 +23,7 @@ import {
   DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog";
 import { TotpSecuritySection } from "@/components/totp-security";
+import { ChangePasswordSection } from "@/components/change-password";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
@@ -398,6 +399,8 @@ export default function AlumniDashboard() {
 
           <TabsContent value="profile" className="space-y-6">
             <ProfileForm user={user} onSave={(data) => updateProfileMutation.mutate(data)} isPending={updateProfileMutation.isPending} />
+
+            <ChangePasswordSection />
 
             <TotpSecuritySection />
 

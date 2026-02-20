@@ -17,6 +17,7 @@ import {
 } from "@shared/schema";
 import type { User } from "@shared/schema";
 import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail, sendApplicationStatusEmail, sendNewApplicationEmail, sendSuggestionEmail, sendNewJobNotificationEmail } from "./email";
+import { getBaseUrl } from "./utils";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 
@@ -111,8 +112,7 @@ export async function registerRoutes(
         emailVerificationToken: verificationToken,
       });
 
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
-      sendVerificationEmail(user.email, verificationToken, baseUrl).catch(console.error);
+      sendVerificationEmail(user.email, verificationToken, getBaseUrl(req)).catch(console.error);
 
       res.status(201).json({ id: user.id, email: user.email, role: user.role, emailVerified: false });
     } catch (err: any) {
@@ -241,8 +241,7 @@ export async function registerRoutes(
       const newToken = crypto.randomBytes(32).toString("hex");
       await storage.updateUser(user.id, { emailVerificationToken: newToken } as any);
 
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
-      sendVerificationEmail(user.email, newToken, baseUrl).catch(console.error);
+      sendVerificationEmail(user.email, newToken, getBaseUrl(req)).catch(console.error);
 
       res.json({ message: "Si el email existe y no esta verificado, se ha enviado un correo de verificacion" });
     } catch (err) {
@@ -263,8 +262,7 @@ export async function registerRoutes(
         const expires = new Date(Date.now() + 60 * 60 * 1000);
         await storage.updateUser(user.id, { passwordResetToken: resetToken, passwordResetExpires: expires } as any);
 
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
-        sendPasswordResetEmail(user.email, resetToken, baseUrl).catch(console.error);
+        sendPasswordResetEmail(user.email, resetToken, getBaseUrl(req)).catch(console.error);
       }
 
       res.json({ message: "Si el email existe, se ha enviado un correo con instrucciones para restablecer la contrasena" });
@@ -403,6 +401,32 @@ export async function registerRoutes(
     }
   });
 
+  // ============ CHANGE PASSWORD ============
+  app.post("/api/auth/change-password", requireAuth, async (req, res, next) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Contraseña actual y nueva son obligatorias" });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "La nueva contraseña debe tener al menos 6 caracteres" });
+      }
+      const user = await storage.getUser(req.user!.id);
+      if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+
+      const valid = await bcrypt.compare(currentPassword, user.password);
+      if (!valid) {
+        return res.status(400).json({ message: "La contraseña actual no es correcta" });
+      }
+
+      const hashed = await bcrypt.hash(newPassword, 12);
+      await storage.updateUser(user.id, { password: hashed } as any);
+      res.json({ message: "Contraseña actualizada correctamente" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // ============ NOTIFICATION PREFERENCES ============
   app.get("/api/auth/notifications", requireAuth, (req, res) => {
     res.json({ jobNotificationsEnabled: req.user!.jobNotificationsEnabled });
@@ -531,7 +555,6 @@ export async function registerRoutes(
       res.status(201).json(job);
 
       if (job.cicloFormativo) {
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
         const company = req.user as User;
         const companyName = company.companyName || company.name;
         try {
@@ -544,7 +567,7 @@ export async function registerRoutes(
               companyName,
               job.location,
               job.cicloFormativo,
-              baseUrl
+              getBaseUrl(req)
             ).catch(err => console.error(`[EMAIL] Error notifying ${alumnus.email}:`, err));
           }
           if (alumni.length > 0) {
@@ -625,14 +648,13 @@ export async function registerRoutes(
         const company = await storage.getUser(job.companyId);
         if (company) {
           const alumniUser = req.user as User;
-          const baseUrl = `${req.protocol}://${req.get("host")}`;
           const companyEmail = company.companyEmail || company.email;
           sendNewApplicationEmail(
             companyEmail,
             company.companyName || company.name,
             alumniUser.name,
             job.title,
-            baseUrl
+            getBaseUrl(req)
           ).catch(() => {});
         }
       } catch (_) {}
@@ -1161,8 +1183,7 @@ export async function registerRoutes(
       const alumni = await storage.getUser(application.alumniId);
       if (alumni && job) {
         const companyName = req.user!.companyName || req.user!.name;
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
-        sendApplicationStatusEmail(alumni.email, alumni.name, job.title, companyName, status, baseUrl).catch(() => {});
+        sendApplicationStatusEmail(alumni.email, alumni.name, job.title, companyName, status, getBaseUrl(req)).catch(() => {});
       }
 
       res.json(updated);

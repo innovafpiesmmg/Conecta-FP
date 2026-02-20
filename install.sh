@@ -71,6 +71,27 @@ if [ -f "$CONFIG_DIR/env" ]; then
     print_warning "Instalación existente detectada - modo ACTUALIZACIÓN"
     print_status "Se preservarán las credenciales y la base de datos"
     echo ""
+
+    # Permitir actualizar APP_URL durante la actualización
+    CURRENT_APP_URL="${APP_URL:-No configurada}"
+    echo -e "  URL actual de la aplicación: ${BOLD}$CURRENT_APP_URL${NC}"
+    echo ""
+    read -p "¿Deseas cambiar la URL de la aplicación? (s/N): " CHANGE_URL
+    if [[ "$CHANGE_URL" =~ ^[sS]$ ]]; then
+        echo -e "Ejemplos: ${BOLD}https://conectafp.midominio.es${NC} o ${BOLD}http://192.168.1.100${NC}"
+        read -p "Nueva URL de la aplicación: " NEW_APP_URL
+        if [ -n "$NEW_APP_URL" ]; then
+            NEW_APP_URL=${NEW_APP_URL%/}
+            if grep -q "^APP_URL=" "$CONFIG_DIR/env"; then
+                sed -i "s|^APP_URL=.*|APP_URL=$NEW_APP_URL|" "$CONFIG_DIR/env"
+            else
+                echo "APP_URL=$NEW_APP_URL" >> "$CONFIG_DIR/env"
+            fi
+            APP_URL="$NEW_APP_URL"
+            print_success "APP_URL actualizada a $NEW_APP_URL"
+        fi
+    fi
+    echo ""
 else
     print_status "Instalación nueva detectada"
     echo ""
@@ -109,6 +130,20 @@ else
     ADMIN_NAME=${ADMIN_NAME:-"Administrador"}
 
     print_success "Datos del administrador recogidos"
+    echo ""
+
+    # Pedir URL de la aplicación
+    print_header "URL de la aplicación"
+    echo -e "Introduce la URL pública con la que se accederá a Conecta FP."
+    echo -e "Ejemplos: ${BOLD}https://conectafp.midominio.es${NC} o ${BOLD}http://192.168.1.100${NC}"
+    echo -e "Los enlaces en los correos electrónicos usarán esta dirección."
+    echo ""
+
+    read -p "URL de la aplicación [http://localhost:$APP_PORT]: " APP_URL
+    APP_URL=${APP_URL:-"http://localhost:$APP_PORT"}
+    APP_URL=${APP_URL%/}
+
+    print_success "URL configurada: $APP_URL"
     echo ""
 fi
 
@@ -207,6 +242,7 @@ PORT=$APP_PORT
 DATABASE_URL=$DATABASE_URL
 SESSION_SECRET=$SESSION_SECRET
 SECURE_COOKIES=false
+APP_URL=$APP_URL
 EOF
 
     chmod 600 "$CONFIG_DIR/env"
@@ -367,6 +403,25 @@ if [ -n "$CF_TOKEN" ]; then
     systemctl start cloudflared
 
     sed -i 's/SECURE_COOKIES=false/SECURE_COOKIES=true/' "$CONFIG_DIR/env"
+
+    # Actualizar APP_URL si el usuario introduce su dominio
+    echo ""
+    echo -e "Introduce el dominio configurado en Cloudflare Tunnel."
+    echo -e "Ejemplo: ${BOLD}conectafp.midominio.es${NC}"
+    echo ""
+    read -p "Dominio de Cloudflare (Enter para no cambiar APP_URL): " CF_DOMAIN
+    if [ -n "$CF_DOMAIN" ]; then
+        CF_DOMAIN=${CF_DOMAIN#http://}
+        CF_DOMAIN=${CF_DOMAIN#https://}
+        CF_DOMAIN=${CF_DOMAIN%/}
+        if grep -q "^APP_URL=" "$CONFIG_DIR/env"; then
+            sed -i "s|^APP_URL=.*|APP_URL=https://$CF_DOMAIN|" "$CONFIG_DIR/env"
+        else
+            echo "APP_URL=https://$CF_DOMAIN" >> "$CONFIG_DIR/env"
+        fi
+        print_success "APP_URL actualizada a https://$CF_DOMAIN"
+    fi
+
     systemctl restart "$APP_NAME"
     print_success "Cloudflare Tunnel instalado y cookies seguras habilitadas"
 else
@@ -403,6 +458,10 @@ fi
 echo -e "${CYAN}${BOLD}╚═══════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}URL de acceso:${NC}  http://$SERVER_IP"
+source "$CONFIG_DIR/env"
+if [ -n "$APP_URL" ] && [ "$APP_URL" != "http://localhost:$APP_PORT" ]; then
+    echo -e "  ${BOLD}URL pública:${NC}    $APP_URL"
+fi
 if [ -n "$CF_TOKEN" ]; then
     echo -e "  ${BOLD}Cloudflare:${NC}     Configurado (acceso HTTPS via tu dominio)"
 fi
