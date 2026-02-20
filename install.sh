@@ -157,9 +157,6 @@ print_success "Usuario del sistema: $APP_USER"
 mkdir -p "$CONFIG_DIR"
 chmod 700 "$CONFIG_DIR"
 
-mkdir -p "$UPLOADS_DIR/avatars" "$UPLOADS_DIR/logos" "$UPLOADS_DIR/cvs"
-print_success "Directorios de uploads creados"
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 5. Configuración persistente
 # ─────────────────────────────────────────────────────────────────────────────
@@ -200,13 +197,29 @@ if [ -d "$APP_DIR/.git" ]; then
     git reset --hard origin/main 2>/dev/null || git reset --hard origin/master
     print_success "Código actualizado"
 else
+    if [ -d "$APP_DIR" ]; then
+        print_warning "Directorio $APP_DIR existe sin repositorio git"
+        print_status "Guardando contenido existente y clonando..."
+        TEMP_UPLOADS=""
+        if [ -d "$UPLOADS_DIR" ]; then
+            TEMP_UPLOADS=$(mktemp -d)
+            cp -a "$UPLOADS_DIR/." "$TEMP_UPLOADS/" 2>/dev/null || true
+        fi
+        rm -rf "$APP_DIR"
+    fi
     print_status "Clonando repositorio..."
     git clone --depth 1 "$GITHUB_REPO" "$APP_DIR"
+    if [ -n "$TEMP_UPLOADS" ] && [ -d "$TEMP_UPLOADS" ]; then
+        print_status "Restaurando archivos de uploads..."
+        mkdir -p "$UPLOADS_DIR"
+        cp -a "$TEMP_UPLOADS/." "$UPLOADS_DIR/" 2>/dev/null || true
+        rm -rf "$TEMP_UPLOADS"
+    fi
     print_success "Repositorio clonado"
 fi
 
+mkdir -p "$UPLOADS_DIR/avatars" "$UPLOADS_DIR/logos" "$UPLOADS_DIR/cvs"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
-chown -R "$APP_USER:$APP_USER" "$UPLOADS_DIR"
 
 print_status "Instalando dependencias npm (incluye herramientas de build)..."
 cd "$APP_DIR"
