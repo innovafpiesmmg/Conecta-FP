@@ -1,0 +1,99 @@
+
+  ╔═══════════════════════════════════════════════════════╗
+  ║          Conecta FP - Autoinstalador v1.0            ║
+  ║     Portal de Empleo para Titulados de FP            ║
+  ╚═══════════════════════════════════════════════════════╝
+
+[AVISO] Instalación existente detectada - modo ACTUALIZACIÓN
+[INFO] Se preservarán las credenciales y la base de datos
+
+
+=== 1/7 - Instalando dependencias del sistema ===
+
+nginx was already set to manually installed.
+[OK] Dependencias del sistema instaladas
+
+=== 2/7 - Instalando Node.js 20.x ===
+
+[INFO] Node.js ya instalado: v20.20.0
+[OK] Node.js v20.20.0 / npm 10.8.2
+
+=== 3/7 - Configurando PostgreSQL ===
+
+Synchronizing state of postgresql.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable postgresql
+[INFO] Base de datos existente - sin cambios
+
+=== 4/7 - Configurando usuario y directorios ===
+
+[OK] Usuario del sistema: conectafp
+
+=== 5/7 - Guardando configuración ===
+
+[INFO] Configuración existente preservada en /etc/conectafp/env
+
+=== 6/7 - Descargando y compilando la aplicación ===
+
+[INFO] Actualizando código existente...
+HEAD is now at 4b95412 Improve server update instructions and clarify installation steps
+[OK] Código actualizado
+[INFO] Instalando dependencias npm (incluye herramientas de build)...
+Run `npm audit` for details.
+[OK] Dependencias instaladas
+[INFO] Compilando la aplicación (build)...
+  dist/index.cjs  1.5mb ⚠️
+
+⚡ Done in 267ms
+[OK] Aplicación compilada
+[INFO] Ejecutando migraciones de base de datos...
+Using 'pg' driver for database querying
+[⣷] Pulling schema from database...
+[⣯] Pulling schema from database...
+[✓] Pulling schema from database...
+[i] No changes detected
+[OK] Esquema de base de datos actualizado
+[INFO] Limpiando dependencias de desarrollo...
+Run `npm audit` for details.
+[OK] Dependencias de producción optimizadas
+
+=== 7/7 - Configurando servicios ===
+
+[OK] Servicio systemd configurado
+[OK] Configuración de Nginx válida
+Synchronizing state of nginx.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable nginx
+[OK] Nginx configurado como proxy reverso
+[OK] Aplicación iniciada
+
+
+=== Cloudflare Tunnel (opcional) ===
+
+Si tienes un Cloudflare Tunnel configurado, introduce el token.
+Esto permite acceso HTTPS sin abrir puertos en el router.
+
+Token de Cloudflare Tunnel (Enter para omitir): 
+[INFO] Cloudflare Tunnel omitido
+
+[INFO] Esperando a que la aplicación inicie (10 segundos)...
+[OK] La aplicación responde correctamente
+
+╔═══════════════════════════════════════════════════════╗
+║         ACTUALIZACIÓN COMPLETADA                      ║
+╚═══════════════════════════════════════════════════════╝
+
+  URL de acceso:  http://192.168.1.51
+
+  Comandos útiles:
+    Estado:       systemctl status conectafp
+    Logs:         journalctl -u conectafp -f
+    Reiniciar:    systemctl restart conectafp
+    Config:       cat /etc/conectafp/env
+    Nginx logs:   tail -f /var/log/nginx/error.log
+
+  Archivos importantes:
+    Aplicación:   /var/www/conectafp
+    Configuración: /etc/conectafp/env
+    Uploads:      /var/www/conectafp/uploads
+    Servicio:     /etc/systemd/system/conectafp.service
+
+root@conectafp:~# 
