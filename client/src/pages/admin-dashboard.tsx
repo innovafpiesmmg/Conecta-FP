@@ -31,7 +31,7 @@ type Stats = {
   totalApplications: number;
 };
 
-type AdminJobOffer = JobOffer & { company?: { companyName: string | null; name: string } };
+type AdminJobOffer = JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } };
 type AdminApplication = {
   id: string;
   alumniId: string;
@@ -301,7 +301,15 @@ function UserRow({ user, onDelete, deleting }: { user: Omit<User, "password">; o
   return (
     <Card className="p-4" data-testid={`card-admin-user-${user.id}`}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="space-y-1 min-w-0 flex-1">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          {user.role === "COMPANY" && user.companyLogoUrl ? (
+            <img src={user.companyLogoUrl} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
+          ) : user.role === "COMPANY" ? (
+            <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-5 h-5 text-muted-foreground" />
+            </div>
+          ) : null}
+          <div className="space-y-1 min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-medium">{user.name}</span>
             <Badge variant={user.role === "ADMIN" ? "default" : user.role === "COMPANY" ? "secondary" : "outline"} className="text-xs">
@@ -323,6 +331,7 @@ function UserRow({ user, onDelete, deleting }: { user: Omit<User, "password">; o
           <p className="text-xs text-muted-foreground">
             Registrado: {new Date(user.createdAt).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
           </p>
+        </div>
         </div>
         {user.role !== "ADMIN" && (
           <AlertDialog>
@@ -366,7 +375,15 @@ function JobRow({ job, onToggle, onDelete, toggling, deleting }: {
   return (
     <Card className="p-4" data-testid={`card-admin-job-${job.id}`}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="space-y-1 min-w-0 flex-1">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          {job.company?.companyLogoUrl ? (
+            <img src={job.company.companyLogoUrl} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-5 h-5 text-muted-foreground" />
+            </div>
+          )}
+          <div className="space-y-1 min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-medium">{job.title}</span>
             <Badge variant="outline" className="text-xs">{jobTypeLabels[job.jobType] || job.jobType}</Badge>
@@ -388,6 +405,7 @@ function JobRow({ job, onToggle, onDelete, toggling, deleting }: {
           <p className="text-xs text-muted-foreground">
             Creada: {new Date(job.createdAt).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
           </p>
+        </div>
         </div>
         <div className="flex items-center gap-2">
           <Button

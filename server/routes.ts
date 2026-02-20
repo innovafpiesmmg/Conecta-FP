@@ -15,7 +15,7 @@ import {
   smtpSettingsSchema, cvDataSchema
 } from "@shared/schema";
 import type { User } from "@shared/schema";
-import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail } from "./email";
+import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail, sendApplicationStatusEmail } from "./email";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 
@@ -851,6 +851,14 @@ export async function registerRoutes(
 
       const updated = await storage.updateApplicationStatus(req.params.id, status);
       if (!updated) return res.status(404).json({ message: "Candidatura no encontrada" });
+
+      const alumni = await storage.getUser(application.alumniId);
+      if (alumni && job) {
+        const companyName = req.user!.companyName || req.user!.name;
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        sendApplicationStatusEmail(alumni.email, alumni.name, job.title, companyName, status, baseUrl).catch(() => {});
+      }
+
       res.json(updated);
     } catch (err) {
       next(err);

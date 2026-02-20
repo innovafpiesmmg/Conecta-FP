@@ -124,6 +124,61 @@ export async function sendJobExpiryReminderEmail(to: string, companyName: string
   );
 }
 
+export async function sendApplicationStatusEmail(
+  to: string,
+  alumniName: string,
+  jobTitle: string,
+  companyName: string,
+  status: string,
+  baseUrl: string
+): Promise<boolean> {
+  const statusLabels: Record<string, string> = {
+    PENDING: "Pendiente",
+    REVIEWED: "Revisada",
+    ACCEPTED: "Aceptada",
+    REJECTED: "Rechazada",
+  };
+  const statusColors: Record<string, string> = {
+    PENDING: "#6b7280",
+    REVIEWED: "#2563eb",
+    ACCEPTED: "#16a34a",
+    REJECTED: "#dc2626",
+  };
+  const statusMessages: Record<string, string> = {
+    PENDING: "Tu candidatura ha vuelto al estado pendiente de revisión.",
+    REVIEWED: "La empresa ha revisado tu candidatura y está evaluando tu perfil.",
+    ACCEPTED: "¡Enhorabuena! La empresa ha aceptado tu candidatura. Es posible que se pongan en contacto contigo próximamente.",
+    REJECTED: "Lamentablemente, la empresa ha decidido no continuar con tu candidatura en esta ocasión.",
+  };
+  const dashboardUrl = `${baseUrl}/alumni`;
+  const label = statusLabels[status] || status;
+  const color = statusColors[status] || "#6b7280";
+  const message = statusMessages[status] || "El estado de tu candidatura ha cambiado.";
+
+  return sendEmail(
+    to,
+    `Conecta FP - Tu candidatura para "${jobTitle}" ha sido ${label.toLowerCase()}`,
+    `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Actualización de tu candidatura</h2>
+      <p>Hola ${alumniName},</p>
+      <p>Tu candidatura para la oferta <strong>"${jobTitle}"</strong> en <strong>${companyName}</strong> ha cambiado de estado:</p>
+      <p style="margin: 20px 0;">
+        <span style="background-color: ${color}; color: white; padding: 8px 16px; border-radius: 4px; font-weight: bold; display: inline-block;">
+          ${label}
+        </span>
+      </p>
+      <p>${message}</p>
+      <p style="margin: 30px 0;">
+        <a href="${dashboardUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+          Ver mis candidaturas
+        </a>
+      </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+    </div>`
+  );
+}
+
 export async function sendPasswordResetEmail(to: string, token: string, baseUrl: string): Promise<boolean> {
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
   return sendEmail(

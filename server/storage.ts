@@ -14,14 +14,14 @@ export interface IStorage {
   updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
   deleteUser(id: string): Promise<void>;
 
-  getActiveJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string } })[]>;
+  getActiveJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } })[]>;
   getJobsByCompany(companyId: string): Promise<JobOffer[]>;
   getJob(id: string): Promise<JobOffer | undefined>;
   createJob(companyId: string, data: InsertJobOffer): Promise<JobOffer>;
   updateJob(id: string, data: Partial<InsertJobOffer>): Promise<JobOffer | undefined>;
   deleteJobsByCompany(companyId: string): Promise<void>;
 
-  getApplicationsByAlumni(alumniId: string): Promise<(Application & { jobOffer?: JobOffer & { company?: { companyName: string | null; name: string } } })[]>;
+  getApplicationsByAlumni(alumniId: string): Promise<(Application & { jobOffer?: JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } } })[]>;
   getApplicationsByJob(jobOfferId: string): Promise<(Application & { alumni?: User })[]>;
   getApplication(alumniId: string, jobOfferId: string): Promise<Application | undefined>;
   getApplicationById(id: string): Promise<Application | undefined>;
@@ -31,7 +31,7 @@ export interface IStorage {
 
   // Admin methods
   getAllUsers(): Promise<User[]>;
-  getAllJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string } })[]>;
+  getAllJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } })[]>;
   getAllApplications(): Promise<(Application & { alumni?: { name: string; email: string }; jobOffer?: { title: string } })[]>;
   getStats(): Promise<{ totalUsers: number; totalAlumni: number; totalCompanies: number; totalJobs: number; activeJobs: number; totalApplications: number }>;
   toggleJobActive(id: string, active: boolean): Promise<JobOffer | undefined>;
@@ -91,11 +91,11 @@ export class DatabaseStorage implements IStorage {
     await db.delete(users).where(eq(users.id, id));
   }
 
-  async getActiveJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string } })[]> {
+  async getActiveJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } })[]> {
     const jobs = await db.select().from(jobOffers).where(eq(jobOffers.active, true)).orderBy(desc(jobOffers.createdAt));
     const result = [];
     for (const job of jobs) {
-      const [company] = await db.select({ companyName: users.companyName, name: users.name }).from(users).where(eq(users.id, job.companyId));
+      const [company] = await db.select({ companyName: users.companyName, name: users.name, companyLogoUrl: users.companyLogoUrl }).from(users).where(eq(users.id, job.companyId));
       result.push({ ...job, company: company || undefined });
     }
     return result;
@@ -124,14 +124,14 @@ export class DatabaseStorage implements IStorage {
     await db.delete(jobOffers).where(eq(jobOffers.companyId, companyId));
   }
 
-  async getApplicationsByAlumni(alumniId: string): Promise<(Application & { jobOffer?: JobOffer & { company?: { companyName: string | null; name: string } } })[]> {
+  async getApplicationsByAlumni(alumniId: string): Promise<(Application & { jobOffer?: JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } } })[]> {
     const apps = await db.select().from(applications).where(eq(applications.alumniId, alumniId)).orderBy(desc(applications.appliedAt));
     const result = [];
     for (const app of apps) {
       const [job] = await db.select().from(jobOffers).where(eq(jobOffers.id, app.jobOfferId));
       let company;
       if (job) {
-        const [c] = await db.select({ companyName: users.companyName, name: users.name }).from(users).where(eq(users.id, job.companyId));
+        const [c] = await db.select({ companyName: users.companyName, name: users.name, companyLogoUrl: users.companyLogoUrl }).from(users).where(eq(users.id, job.companyId));
         company = c || undefined;
       }
       result.push({ ...app, jobOffer: job ? { ...job, company } : undefined });
@@ -208,11 +208,11 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async getAllJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string } })[]> {
+  async getAllJobs(): Promise<(JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } })[]> {
     const jobs = await db.select().from(jobOffers).orderBy(desc(jobOffers.createdAt));
     const result = [];
     for (const job of jobs) {
-      const [company] = await db.select({ companyName: users.companyName, name: users.name }).from(users).where(eq(users.id, job.companyId));
+      const [company] = await db.select({ companyName: users.companyName, name: users.name, companyLogoUrl: users.companyLogoUrl }).from(users).where(eq(users.id, job.companyId));
       result.push({ ...job, company: company || undefined });
     }
     return result;

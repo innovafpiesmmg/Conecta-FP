@@ -61,6 +61,8 @@ shared/
 - **Dynamic CV Builder**: Alumni can build structured CVs (education, experience, languages, additional info) stored as JSONB
 - **Annual CV Reminders**: Scheduler sends email reminders to alumni who haven't updated CV in 1+ year
 - **Job Expiry System**: Companies can set expiry dates on job offers; auto-deactivated when expired; 7-day email reminders
+- **Application Status Notifications**: Email sent to alumni when their application status changes (pending, reviewed, accepted, rejected)
+- **Company Logos**: Company logos displayed on job cards in alumni dashboard, admin dashboard, and application listings
 
 ## Deployment (Ubuntu Server)
 - `install.sh` autoinstaller script for Ubuntu 22.04/24.04

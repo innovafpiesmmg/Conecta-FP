@@ -53,7 +53,7 @@ const jobTypeLabels: Record<string, string> = {
   REMOTE: "Remoto",
 };
 
-type JobOfferWithCompany = JobOffer & { company?: { companyName: string | null; name: string } };
+type JobOfferWithCompany = JobOffer & { company?: { companyName: string | null; name: string; companyLogoUrl: string | null } };
 type ApplicationWithJob = Application & { jobOffer?: JobOfferWithCompany };
 
 export default function AlumniDashboard() {
@@ -223,7 +223,15 @@ export default function AlumniDashboard() {
                 {filteredJobs.map((job) => (
                   <Card key={job.id} className="p-5">
                     <div className="flex items-start justify-between gap-4 flex-wrap">
-                      <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {job.company?.companyLogoUrl ? (
+                          <img src={job.company.companyLogoUrl} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Building2 className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h3 className="font-semibold text-base">{job.title}</h3>
                           <Badge variant="outline" className="text-xs">{jobTypeLabels[job.jobType] || job.jobType}</Badge>
@@ -259,6 +267,7 @@ export default function AlumniDashboard() {
                             Requisitos: {job.requirements}
                           </p>
                         )}
+                      </div>
                       </div>
                       <div className="flex-shrink-0">
                         {appliedJobIds.has(job.id) ? (
@@ -340,6 +349,14 @@ export default function AlumniDashboard() {
                 {myApplications.map((app) => (
                   <Card key={app.id} className="p-5">
                     <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="flex items-start gap-3">
+                        {app.jobOffer?.company?.companyLogoUrl ? (
+                          <img src={app.jobOffer.company.companyLogoUrl} alt="" className="w-10 h-10 rounded-md object-cover flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Building2 className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        )}
                       <div>
                         <h3 className="font-semibold">{app.jobOffer?.title || "Oferta"}</h3>
                         <p className="text-sm text-muted-foreground">
@@ -350,6 +367,7 @@ export default function AlumniDashboard() {
                             {app.coverLetter}
                           </p>
                         )}
+                      </div>
                       </div>
                       <Badge variant={statusVariants[app.status]} data-testid={`badge-status-${app.id}`}>
                         {statusLabels[app.status]}
