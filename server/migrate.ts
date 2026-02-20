@@ -3,9 +3,36 @@ const { Pool } = pg;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+async function fixReferenceTablesIfNeeded(client: pg.PoolClient) {
+  const refTables = ["ciclos_formativos", "familias_profesionales", "fp_centers"];
+  for (const table of refTables) {
+    const { rows } = await client.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1`,
+      [table]
+    );
+    if (rows.length === 0) continue;
+    const cols = rows.map((r: any) => r.column_name);
+    if (cols.includes("codigo") || cols.includes("nombre") || !cols.includes("name")) {
+      console.log(`[FIX] Tabla ${table} tiene esquema incorrecto, recreando...`);
+      if (table === "ciclos_formativos") {
+        await client.query(`DROP TABLE IF EXISTS "ciclos_formativos" CASCADE`);
+      }
+      if (table === "familias_profesionales") {
+        await client.query(`DROP TABLE IF EXISTS "ciclos_formativos" CASCADE`);
+        await client.query(`DROP TABLE IF EXISTS "familias_profesionales" CASCADE`);
+      }
+      if (table === "fp_centers") {
+        await client.query(`DROP TABLE IF EXISTS "fp_centers" CASCADE`);
+      }
+    }
+  }
+}
+
 async function migrate() {
   const client = await pool.connect();
   try {
+    await fixReferenceTablesIfNeeded(client);
+
     const migrations: string[] = [
       `DO $$ BEGIN
         CREATE TYPE "user_role" AS ENUM('ALUMNI', 'COMPANY', 'ADMIN');
