@@ -2,9 +2,12 @@ import { eq, and, desc, count, sql, lt, isNull, isNotNull, lte } from "drizzle-o
 import { db } from "./db";
 import {
   users, jobOffers, applications, smtpSettings, fpCenters,
+  familiasProfesionales, ciclosFormativos,
   type User, type InsertUser, type JobOffer, type InsertJobOffer,
   type Application, type InsertApplication, type SmtpSettings,
-  type CvData, type FpCenter, type InsertFpCenter
+  type CvData, type FpCenter, type InsertFpCenter,
+  type FamiliaProfesional, type InsertFamiliaProfesional,
+  type CicloFormativo, type InsertCicloFormativo
 } from "@shared/schema";
 
 export interface IStorage {
@@ -70,6 +73,21 @@ export interface IStorage {
   createFpCenter(data: InsertFpCenter): Promise<FpCenter>;
   updateFpCenter(id: string, data: Partial<InsertFpCenter>): Promise<FpCenter | undefined>;
   deleteFpCenter(id: string): Promise<void>;
+
+  // Familias Profesionales
+  getAllFamilias(): Promise<FamiliaProfesional[]>;
+  getActiveFamilias(): Promise<FamiliaProfesional[]>;
+  createFamilia(data: InsertFamiliaProfesional): Promise<FamiliaProfesional>;
+  updateFamilia(id: string, data: Partial<InsertFamiliaProfesional>): Promise<FamiliaProfesional | undefined>;
+  deleteFamilia(id: string): Promise<void>;
+
+  // Ciclos Formativos
+  getCiclosByFamilia(familiaId: string): Promise<CicloFormativo[]>;
+  getActiveCiclosByFamilia(familiaId: string): Promise<CicloFormativo[]>;
+  getAllCiclos(): Promise<(CicloFormativo & { familiaName?: string })[]>;
+  createCiclo(data: InsertCicloFormativo): Promise<CicloFormativo>;
+  updateCiclo(id: string, data: Partial<InsertCicloFormativo>): Promise<CicloFormativo | undefined>;
+  deleteCiclo(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -384,6 +402,76 @@ export class DatabaseStorage implements IStorage {
 
   async markExpiryReminderSent(jobId: string): Promise<void> {
     await db.update(jobOffers).set({ expiryReminderSentAt: new Date() }).where(eq(jobOffers.id, jobId));
+  }
+
+  // FP Centers
+  async getAllFpCenters(): Promise<FpCenter[]> {
+    return db.select().from(fpCenters).orderBy(fpCenters.name);
+  }
+  async getActiveFpCenters(): Promise<FpCenter[]> {
+    return db.select().from(fpCenters).where(eq(fpCenters.active, true)).orderBy(fpCenters.name);
+  }
+  async createFpCenter(data: InsertFpCenter): Promise<FpCenter> {
+    const [center] = await db.insert(fpCenters).values(data).returning();
+    return center;
+  }
+  async updateFpCenter(id: string, data: Partial<InsertFpCenter>): Promise<FpCenter | undefined> {
+    const [center] = await db.update(fpCenters).set(data).where(eq(fpCenters.id, id)).returning();
+    return center;
+  }
+  async deleteFpCenter(id: string): Promise<void> {
+    await db.delete(fpCenters).where(eq(fpCenters.id, id));
+  }
+
+  // Familias Profesionales
+  async getAllFamilias(): Promise<FamiliaProfesional[]> {
+    return db.select().from(familiasProfesionales).orderBy(familiasProfesionales.name);
+  }
+  async getActiveFamilias(): Promise<FamiliaProfesional[]> {
+    return db.select().from(familiasProfesionales).where(eq(familiasProfesionales.active, true)).orderBy(familiasProfesionales.name);
+  }
+  async createFamilia(data: InsertFamiliaProfesional): Promise<FamiliaProfesional> {
+    const [familia] = await db.insert(familiasProfesionales).values(data).returning();
+    return familia;
+  }
+  async updateFamilia(id: string, data: Partial<InsertFamiliaProfesional>): Promise<FamiliaProfesional | undefined> {
+    const [familia] = await db.update(familiasProfesionales).set(data).where(eq(familiasProfesionales.id, id)).returning();
+    return familia;
+  }
+  async deleteFamilia(id: string): Promise<void> {
+    await db.delete(familiasProfesionales).where(eq(familiasProfesionales.id, id));
+  }
+
+  // Ciclos Formativos
+  async getCiclosByFamilia(familiaId: string): Promise<CicloFormativo[]> {
+    return db.select().from(ciclosFormativos).where(eq(ciclosFormativos.familiaId, familiaId)).orderBy(ciclosFormativos.name);
+  }
+  async getActiveCiclosByFamilia(familiaId: string): Promise<CicloFormativo[]> {
+    return db.select().from(ciclosFormativos).where(and(eq(ciclosFormativos.familiaId, familiaId), eq(ciclosFormativos.active, true))).orderBy(ciclosFormativos.name);
+  }
+  async getAllCiclos(): Promise<(CicloFormativo & { familiaName?: string })[]> {
+    const rows = await db.select({
+      id: ciclosFormativos.id,
+      name: ciclosFormativos.name,
+      familiaId: ciclosFormativos.familiaId,
+      active: ciclosFormativos.active,
+      createdAt: ciclosFormativos.createdAt,
+      familiaName: familiasProfesionales.name,
+    }).from(ciclosFormativos)
+      .leftJoin(familiasProfesionales, eq(ciclosFormativos.familiaId, familiasProfesionales.id))
+      .orderBy(familiasProfesionales.name, ciclosFormativos.name);
+    return rows.map(r => ({ ...r, familiaName: r.familiaName ?? undefined }));
+  }
+  async createCiclo(data: InsertCicloFormativo): Promise<CicloFormativo> {
+    const [ciclo] = await db.insert(ciclosFormativos).values(data).returning();
+    return ciclo;
+  }
+  async updateCiclo(id: string, data: Partial<InsertCicloFormativo>): Promise<CicloFormativo | undefined> {
+    const [ciclo] = await db.update(ciclosFormativos).set(data).where(eq(ciclosFormativos.id, id)).returning();
+    return ciclo;
+  }
+  async deleteCiclo(id: string): Promise<void> {
+    await db.delete(ciclosFormativos).where(eq(ciclosFormativos.id, id));
   }
 }
 

@@ -85,6 +85,21 @@ export const fpCenters = pgTable("fp_centers", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const familiasProfesionales = pgTable("familias_profesionales", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const ciclosFormativos = pgTable("ciclos_formativos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  familiaId: varchar("familia_id").notNull().references(() => familiasProfesionales.id, { onDelete: "cascade" }),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const applications = pgTable("applications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   alumniId: varchar("alumni_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -217,6 +232,8 @@ export type CvExperience = z.infer<typeof cvExperienceSchema>;
 export type CvLanguage = z.infer<typeof cvLanguageSchema>;
 
 export const insertFpCenterSchema = createInsertSchema(fpCenters).omit({ id: true, createdAt: true });
+export const insertFamiliaProfesionalSchema = createInsertSchema(familiasProfesionales).omit({ id: true, createdAt: true });
+export const insertCicloFormativoSchema = createInsertSchema(ciclosFormativos).omit({ id: true, createdAt: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -227,6 +244,10 @@ export type InsertApplication = z.infer<typeof insertApplicationSchema>;
 export type SmtpSettings = typeof smtpSettings.$inferSelect;
 export type FpCenter = typeof fpCenters.$inferSelect;
 export type InsertFpCenter = z.infer<typeof insertFpCenterSchema>;
+export type FamiliaProfesional = typeof familiasProfesionales.$inferSelect;
+export type InsertFamiliaProfesional = z.infer<typeof insertFamiliaProfesionalSchema>;
+export type CicloFormativo = typeof ciclosFormativos.$inferSelect;
+export type InsertCicloFormativo = z.infer<typeof insertCicloFormativoSchema>;
 
 export const FAMILIAS_PROFESIONALES = [
   "Informática y Comunicaciones",

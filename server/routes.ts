@@ -840,6 +840,135 @@ export async function registerRoutes(
     }
   });
 
+  // ============ FP CENTERS (Admin CRUD) ============
+
+  app.get("/api/admin/fp-centers", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const centers = await storage.getAllFpCenters();
+      res.json(centers);
+    } catch (err) { next(err); }
+  });
+
+  app.post("/api/admin/fp-centers", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const { name, municipio, isla, active } = req.body;
+      if (!name || !municipio || !isla) return res.status(400).json({ message: "Nombre, municipio e isla son obligatorios" });
+      const center = await storage.createFpCenter({ name, municipio, isla, active: active ?? true });
+      res.status(201).json(center);
+    } catch (err) { next(err); }
+  });
+
+  app.patch("/api/admin/fp-centers/:id", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const center = await storage.updateFpCenter(req.params.id, req.body);
+      if (!center) return res.status(404).json({ message: "Centro no encontrado" });
+      res.json(center);
+    } catch (err) { next(err); }
+  });
+
+  app.delete("/api/admin/fp-centers/:id", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      await storage.deleteFpCenter(req.params.id);
+      res.json({ message: "Centro eliminado" });
+    } catch (err) { next(err); }
+  });
+
+  // ============ FAMILIAS PROFESIONALES (Admin CRUD) ============
+
+  app.get("/api/admin/familias", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const familias = await storage.getAllFamilias();
+      res.json(familias);
+    } catch (err) { next(err); }
+  });
+
+  app.post("/api/admin/familias", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const { name, active } = req.body;
+      if (!name) return res.status(400).json({ message: "El nombre es obligatorio" });
+      const familia = await storage.createFamilia({ name, active: active ?? true });
+      res.status(201).json(familia);
+    } catch (err) { next(err); }
+  });
+
+  app.patch("/api/admin/familias/:id", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const familia = await storage.updateFamilia(req.params.id, req.body);
+      if (!familia) return res.status(404).json({ message: "Familia no encontrada" });
+      res.json(familia);
+    } catch (err) { next(err); }
+  });
+
+  app.delete("/api/admin/familias/:id", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      await storage.deleteFamilia(req.params.id);
+      res.json({ message: "Familia eliminada" });
+    } catch (err) { next(err); }
+  });
+
+  // ============ CICLOS FORMATIVOS (Admin CRUD) ============
+
+  app.get("/api/admin/ciclos", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const ciclos = await storage.getAllCiclos();
+      res.json(ciclos);
+    } catch (err) { next(err); }
+  });
+
+  app.get("/api/admin/ciclos/by-familia/:familiaId", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const ciclos = await storage.getCiclosByFamilia(req.params.familiaId);
+      res.json(ciclos);
+    } catch (err) { next(err); }
+  });
+
+  app.post("/api/admin/ciclos", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const { name, familiaId, active } = req.body;
+      if (!name || !familiaId) return res.status(400).json({ message: "Nombre y familia son obligatorios" });
+      const ciclo = await storage.createCiclo({ name, familiaId, active: active ?? true });
+      res.status(201).json(ciclo);
+    } catch (err) { next(err); }
+  });
+
+  app.patch("/api/admin/ciclos/:id", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const ciclo = await storage.updateCiclo(req.params.id, req.body);
+      if (!ciclo) return res.status(404).json({ message: "Ciclo no encontrado" });
+      res.json(ciclo);
+    } catch (err) { next(err); }
+  });
+
+  app.delete("/api/admin/ciclos/:id", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      await storage.deleteCiclo(req.params.id);
+      res.json({ message: "Ciclo eliminado" });
+    } catch (err) { next(err); }
+  });
+
+  // ============ PUBLIC ENDPOINTS for Familias/Ciclos/Centers ============
+
+  app.get("/api/public/familias", async (req, res, next) => {
+    try {
+      const familias = await storage.getActiveFamilias();
+      res.json(familias);
+    } catch (err) { next(err); }
+  });
+
+  app.get("/api/public/ciclos/:familiaId", async (req, res, next) => {
+    try {
+      const ciclos = await storage.getActiveCiclosByFamilia(req.params.familiaId);
+      res.json(ciclos);
+    } catch (err) { next(err); }
+  });
+
+  app.get("/api/public/fp-centers", async (req, res, next) => {
+    try {
+      const centers = await storage.getActiveFpCenters();
+      res.json(centers);
+    } catch (err) { next(err); }
+  });
+
   // ============ FILE UPLOAD ROUTES ============
 
   app.use("/uploads/avatars", express.static(path.join(UPLOADS_DIR, "avatars")));

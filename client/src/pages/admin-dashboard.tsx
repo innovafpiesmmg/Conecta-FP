@@ -7,8 +7,9 @@ import {
   Shield, Users, Briefcase, FileText, LogOut, Loader2,
   Trash2, ToggleLeft, ToggleRight, Mail, Phone, Building2,
   GraduationCap, MapPin, Eye, EyeOff, BarChart3, Settings, Send, MessageCircle,
-  TrendingUp, ChevronDown, ChevronRight
+  TrendingUp, ChevronDown, ChevronRight, School, BookOpen, Library
 } from "lucide-react";
+import { CentrosFpManager, FamiliasProfesionalesManager, CiclosFormativosManager } from "@/components/admin-tables-manager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -169,6 +170,9 @@ export default function AdminDashboard() {
             <TabsTrigger value="jobs" data-testid="tab-admin-jobs"><Briefcase className="w-4 h-4 mr-1" /> Ofertas</TabsTrigger>
             <TabsTrigger value="applications" data-testid="tab-admin-apps"><FileText className="w-4 h-4 mr-1" /> Candidaturas</TabsTrigger>
             <TabsTrigger value="smtp" data-testid="tab-admin-smtp"><Settings className="w-4 h-4 mr-1" /> Correo</TabsTrigger>
+            <TabsTrigger value="centros" data-testid="tab-admin-centros"><School className="w-4 h-4 mr-1" /> Centros FP</TabsTrigger>
+            <TabsTrigger value="familias" data-testid="tab-admin-familias"><Library className="w-4 h-4 mr-1" /> Familias</TabsTrigger>
+            <TabsTrigger value="ciclos" data-testid="tab-admin-ciclos"><BookOpen className="w-4 h-4 mr-1" /> Ciclos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="stats">
@@ -265,6 +269,18 @@ export default function AdminDashboard() {
 
           <TabsContent value="smtp">
             <SmtpPanel />
+          </TabsContent>
+
+          <TabsContent value="centros">
+            <CentrosFpManager />
+          </TabsContent>
+
+          <TabsContent value="familias">
+            <FamiliasProfesionalesManager />
+          </TabsContent>
+
+          <TabsContent value="ciclos">
+            <CiclosFormativosManager />
           </TabsContent>
         </Tabs>
       </main>

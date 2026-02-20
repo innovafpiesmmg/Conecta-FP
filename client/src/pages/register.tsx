@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { registerAlumniSchema, registerCompanySchema, FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
+import { registerAlumniSchema, registerCompanySchema } from "@shared/schema";
+import { useFamilias, useCiclosByFamiliaName, useFpCenters } from "@/hooks/use-fp-data";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
@@ -39,8 +40,11 @@ export default function Register() {
     },
   });
 
+  const { data: familiasList = [] } = useFamilias();
+  const { data: fpCentersList = [] } = useFpCenters();
   const selectedFamilia = alumniForm.watch("familiaProfesional");
-  const ciclosDisponibles = selectedFamilia ? CICLOS_POR_FAMILIA[selectedFamilia] || [] : [];
+  const { data: ciclosList = [] } = useCiclosByFamiliaName(selectedFamilia);
+  const ciclosDisponibles = ciclosList.map(c => c.name);
 
   const companyForm = useForm<CompanyData>({
     resolver: zodResolver(registerCompanySchema),
@@ -144,8 +148,8 @@ export default function Register() {
                         <SelectValue placeholder="Selecciona familia" />
                       </SelectTrigger>
                       <SelectContent>
-                        {FAMILIAS_PROFESIONALES.map((f) => (
-                          <SelectItem key={f} value={f}>{f}</SelectItem>
+                        {familiasList.map((f) => (
+                          <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -170,8 +174,20 @@ export default function Register() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="alumni-university">Centro de FP</Label>
-                    <Input id="alumni-university" placeholder="Tu centro de FP" data-testid="input-alumni-university" {...alumniForm.register("university")} />
+                    <Label>Centro de FP</Label>
+                    <Select
+                      value={alumniForm.watch("university") || ""}
+                      onValueChange={(val) => alumniForm.setValue("university", val)}
+                    >
+                      <SelectTrigger data-testid="select-alumni-university">
+                        <SelectValue placeholder="Selecciona tu centro" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fpCentersList.map((c) => (
+                          <SelectItem key={c.id} value={c.name}>{c.name} ({c.isla})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="alumni-year">Año de promoción</Label>

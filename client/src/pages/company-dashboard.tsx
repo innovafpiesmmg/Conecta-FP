@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { JobOffer, Application, User } from "@shared/schema";
-import { FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
+import { useFamilias, useCiclosByFamiliaName } from "@/hooks/use-fp-data";
 import {
   Briefcase, Plus, Users, LogOut, Loader2, MapPin, Clock, Building2,
   Mail, Phone, GraduationCap, FileText, ChevronDown, ChevronUp,
@@ -67,6 +67,7 @@ export default function CompanyDashboard() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterFamilia, setFilterFamilia] = useState("");
+  const { data: familiasList = [] } = useFamilias();
 
   const { data: myJobs = [], isLoading: jobsLoading } = useQuery<JobOffer[]>({
     queryKey: ["/api/jobs/mine"],
@@ -174,8 +175,8 @@ export default function CompanyDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas las familias</SelectItem>
-                  {FAMILIAS_PROFESIONALES.map((f) => (
-                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  {familiasList.map((f) => (
+                    <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -626,7 +627,9 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
   const [cicloFormativo, setCicloFormativo] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
 
-  const ciclosDisponibles = familiaProfesional ? CICLOS_POR_FAMILIA[familiaProfesional] || [] : [];
+  const { data: familiasList = [] } = useFamilias();
+  const { data: ciclosList = [] } = useCiclosByFamiliaName(familiaProfesional);
+  const ciclosDisponibles = ciclosList.map(c => c.name);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -685,8 +688,8 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
               <SelectValue placeholder="Selecciona familia" />
             </SelectTrigger>
             <SelectContent>
-              {FAMILIAS_PROFESIONALES.map((f) => (
-                <SelectItem key={f} value={f}>{f}</SelectItem>
+              {familiasList.map((f) => (
+                <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -749,7 +752,9 @@ function EditJobForm({ job, onSubmit, isPending }: { job: JobOffer; onSubmit: (d
   const [cicloFormativo, setCicloFormativo] = useState(job.cicloFormativo || "");
   const [expiresAt, setExpiresAt] = useState(job.expiresAt ? new Date(job.expiresAt).toISOString().split("T")[0] : "");
 
-  const ciclosDisponibles = familiaProfesional ? CICLOS_POR_FAMILIA[familiaProfesional] || [] : [];
+  const { data: familiasList = [] } = useFamilias();
+  const { data: ciclosList = [] } = useCiclosByFamiliaName(familiaProfesional);
+  const ciclosDisponibles = ciclosList.map(c => c.name);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -808,8 +813,8 @@ function EditJobForm({ job, onSubmit, isPending }: { job: JobOffer; onSubmit: (d
               <SelectValue placeholder="Selecciona familia" />
             </SelectTrigger>
             <SelectContent>
-              {FAMILIAS_PROFESIONALES.map((f) => (
-                <SelectItem key={f} value={f}>{f}</SelectItem>
+              {familiasList.map((f) => (
+                <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>

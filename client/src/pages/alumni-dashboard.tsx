@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { JobOffer, Application, User } from "@shared/schema";
-import { FAMILIAS_PROFESIONALES, CICLOS_POR_FAMILIA } from "@shared/schema";
+import { useFamilias, useCiclosByFamiliaName, useFpCenters } from "@/hooks/use-fp-data";
 import {
   Briefcase, Search, User as UserIcon, FileText, LogOut, Loader2, MapPin,
   Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X, ClipboardList
@@ -61,6 +61,7 @@ export default function AlumniDashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: familiasList = [] } = useFamilias();
   const [searchQuery, setSearchQuery] = useState("");
   const [applyJobId, setApplyJobId] = useState<string | null>(null);
   const [coverLetter, setCoverLetter] = useState("");
@@ -194,8 +195,8 @@ export default function AlumniDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas las familias</SelectItem>
-                  {FAMILIAS_PROFESIONALES.map((f) => (
-                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  {familiasList.map((f) => (
+                    <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -453,8 +454,10 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
   const [profilePublic, setProfilePublic] = useState(user.profilePublic);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingCv, setUploadingCv] = useState(false);
-
-  const ciclosDisponibles = familiaProfesional ? CICLOS_POR_FAMILIA[familiaProfesional] || [] : [];
+  const { data: familiasList = [] } = useFamilias();
+  const { data: fpCentersList = [] } = useFpCenters();
+  const { data: ciclosList = [] } = useCiclosByFamiliaName(familiaProfesional);
+  const ciclosDisponibles = ciclosList.map(c => c.name);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -596,8 +599,8 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
                 <SelectValue placeholder="Selecciona familia" />
               </SelectTrigger>
               <SelectContent>
-                {FAMILIAS_PROFESIONALES.map((f) => (
-                  <SelectItem key={f} value={f}>{f}</SelectItem>
+                {familiasList.map((f) => (
+                  <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -623,7 +626,16 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Centro de FP</Label>
-            <Input value={university} onChange={(e) => setUniversity(e.target.value)} data-testid="input-profile-university" />
+            <Select value={university} onValueChange={setUniversity}>
+              <SelectTrigger data-testid="select-profile-university">
+                <SelectValue placeholder="Selecciona tu centro" />
+              </SelectTrigger>
+              <SelectContent>
+                {fpCentersList.map((c) => (
+                  <SelectItem key={c.id} value={c.name}>{c.name} ({c.isla})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Año de promoción</Label>
