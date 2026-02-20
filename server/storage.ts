@@ -35,6 +35,7 @@ export interface IStorage {
   getAllApplications(): Promise<(Application & { alumni?: { name: string; email: string }; jobOffer?: { title: string } })[]>;
   getStats(): Promise<{ totalUsers: number; totalAlumni: number; totalCompanies: number; totalJobs: number; activeJobs: number; totalApplications: number }>;
   toggleJobActive(id: string, active: boolean): Promise<JobOffer | undefined>;
+  deactivateJob(id: string): Promise<JobOffer | undefined>;
   adminDeleteJob(id: string): Promise<void>;
 
   // SMTP settings
@@ -241,6 +242,11 @@ export class DatabaseStorage implements IStorage {
 
   async toggleJobActive(id: string, active: boolean): Promise<JobOffer | undefined> {
     const [job] = await db.update(jobOffers).set({ active }).where(eq(jobOffers.id, id)).returning();
+    return job;
+  }
+
+  async deactivateJob(id: string): Promise<JobOffer | undefined> {
+    const [job] = await db.update(jobOffers).set({ active: false, expiresAt: new Date() }).where(eq(jobOffers.id, id)).returning();
     return job;
   }
 

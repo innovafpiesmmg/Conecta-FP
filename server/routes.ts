@@ -852,6 +852,10 @@ export async function registerRoutes(
       const updated = await storage.updateApplicationStatus(req.params.id, status);
       if (!updated) return res.status(404).json({ message: "Candidatura no encontrada" });
 
+      if (status === "ACCEPTED") {
+        await storage.deactivateJob(job.id);
+      }
+
       const alumni = await storage.getUser(application.alumniId);
       if (alumni && job) {
         const companyName = req.user!.companyName || req.user!.name;
