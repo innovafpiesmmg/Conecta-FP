@@ -63,6 +63,8 @@ shared/
 - **Job Expiry System**: Companies can set expiry dates on job offers; auto-deactivated when expired; 7-day email reminders
 - **Application Status Notifications**: Email sent to alumni when their application status changes (pending, reviewed, accepted, rejected)
 - **Company Logos**: Company logos displayed on job cards in alumni dashboard, admin dashboard, and application listings
+- **Job Notifications**: When a new job offer is created, alumni with matching cicloFormativo receive email notifications. Alumni can toggle notifications on/off from their profile settings.
+- **Reference Data Seeding**: Familias, ciclos, FP centers, and admin user are seeded idempotently on every startup (ON CONFLICT DO NOTHING)
 
 ## Deployment (Ubuntu Server)
 - `install.sh` autoinstaller script for Ubuntu 22.04/24.04
@@ -100,6 +102,8 @@ shared/
 - POST /api/auth/resend-verification - Resend verification email
 - POST /api/auth/forgot-password - Request password reset email
 - POST /api/auth/reset-password - Reset password with token
+- GET /api/auth/notifications - Get notification preferences
+- PATCH /api/auth/notifications - Update notification preferences
 
 ### Public Directory
 - GET /api/public/alumni - List public alumni profiles (no auth required)

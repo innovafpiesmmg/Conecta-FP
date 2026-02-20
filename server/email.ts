@@ -266,6 +266,41 @@ export async function sendSuggestionEmail(
   );
 }
 
+export async function sendNewJobNotificationEmail(
+  to: string,
+  alumniName: string,
+  jobTitle: string,
+  companyName: string,
+  location: string,
+  cicloFormativo: string,
+  baseUrl: string
+): Promise<boolean> {
+  const dashboardUrl = `${baseUrl}/dashboard`;
+  return sendEmail(
+    to,
+    `Conecta FP - Nueva oferta de empleo para ${cicloFormativo}`,
+    `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Nueva oferta de empleo disponible</h2>
+      <p>Hola ${alumniName},</p>
+      <p>Se ha publicado una nueva oferta de empleo que coincide con tu formación:</p>
+      <div style="background: #f8f9fa; border-left: 4px solid #2563eb; padding: 16px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0 0 8px; font-weight: bold; color: #333; font-size: 16px;">${jobTitle}</p>
+        <p style="margin: 0 0 4px; color: #555;">Empresa: <strong>${companyName}</strong></p>
+        <p style="margin: 0 0 4px; color: #555;">Ubicación: ${location}</p>
+        <p style="margin: 0; color: #555;">Ciclo: ${cicloFormativo}</p>
+      </div>
+      <p style="margin: 30px 0;">
+        <a href="${dashboardUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+          Ver oferta
+        </a>
+      </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="color: #999; font-size: 12px;">Puedes desactivar estas notificaciones desde tu panel de titulado en la sección de configuración.</p>
+      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+    </div>`
+  );
+}
+
 export async function sendPasswordResetEmail(to: string, token: string, baseUrl: string): Promise<boolean> {
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
   return sendEmail(

@@ -62,6 +62,10 @@ export interface IStorage {
   getExpiringJobs(daysBeforeExpiry: number): Promise<(JobOffer & { company?: User })[]>;
   getExpiredJobs(): Promise<JobOffer[]>;
 
+  // Job notifications
+  getAlumniForJobNotification(cicloFormativo: string): Promise<User[]>;
+  updateJobNotifications(userId: string, enabled: boolean): Promise<User | undefined>;
+
   // CV reminder
   getAlumniNeedingCvReminder(): Promise<User[]>;
   markCvReminderSent(userId: string): Promise<void>;
@@ -383,6 +387,20 @@ export class DatabaseStorage implements IStorage {
         isNotNull(jobOffers.expiresAt),
         lte(jobOffers.expiresAt, now)
       ));
+  }
+
+  async getAlumniForJobNotification(cicloFormativo: string): Promise<User[]> {
+    return db.select().from(users).where(and(
+      eq(users.role, "ALUMNI"),
+      eq(users.cicloFormativo, cicloFormativo),
+      eq(users.jobNotificationsEnabled, true),
+      eq(users.emailVerified, true)
+    ));
+  }
+
+  async updateJobNotifications(userId: string, enabled: boolean): Promise<User | undefined> {
+    const [user] = await db.update(users).set({ jobNotificationsEnabled: enabled }).where(eq(users.id, userId)).returning();
+    return user;
   }
 
   async getAlumniNeedingCvReminder(): Promise<User[]> {

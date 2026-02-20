@@ -7,7 +7,7 @@ import type { JobOffer, Application, User } from "@shared/schema";
 import { useFamilias, useCiclosByFamiliaName, useFpCenters } from "@/hooks/use-fp-data";
 import {
   Briefcase, Search, User as UserIcon, FileText, LogOut, Loader2, MapPin,
-  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X, ClipboardList
+  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X, ClipboardList, Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -401,6 +401,8 @@ export default function AlumniDashboard() {
 
             <TotpSecuritySection />
 
+            <NotificationSettings />
+
             <Card className="p-6 border-destructive/30">
               <h3 className="font-semibold text-destructive flex items-center gap-2 mb-2">
                 <Trash2 className="w-4 h-4" /> Zona peligrosa
@@ -698,6 +700,53 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar cambios"}
         </Button>
       </form>
+    </Card>
+  );
+}
+
+function NotificationSettings() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data, isLoading } = useQuery<{ jobNotificationsEnabled: boolean }>({
+    queryKey: ["/api/auth/notifications"],
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const res = await apiRequest("PATCH", "/api/auth/notifications", { jobNotificationsEnabled: enabled });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/notifications"] });
+      toast({ title: "Preferencias actualizadas" });
+    },
+    onError: () => {
+      toast({ title: "Error al actualizar", variant: "destructive" });
+    },
+  });
+
+  if (isLoading) return null;
+
+  return (
+    <Card className="p-6">
+      <h3 className="font-semibold flex items-center gap-2 mb-4">
+        <Bell className="w-4 h-4" /> Notificaciones
+      </h3>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Nuevas ofertas de empleo</p>
+          <p className="text-xs text-muted-foreground">
+            Recibir un correo cuando se publique una oferta que coincida con tu ciclo formativo
+          </p>
+        </div>
+        <Switch
+          checked={data?.jobNotificationsEnabled ?? true}
+          onCheckedChange={(checked) => mutation.mutate(checked)}
+          disabled={mutation.isPending}
+          data-testid="switch-job-notifications"
+        />
+      </div>
     </Card>
   );
 }

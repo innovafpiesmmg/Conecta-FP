@@ -42,6 +42,7 @@ export const users = pgTable("users", {
   cvData: jsonb("cv_data"),
   cvLastUpdatedAt: timestamp("cv_last_updated_at"),
   cvReminderSentAt: timestamp("cv_reminder_sent_at"),
+  jobNotificationsEnabled: boolean("job_notifications_enabled").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

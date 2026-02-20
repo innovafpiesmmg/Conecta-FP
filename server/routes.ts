@@ -16,7 +16,7 @@ import {
   smtpSettingsSchema, cvDataSchema
 } from "@shared/schema";
 import type { User } from "@shared/schema";
-import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail, sendApplicationStatusEmail, sendNewApplicationEmail, sendSuggestionEmail } from "./email";
+import { sendVerificationEmail, sendPasswordResetEmail, sendTestEmail, sendApplicationStatusEmail, sendNewApplicationEmail, sendSuggestionEmail, sendNewJobNotificationEmail } from "./email";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 
@@ -403,6 +403,25 @@ export async function registerRoutes(
     }
   });
 
+  // ============ NOTIFICATION PREFERENCES ============
+  app.get("/api/auth/notifications", requireAuth, (req, res) => {
+    res.json({ jobNotificationsEnabled: req.user!.jobNotificationsEnabled });
+  });
+
+  app.patch("/api/auth/notifications", requireAuth, async (req, res, next) => {
+    try {
+      const { jobNotificationsEnabled } = req.body;
+      if (typeof jobNotificationsEnabled !== "boolean") {
+        return res.status(400).json({ message: "Valor inválido" });
+      }
+      const updated = await storage.updateJobNotifications(req.user!.id, jobNotificationsEnabled);
+      if (!updated) return res.status(404).json({ message: "Usuario no encontrado" });
+      res.json({ jobNotificationsEnabled: updated.jobNotificationsEnabled });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // ============ RIGHT TO ERASURE (GDPR Art. 17) ============
   app.delete("/api/auth/account", requireAuth, async (req, res, next) => {
     try {
@@ -510,6 +529,31 @@ export async function registerRoutes(
       const parsed = insertJobOfferSchema.parse(body);
       const job = await storage.createJob(req.user!.id, parsed);
       res.status(201).json(job);
+
+      if (job.cicloFormativo) {
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        const company = req.user as User;
+        const companyName = company.companyName || company.name;
+        try {
+          const alumni = await storage.getAlumniForJobNotification(job.cicloFormativo);
+          for (const alumnus of alumni) {
+            sendNewJobNotificationEmail(
+              alumnus.email,
+              alumnus.name,
+              job.title,
+              companyName,
+              job.location,
+              job.cicloFormativo,
+              baseUrl
+            ).catch(err => console.error(`[EMAIL] Error notifying ${alumnus.email}:`, err));
+          }
+          if (alumni.length > 0) {
+            console.log(`[NOTIFY] Sent new job notifications to ${alumni.length} alumni for ciclo: ${job.cicloFormativo}`);
+          }
+        } catch (err) {
+          console.error("[NOTIFY] Error sending job notifications:", err);
+        }
+      }
     } catch (err: any) {
       if (err.name === "ZodError") return res.status(400).json({ message: "Datos invalidos", errors: err.errors });
       next(err);
