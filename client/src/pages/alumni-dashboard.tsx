@@ -241,10 +241,10 @@ export default function AlumniDashboard() {
                             <Building2 className="w-3.5 h-3.5" />
                             {job.company?.companyName || "Empresa"}
                           </span>
-                          <span className="flex items-center gap-1">
+                          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.location)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors">
                             <MapPin className="w-3.5 h-3.5" />
                             {job.location}
-                          </span>
+                          </a>
                           {(job.salaryMin || job.salaryMax) && (
                             <span>
                               {job.salaryMin && job.salaryMax
@@ -360,7 +360,9 @@ export default function AlumniDashboard() {
                       <div>
                         <h3 className="font-semibold">{app.jobOffer?.title || "Oferta"}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {app.jobOffer?.company?.companyName || "Empresa"} - {app.jobOffer?.location}
+                          {app.jobOffer?.company?.companyName || "Empresa"} - {app.jobOffer?.location && (
+                            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(app.jobOffer.location)}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">{app.jobOffer.location}</a>
+                          )}
                         </p>
                         {app.coverLetter && (
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
@@ -441,6 +443,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
   const cvInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone || "");
+  const [whatsapp, setWhatsapp] = useState(user.whatsapp || "");
   const [bio, setBio] = useState(user.bio || "");
   const [university, setUniversity] = useState(user.university || "");
   const [graduationYear, setGraduationYear] = useState(user.graduationYear?.toString() || "");
@@ -456,7 +459,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
-      name, phone, bio, university,
+      name, phone, whatsapp, bio, university,
       graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
       familiaProfesional: familiaProfesional || undefined,
       cicloFormativo: cicloFormativo || undefined,
@@ -565,7 +568,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Nombre completo</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} data-testid="input-profile-name" />
@@ -573,6 +576,10 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
           <div className="space-y-2">
             <Label>Teléfono</Label>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+34 600 000 000" data-testid="input-profile-phone" />
+          </div>
+          <div className="space-y-2">
+            <Label>WhatsApp</Label>
+            <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+34 600 000 000" data-testid="input-profile-whatsapp" />
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

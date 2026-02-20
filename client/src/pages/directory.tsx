@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import {
   Briefcase, Search, GraduationCap, Building2, MapPin, Globe,
-  Mail, User as UserIcon, Loader2
+  Mail, User as UserIcon, Loader2, Phone, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +23,8 @@ type PublicAlumni = {
   cicloFormativo: string | null;
   skills: string | null;
   profilePhotoUrl: string | null;
+  phone: string | null;
+  whatsapp: string | null;
 };
 
 type PublicCompany = {
@@ -35,6 +37,8 @@ type PublicCompany = {
   companyLogoUrl: string | null;
   companyEmail: string | null;
   profilePhotoUrl: string | null;
+  phone: string | null;
+  whatsapp: string | null;
 };
 
 export default function Directory() {
@@ -191,6 +195,20 @@ export default function Directory() {
                       </div>
                     )}
                     {a.bio && <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{a.bio}</p>}
+                    {(a.phone || a.whatsapp) && (
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-2">
+                        {a.phone && (
+                          <a href={`tel:${a.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+                            <Phone className="w-3 h-3" />{a.phone}
+                          </a>
+                        )}
+                        {a.whatsapp && (
+                          <a href={`https://wa.me/${a.whatsapp.replace(/[^0-9+]/g, "").replace("+", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-green-600 transition-colors">
+                            <MessageCircle className="w-3 h-3" />WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    )}
                     {a.skills && (
                       <div className="flex flex-wrap gap-1">
                         {a.skills.split(",").slice(0, 4).map((skill, i) => (
@@ -289,7 +307,19 @@ export default function Directory() {
                           data-testid={`link-email-${c.id}`}
                         >
                           <Mail className="w-3 h-3" />
-                          Contacto
+                          Email
+                        </a>
+                      )}
+                      {c.phone && (
+                        <a href={`tel:${c.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+                          <Phone className="w-3 h-3" />
+                          Llamar
+                        </a>
+                      )}
+                      {c.whatsapp && (
+                        <a href={`https://wa.me/${c.whatsapp.replace(/[^0-9+]/g, "").replace("+", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-green-600 transition-colors">
+                          <MessageCircle className="w-3 h-3" />
+                          WhatsApp
                         </a>
                       )}
                     </div>

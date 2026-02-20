@@ -9,7 +9,7 @@ import {
   Briefcase, Plus, Users, LogOut, Loader2, MapPin, Clock, Building2,
   Mail, Phone, GraduationCap, FileText, ChevronDown, ChevronUp,
   Trash2, Shield, ExternalLink, Eye, Camera, Upload, X, User as UserIcon, Image,
-  Search, Pencil
+  Search, Pencil, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -323,7 +323,7 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
               </div>
             )}
             <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{job.location}</span>
+              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.location)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors"><MapPin className="w-3.5 h-3.5" />{job.location}</a>
               {(job.salaryMin || job.salaryMax) && (
                 <span>
                   {job.salaryMin && job.salaryMax
@@ -417,10 +417,13 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                         {app.alumni?.email && (
-                          <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{app.alumni.email}</span>
+                          <a href={`mailto:${app.alumni.email}`} className="flex items-center gap-1 hover:text-primary transition-colors"><Mail className="w-3 h-3" />{app.alumni.email}</a>
                         )}
                         {app.alumni?.phone && (
-                          <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{app.alumni.phone}</span>
+                          <a href={`tel:${app.alumni.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors"><Phone className="w-3 h-3" />{app.alumni.phone}</a>
+                        )}
+                        {app.alumni?.whatsapp && (
+                          <a href={`https://wa.me/${app.alumni.whatsapp.replace(/[^0-9+]/g, "").replace("+", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-green-600 transition-colors"><MessageCircle className="w-3 h-3" />{app.alumni.whatsapp}</a>
                         )}
                         {app.alumni?.university && (
                           <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{app.alumni.university}</span>
@@ -745,6 +748,7 @@ function CompanyProfileForm({ user }: { user: User }) {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone || "");
+  const [whatsapp, setWhatsapp] = useState(user.whatsapp || "");
   const [companyName, setCompanyName] = useState(user.companyName || "");
   const [companyDescription, setCompanyDescription] = useState(user.companyDescription || "");
   const [companyWebsite, setCompanyWebsite] = useState(user.companyWebsite || "");
@@ -769,7 +773,7 @@ function CompanyProfileForm({ user }: { user: User }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate({ name, phone, companyName, companyDescription, companyWebsite, companySector, companyEmail, companyCif, profilePublic });
+    updateMutation.mutate({ name, phone, whatsapp, companyName, companyDescription, companyWebsite, companySector, companyEmail, companyCif, profilePublic });
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -901,6 +905,10 @@ function CompanyProfileForm({ user }: { user: User }) {
           <div className="space-y-2">
             <Label>Teléfono</Label>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} data-testid="input-company-phone" />
+          </div>
+          <div className="space-y-2">
+            <Label>WhatsApp</Label>
+            <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+34 600 000 000" data-testid="input-company-whatsapp" />
           </div>
           <div className="space-y-2">
             <Label>Nombre de la empresa</Label>

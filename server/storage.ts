@@ -30,8 +30,8 @@ export interface IStorage {
   deleteApplicationsByAlumni(alumniId: string): Promise<void>;
 
   // Public profiles
-  getPublicAlumni(): Promise<{ id: string; name: string; bio: string | null; university: string | null; graduationYear: number | null; familiaProfesional: string | null; cicloFormativo: string | null; skills: string | null; profilePhotoUrl: string | null }[]>;
-  getPublicCompanies(): Promise<{ id: string; name: string; companyName: string | null; companyDescription: string | null; companyWebsite: string | null; companySector: string | null; companyLogoUrl: string | null; companyEmail: string | null; profilePhotoUrl: string | null }[]>;
+  getPublicAlumni(): Promise<{ id: string; name: string; bio: string | null; university: string | null; graduationYear: number | null; familiaProfesional: string | null; cicloFormativo: string | null; skills: string | null; profilePhotoUrl: string | null; phone: string | null; whatsapp: string | null }[]>;
+  getPublicCompanies(): Promise<{ id: string; name: string; companyName: string | null; companyDescription: string | null; companyWebsite: string | null; companySector: string | null; companyLogoUrl: string | null; companyEmail: string | null; profilePhotoUrl: string | null; phone: string | null; whatsapp: string | null }[]>;
 
   // Admin methods
   getAllUsers(): Promise<User[]>;
@@ -214,6 +214,7 @@ export class DatabaseStorage implements IStorage {
       id: users.id, name: users.name, bio: users.bio, university: users.university,
       graduationYear: users.graduationYear, familiaProfesional: users.familiaProfesional,
       cicloFormativo: users.cicloFormativo, skills: users.skills, profilePhotoUrl: users.profilePhotoUrl,
+      phone: users.phone, whatsapp: users.whatsapp,
     }).from(users).where(and(eq(users.role, "ALUMNI"), eq(users.profilePublic, true))).orderBy(desc(users.createdAt));
     return result;
   }
@@ -224,6 +225,7 @@ export class DatabaseStorage implements IStorage {
       companyDescription: users.companyDescription, companyWebsite: users.companyWebsite,
       companySector: users.companySector, companyLogoUrl: users.companyLogoUrl,
       companyEmail: users.companyEmail, profilePhotoUrl: users.profilePhotoUrl,
+      phone: users.phone, whatsapp: users.whatsapp,
     }).from(users).where(and(eq(users.role, "COMPANY"), eq(users.profilePublic, true))).orderBy(desc(users.createdAt));
     return result;
   }

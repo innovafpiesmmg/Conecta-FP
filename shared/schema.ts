@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   role: roleEnum("role").notNull(),
   name: text("name").notNull(),
   phone: text("phone"),
+  whatsapp: text("whatsapp"),
   bio: text("bio"),
   cvUrl: text("cv_url"),
   university: text("university"),
@@ -138,6 +139,7 @@ export const insertApplicationSchema = createInsertSchema(applications).omit({
 export const updateProfileAlumniSchema = z.object({
   name: z.string().min(2).optional(),
   phone: z.string().optional(),
+  whatsapp: z.string().optional(),
   bio: z.string().optional(),
   university: z.string().optional(),
   graduationYear: z.number().optional(),
@@ -150,6 +152,7 @@ export const updateProfileAlumniSchema = z.object({
 export const updateProfileCompanySchema = z.object({
   name: z.string().min(2).optional(),
   phone: z.string().optional(),
+  whatsapp: z.string().optional(),
   companyName: z.string().optional(),
   companyEmail: z.string().email("Email corporativo no válido").optional().or(z.literal("")),
   companyCif: z.string().optional(),
