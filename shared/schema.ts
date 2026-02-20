@@ -76,6 +76,15 @@ export const jobOffers = pgTable("job_offers", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const fpCenters = pgTable("fp_centers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  municipio: text("municipio").notNull(),
+  isla: text("isla").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const applications = pgTable("applications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   alumniId: varchar("alumni_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -207,6 +216,8 @@ export type CvEducation = z.infer<typeof cvEducationSchema>;
 export type CvExperience = z.infer<typeof cvExperienceSchema>;
 export type CvLanguage = z.infer<typeof cvLanguageSchema>;
 
+export const insertFpCenterSchema = createInsertSchema(fpCenters).omit({ id: true, createdAt: true });
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type JobOffer = typeof jobOffers.$inferSelect;
@@ -214,6 +225,8 @@ export type InsertJobOffer = z.infer<typeof insertJobOfferSchema>;
 export type Application = typeof applications.$inferSelect;
 export type InsertApplication = z.infer<typeof insertApplicationSchema>;
 export type SmtpSettings = typeof smtpSettings.$inferSelect;
+export type FpCenter = typeof fpCenters.$inferSelect;
+export type InsertFpCenter = z.infer<typeof insertFpCenterSchema>;
 
 export const FAMILIAS_PROFESIONALES = [
   "Informática y Comunicaciones",

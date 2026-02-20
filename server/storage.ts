@@ -1,10 +1,10 @@
 import { eq, and, desc, count, sql, lt, isNull, isNotNull, lte } from "drizzle-orm";
 import { db } from "./db";
 import {
-  users, jobOffers, applications, smtpSettings,
+  users, jobOffers, applications, smtpSettings, fpCenters,
   type User, type InsertUser, type JobOffer, type InsertJobOffer,
   type Application, type InsertApplication, type SmtpSettings,
-  type CvData
+  type CvData, type FpCenter, type InsertFpCenter
 } from "@shared/schema";
 
 export interface IStorage {
@@ -63,6 +63,13 @@ export interface IStorage {
   getAlumniNeedingCvReminder(): Promise<User[]>;
   markCvReminderSent(userId: string): Promise<void>;
   markExpiryReminderSent(jobId: string): Promise<void>;
+
+  // FP Centers
+  getAllFpCenters(): Promise<FpCenter[]>;
+  getActiveFpCenters(): Promise<FpCenter[]>;
+  createFpCenter(data: InsertFpCenter): Promise<FpCenter>;
+  updateFpCenter(id: string, data: Partial<InsertFpCenter>): Promise<FpCenter | undefined>;
+  deleteFpCenter(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
