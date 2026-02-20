@@ -16,7 +16,26 @@ declare global {
 
 const PgSession = connectPgSimple(session);
 
+async function ensureSessionTable() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+      ) WITH (OIDS=FALSE);
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+    `);
+  } finally {
+    client.release();
+  }
+}
+
 export function setupAuth(app: Express) {
+  ensureSessionTable().catch(err => console.error("Error creating session table:", err));
+
   const sessionSecret = process.env.SESSION_SECRET || "alumni-jobs-secret-key-change-in-production";
 
   app.use(
@@ -24,7 +43,7 @@ export function setupAuth(app: Express) {
       store: new PgSession({
         pool: pool as any,
         tableName: "session",
-        createTableIfMissing: true,
+        createTableIfMissing: false,
       }),
       secret: sessionSecret,
       resave: false,
