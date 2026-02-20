@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import { storage } from "./storage";
 
 export async function seedDatabase() {
+  if (process.env.NODE_ENV === "production") return;
+
   const existingUser = await storage.getUserByEmail("empresa@techcorp.es");
   if (existingUser) return;
 

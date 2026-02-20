@@ -175,7 +175,13 @@ chmod +x install.sh
 sudo ./install.sh
 ```
 
-El instalador realizará automáticamente las siguientes acciones:
+El instalador te pedirá los siguientes datos:
+
+- **Email del administrador**: el correo electrónico para la cuenta de administrador
+- **Contraseña del administrador**: la contraseña para acceder al panel de administración (mínimo 6 caracteres, se pide confirmación)
+- **Nombre del administrador**: nombre que se mostrará en el panel (opcional, por defecto "Administrador")
+
+Después, realizará automáticamente las siguientes acciones:
 
 1. Instalar todas las dependencias del sistema (`curl`, `git`, `openssl`, `nginx`, `postgresql`, `build-essential`)
 2. Instalar Node.js 20.x
@@ -184,11 +190,12 @@ El instalador realizará automáticamente las siguientes acciones:
 5. Guardar la configuración en `/etc/conectafp/env`
 6. Clonar el repositorio, instalar dependencias npm y compilar la aplicación
 7. Ejecutar las migraciones de base de datos
-8. Configurar el servicio systemd para que la aplicación se inicie automáticamente
-9. Configurar Nginx como proxy reverso en el puerto 80
-10. (Opcional) Configurar Cloudflare Tunnel para acceso HTTPS
+8. Crear la cuenta de administrador con las credenciales proporcionadas
+9. Configurar el servicio systemd para que la aplicación se inicie automáticamente
+10. Configurar Nginx como proxy reverso en el puerto 80
+11. (Opcional) Configurar Cloudflare Tunnel para acceso HTTPS
 
-Al finalizar, el instalador mostrará la URL de acceso y las credenciales por defecto.
+Al finalizar, el instalador mostrará la URL de acceso y el email del administrador.
 
 #### Paso 7: Verificar la instalación
 
@@ -765,9 +772,13 @@ sudo systemctl restart cloudflared
 
 ---
 
-## Credenciales por Defecto
+## Credenciales
 
-La aplicación incluye datos de demostración con los siguientes usuarios:
+### Producción (servidor Ubuntu)
+Durante la instalación, el script te pedirá el email y la contraseña del administrador. No se crean usuarios de demostración en producción. Los titulados y empresas se registran ellos mismos a través del formulario de registro.
+
+### Desarrollo (entorno Replit)
+En el entorno de desarrollo se crean automáticamente usuarios de demostración:
 
 | Rol | Email | Contraseña |
 |-----|-------|------------|
@@ -775,7 +786,7 @@ La aplicación incluye datos de demostración con los siguientes usuarios:
 | Titulado FP | `maria@alumni.com` | `password123` |
 | Empresa | `empresa@techcorp.es` | `password123` |
 
-> **IMPORTANTE**: Cambia estas contraseñas inmediatamente después de la primera instalación en un entorno de producción.
+> **Nota**: Estos usuarios de demostración solo se crean en desarrollo, nunca en producción.
 
 ---
 

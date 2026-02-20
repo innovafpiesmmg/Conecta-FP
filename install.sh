@@ -74,6 +74,42 @@ if [ -f "$CONFIG_DIR/env" ]; then
 else
     print_status "Instalación nueva detectada"
     echo ""
+
+    # Pedir credenciales del administrador
+    print_header "Datos del administrador"
+    echo -e "Se necesita un email y contraseña para la cuenta de administrador."
+    echo ""
+
+    while true; do
+        read -p "Email del administrador: " ADMIN_EMAIL
+        if [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            break
+        else
+            print_error "Email no válido. Introduce un email correcto."
+        fi
+    done
+
+    while true; do
+        read -s -p "Contraseña del administrador (mínimo 6 caracteres): " ADMIN_PASSWORD
+        echo ""
+        if [ ${#ADMIN_PASSWORD} -ge 6 ]; then
+            read -s -p "Repite la contraseña: " ADMIN_PASSWORD_CONFIRM
+            echo ""
+            if [ "$ADMIN_PASSWORD" = "$ADMIN_PASSWORD_CONFIRM" ]; then
+                break
+            else
+                print_error "Las contraseñas no coinciden. Inténtalo de nuevo."
+            fi
+        else
+            print_error "La contraseña debe tener al menos 6 caracteres."
+        fi
+    done
+
+    read -p "Nombre del administrador [Administrador]: " ADMIN_NAME
+    ADMIN_NAME=${ADMIN_NAME:-"Administrador"}
+
+    print_success "Datos del administrador recogidos"
+    echo ""
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -235,6 +271,12 @@ cd "$APP_DIR"
 sudo -u "$APP_USER" DATABASE_URL="$DATABASE_URL" npx drizzle-kit push --force 2>&1 | tail -5
 print_success "Esquema de base de datos actualizado"
 
+if [ "$IS_UPDATE" = false ] && [ -n "$ADMIN_EMAIL" ]; then
+    print_status "Creando usuario administrador..."
+    sudo -u "$APP_USER" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_NAME="$ADMIN_NAME" DATABASE_URL="$DATABASE_URL" npx tsx server/create-admin.ts 2>&1
+    print_success "Administrador creado: $ADMIN_EMAIL"
+fi
+
 print_status "Limpiando dependencias de desarrollo..."
 sudo -u "$APP_USER" npm prune --omit=dev 2>&1 | tail -1
 print_success "Dependencias de producción optimizadas"
@@ -365,11 +407,12 @@ if [ -n "$CF_TOKEN" ]; then
     echo -e "  ${BOLD}Cloudflare:${NC}     Configurado (acceso HTTPS via tu dominio)"
 fi
 echo ""
-echo -e "  ${BOLD}Credenciales por defecto:${NC}"
-echo -e "    Admin:        admin@conectafp.es / admin123"
-echo -e "    Titulado FP:  maria@alumni.com / password123"
-echo -e "    Empresa:      empresa@techcorp.es / password123"
-echo ""
+if [ "$IS_UPDATE" = false ] && [ -n "$ADMIN_EMAIL" ]; then
+    echo -e "  ${BOLD}Cuenta de administrador:${NC}"
+    echo -e "    Email:        $ADMIN_EMAIL"
+    echo -e "    Contraseña:   (la que introdujiste durante la instalación)"
+    echo ""
+fi
 echo -e "  ${BOLD}Comandos útiles:${NC}"
 echo -e "    Estado:       ${GREEN}systemctl status $APP_NAME${NC}"
 echo -e "    Logs:         ${GREEN}journalctl -u $APP_NAME -f${NC}"
@@ -379,16 +422,10 @@ echo -e "    Nginx logs:   ${GREEN}tail -f /var/log/nginx/error.log${NC}"
 echo ""
 echo -e "  ${BOLD}Archivos importantes:${NC}"
 echo -e "    Aplicación:   $APP_DIR"
-echo -e "    Configuración:$CONFIG_DIR/env"
+echo -e "    Configuración: $CONFIG_DIR/env"
 echo -e "    Uploads:      $UPLOADS_DIR"
 echo -e "    Servicio:     /etc/systemd/system/$APP_NAME.service"
 echo ""
-
-if [ "$IS_UPDATE" = false ]; then
-    echo -e "  ${YELLOW}${BOLD}IMPORTANTE:${NC} Cambia las contraseñas por defecto después"
-    echo -e "  del primer inicio de sesión."
-    echo ""
-fi
 
 if [ "$APP_OK" = false ]; then
     echo -e "  ${YELLOW}${BOLD}NOTA:${NC} La aplicación puede tardar unos segundos en iniciar."
