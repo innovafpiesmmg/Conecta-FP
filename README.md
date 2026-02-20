@@ -438,42 +438,85 @@ Accede a tu dominio configurado en Cloudflare (ejemplo: `https://empleo.tucentro
 
 ## Actualización
 
-Para actualizar la aplicación a la última versión, simplemente vuelve a ejecutar el instalador:
+Cuando se publiquen nuevas versiones en el repositorio de GitHub, puedes actualizar tu servidor de dos formas.
+
+### Opción 1: Usando el script de instalación (Recomendada)
+
+El mismo `install.sh` sirve para actualizar. Primero, descarga la versión más reciente del script y luego ejecútalo:
 
 ```bash
+# 1. Descargar la última versión del script de instalación desde GitHub
+cd ~
+wget -O install.sh https://raw.githubusercontent.com/innovafpiesmmg/Conecta-FP/main/install.sh
+chmod +x install.sh
+
+# 2. Ejecutar el instalador
 sudo ./install.sh
 ```
 
-El script detectará automáticamente que ya existe una instalación y:
-- Preservará la base de datos y todos los datos
-- Preservará las credenciales y la configuración (`/etc/conectafp/env`)
-- Preservará los archivos subidos (fotos, logos, CVs)
-- Descargará el código más reciente del repositorio
+El script detectará automáticamente que ya existe una instalación (modo ACTUALIZACIÓN) y:
+- **NO** pedirá datos del administrador (ya existe)
+- **Preservará** la base de datos y todos los datos de usuarios, ofertas y candidaturas
+- **Preservará** la configuración (`/etc/conectafp/env`) con las contraseñas y secretos
+- **Preservará** los archivos subidos (fotos de perfil, logos, CVs)
+- Descargará el código más reciente del repositorio de GitHub
+- Reinstalará las dependencias npm necesarias
 - Recompilará la aplicación
-- Ejecutará las migraciones de base de datos necesarias
-- Reiniciará los servicios
+- Ejecutará las migraciones de base de datos (si hay cambios en el esquema)
+- Reiniciará los servicios automáticamente
 
-### Actualización manual (alternativa)
+> **Nota**: Es importante descargar siempre la última versión de `install.sh` antes de ejecutarlo, ya que el propio script puede haber sido actualizado con mejoras o correcciones.
+
+### Opción 2: Actualización manual paso a paso
+
+Si prefieres tener más control sobre el proceso, puedes actualizar manualmente:
 
 ```bash
-cd /var/www/conectafp
+# 1. Detener la aplicación
+sudo systemctl stop conectafp
 
-# Descargar última versión
+# 2. Descargar la última versión del código
+cd /var/www/conectafp
 sudo -u conectafp git fetch --all
 sudo -u conectafp git reset --hard origin/main
 
-# Reinstalar y recompilar
+# 3. Instalar dependencias (incluye herramientas de compilación)
 sudo -u conectafp npm install
+
+# 4. Recompilar la aplicación
 sudo -u conectafp npm run build
 
-# Migrar base de datos
+# 5. Ejecutar migraciones de base de datos
 source /etc/conectafp/env
 sudo -u conectafp DATABASE_URL="$DATABASE_URL" npx drizzle-kit push --force
 
-# Limpiar y reiniciar
+# 6. Limpiar dependencias de desarrollo
 sudo -u conectafp npm prune --omit=dev
-sudo systemctl restart conectafp
+
+# 7. Reiniciar la aplicación
+sudo systemctl start conectafp
+
+# 8. Verificar que funciona
+sudo systemctl status conectafp
 ```
+
+### Verificar la actualización
+
+Después de actualizar, comprueba que todo funciona:
+
+```bash
+# Ver el estado del servicio
+sudo systemctl status conectafp
+
+# Ver los logs en tiempo real (Ctrl+C para salir)
+sudo journalctl -u conectafp -f
+
+# Probar la conexión
+curl -s -o /dev/null -w "%{http_code}" http://localhost:5000
+# Debería devolver 200
+```
+
+Si algo va mal, revisa los logs con `journalctl -u conectafp -n 50` para identificar el error.
 
 ---
 
