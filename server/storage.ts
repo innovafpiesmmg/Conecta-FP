@@ -154,6 +154,7 @@ export class DatabaseStorage implements IStorage {
         name: alumni.name,
         email: alumni.email,
         phone: alumni.phone,
+        whatsapp: alumni.whatsapp,
         bio: alumni.bio,
         cvUrl: alumni.cvUrl,
         university: alumni.university,

@@ -81,7 +81,7 @@ export async function sendVerificationEmail(to: string, token: string, baseUrl: 
 }
 
 export async function sendCvUpdateReminderEmail(to: string, name: string, baseUrl: string): Promise<boolean> {
-  const dashboardUrl = `${baseUrl}/alumni`;
+  const dashboardUrl = `${baseUrl}/dashboard`;
   return sendEmail(
     to,
     "Conecta FP - Recordatorio: Actualiza tu CV",
@@ -150,7 +150,7 @@ export async function sendApplicationStatusEmail(
     ACCEPTED: "¡Enhorabuena! La empresa ha aceptado tu candidatura. Es posible que se pongan en contacto contigo próximamente.",
     REJECTED: "Lamentablemente, la empresa ha decidido no continuar con tu candidatura en esta ocasión.",
   };
-  const dashboardUrl = `${baseUrl}/alumni`;
+  const dashboardUrl = `${baseUrl}/dashboard`;
   const label = statusLabels[status] || status;
   const color = statusColors[status] || "#6b7280";
   const message = statusMessages[status] || "El estado de tu candidatura ha cambiado.";

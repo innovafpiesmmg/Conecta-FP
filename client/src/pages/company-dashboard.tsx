@@ -259,6 +259,7 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
   const { toast } = useToast();
   const [viewCvAlumniId, setViewCvAlumniId] = useState<string | null>(null);
   const [viewCvAlumniName, setViewCvAlumniName] = useState("");
+  const [viewProfileAlumni, setViewProfileAlumni] = useState<User | null>(null);
   const [showExtend, setShowExtend] = useState(false);
   const [newExpiryDate, setNewExpiryDate] = useState("");
   const [showEdit, setShowEdit] = useState(false);
@@ -409,11 +410,21 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                 <Card key={app.id} className="p-4">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="font-medium text-sm">{app.alumni?.name || "Candidato"}</span>
-                        <Badge variant={statusVariants[app.status]} className="text-xs">
-                          {statusLabels[app.status]}
-                        </Badge>
+                      <div className="flex items-center gap-3 mb-2">
+                        {app.alumni?.profilePhotoUrl && (
+                          <img src={app.alumni.profilePhotoUrl} alt={app.alumni.name} className="w-10 h-10 rounded-full object-cover border" />
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm">{app.alumni?.name || "Candidato"}</span>
+                            <Badge variant={statusVariants[app.status]} className="text-xs">
+                              {statusLabels[app.status]}
+                            </Badge>
+                          </div>
+                          {app.alumni?.university && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><GraduationCap className="w-3 h-3" />{app.alumni.university}{app.alumni.graduationYear ? ` (${app.alumni.graduationYear})` : ""}</span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                         {app.alumni?.email && (
@@ -425,12 +436,9 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                         {app.alumni?.whatsapp && (
                           <a href={`https://wa.me/${app.alumni.whatsapp.replace(/[^0-9+]/g, "").replace("+", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-green-600 transition-colors"><MessageCircle className="w-3 h-3" />{app.alumni.whatsapp}</a>
                         )}
-                        {app.alumni?.university && (
-                          <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{app.alumni.university}</span>
-                        )}
                       </div>
                       {(app.alumni?.familiaProfesional || app.alumni?.cicloFormativo) && (
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           {app.alumni?.familiaProfesional && <Badge variant="outline" className="text-xs">{app.alumni.familiaProfesional}</Badge>}
                           {app.alumni?.cicloFormativo && <Badge variant="secondary" className="text-xs">{app.alumni.cicloFormativo}</Badge>}
                         </div>
@@ -438,26 +446,36 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                       {app.alumni?.skills && (
                         <p className="text-xs text-muted-foreground mt-1">Habilidades: {app.alumni.skills}</p>
                       )}
+                      {app.alumni?.bio && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{app.alumni.bio}</p>
+                      )}
                       {app.coverLetter && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          <FileText className="w-3 h-3 inline mr-1" />{app.coverLetter}
+                          <FileText className="w-3 h-3 inline mr-1" />Carta: {app.coverLetter}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                      <div className="flex items-center gap-3 mt-2 flex-wrap">
                         {app.alumni?.cvUrl && (
-                          <a href={`/api/uploads/cv/${app.alumni.cvUrl.split("/").pop()}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary flex items-center gap-1">
+                          <a href={`/api/uploads/cv/${app.alumni.cvUrl.split("/").pop()}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary flex items-center gap-1 hover:underline" data-testid={`link-cv-pdf-${app.id}`}>
                             <ExternalLink className="w-3 h-3" /> Ver CV (PDF)
                           </a>
                         )}
                         {!!(app.alumni?.cvData) && (
                           <button
                             onClick={() => { setViewCvAlumniId(app.alumni!.id); setViewCvAlumniName(app.alumni!.name); }}
-                            className="text-xs text-primary flex items-center gap-1"
+                            className="text-xs text-primary flex items-center gap-1 hover:underline"
                             data-testid={`button-view-dynamic-cv-${app.id}`}
                           >
                             <FileText className="w-3 h-3" /> Ver CV dinámico
                           </button>
                         )}
+                        <button
+                          onClick={() => { setViewProfileAlumni(app.alumni || null); }}
+                          className="text-xs text-primary flex items-center gap-1 hover:underline"
+                          data-testid={`button-view-profile-${app.id}`}
+                        >
+                          <Eye className="w-3 h-3" /> Ver perfil completo
+                        </button>
                       </div>
                     </div>
                     <Select
@@ -489,6 +507,104 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
             <DialogDescription>CV dinámico del candidato</DialogDescription>
           </DialogHeader>
           {viewCvAlumniId && <CvBuilder readOnly alumniId={viewCvAlumniId} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewProfileAlumni} onOpenChange={(open) => { if (!open) setViewProfileAlumni(null); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Perfil del candidato</DialogTitle>
+            <DialogDescription>Datos completos del candidato</DialogDescription>
+          </DialogHeader>
+          {viewProfileAlumni && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                {viewProfileAlumni.profilePhotoUrl ? (
+                  <img src={viewProfileAlumni.profilePhotoUrl} alt={viewProfileAlumni.name} className="w-16 h-16 rounded-full object-cover border" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                    <UserIcon className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold text-lg">{viewProfileAlumni.name}</h3>
+                  {viewProfileAlumni.university && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <GraduationCap className="w-4 h-4" />{viewProfileAlumni.university}
+                      {viewProfileAlumni.graduationYear ? ` (Promoción ${viewProfileAlumni.graduationYear})` : ""}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Contacto</h4>
+                <div className="space-y-1.5 text-sm">
+                  <a href={`mailto:${viewProfileAlumni.email}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                    <Mail className="w-4 h-4" />{viewProfileAlumni.email}
+                  </a>
+                  {viewProfileAlumni.phone && (
+                    <a href={`tel:${viewProfileAlumni.phone}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Phone className="w-4 h-4" />{viewProfileAlumni.phone}
+                    </a>
+                  )}
+                  {viewProfileAlumni.whatsapp && (
+                    <a href={`https://wa.me/${viewProfileAlumni.whatsapp.replace(/[^0-9+]/g, "").replace("+", "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-green-600 transition-colors">
+                      <MessageCircle className="w-4 h-4" />{viewProfileAlumni.whatsapp}
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {(viewProfileAlumni.familiaProfesional || viewProfileAlumni.cicloFormativo) && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Formación Profesional</h4>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {viewProfileAlumni.familiaProfesional && <Badge variant="outline">{viewProfileAlumni.familiaProfesional}</Badge>}
+                    {viewProfileAlumni.cicloFormativo && <Badge variant="secondary">{viewProfileAlumni.cicloFormativo}</Badge>}
+                  </div>
+                </div>
+              )}
+
+              {viewProfileAlumni.bio && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Sobre mí</h4>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{viewProfileAlumni.bio}</p>
+                </div>
+              )}
+
+              {viewProfileAlumni.skills && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Habilidades</h4>
+                  <p className="text-sm text-muted-foreground">{viewProfileAlumni.skills}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Currículum</h4>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {viewProfileAlumni.cvUrl ? (
+                    <a href={`/api/uploads/cv/${viewProfileAlumni.cvUrl.split("/").pop()}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary flex items-center gap-1 hover:underline">
+                      <ExternalLink className="w-4 h-4" /> Descargar CV (PDF)
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No ha subido CV en PDF</span>
+                  )}
+                  {!!(viewProfileAlumni.cvData) && (
+                    <button
+                      onClick={() => { setViewProfileAlumni(null); setViewCvAlumniId(viewProfileAlumni.id); setViewCvAlumniName(viewProfileAlumni.name); }}
+                      className="text-sm text-primary flex items-center gap-1 hover:underline"
+                    >
+                      <FileText className="w-4 h-4" /> Ver CV dinámico
+                    </button>
+                  )}
+                  {!viewProfileAlumni.cvUrl && !viewProfileAlumni.cvData && (
+                    <span className="text-sm text-muted-foreground">No ha creado CV dinámico</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Card>
