@@ -359,7 +359,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="border-t py-8 bg-blue-50 dark:bg-blue-950/30">
+      <footer className="border-t py-8 bg-blue-100 dark:bg-blue-950/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex flex-col items-center sm:items-start gap-1">
             <div className="flex items-center gap-2">
