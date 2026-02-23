@@ -367,22 +367,24 @@ export default function Landing() {
               <span>Conecta FP Canarias - Portal de Empleo Privado</span>
             </div>
             <span className="text-xs text-muted-foreground">Un proyecto promovido por el Dpto. de Administración de Empresas del IES Manuel Martín González</span>
+          </div>
+          <div className="flex flex-col items-center sm:items-end gap-2">
+            <div className="flex items-center gap-4 flex-wrap">
+              <Link href="/sugerencias">
+                <span className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1" data-testid="link-suggestions-footer">
+                  <MessageSquarePlus className="w-3.5 h-3.5" />
+                  Sugerencias
+                </span>
+              </Link>
+              <Link href="/terms">
+                <span className="cursor-pointer hover:text-foreground transition-colors" data-testid="link-terms-footer">Términos y Privacidad</span>
+              </Link>
+              <span>Protegido por RGPD</span>
+            </div>
             <span className="text-xs text-muted-foreground flex items-center gap-1.5">
               <img src={asdLogo} alt="Atreyu Servicios Digitales" className="h-4 w-auto" data-testid="img-asd-logo" />
               Software desarrollado por Atreyu Servicios Digitales
             </span>
-          </div>
-          <div className="flex items-center gap-4 flex-wrap">
-            <Link href="/sugerencias">
-              <span className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1" data-testid="link-suggestions-footer">
-                <MessageSquarePlus className="w-3.5 h-3.5" />
-                Sugerencias
-              </span>
-            </Link>
-            <Link href="/terms">
-              <span className="cursor-pointer hover:text-foreground transition-colors" data-testid="link-terms-footer">Términos y Privacidad</span>
-            </Link>
-            <span>Protegido por RGPD</span>
           </div>
         </div>
       </footer>
