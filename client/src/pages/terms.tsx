@@ -111,7 +111,19 @@ export default function Terms() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">9. Declaración de Aceptación</h2>
+              <h2 className="text-lg font-semibold">9. Política de Cookies</h2>
+              <p className="leading-relaxed text-muted-foreground">
+                Conecta-FP utiliza exclusivamente cookies técnicas estrictamente necesarias para el funcionamiento de la plataforma. En concreto:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li><strong className="text-foreground">Cookie de sesión:</strong> Se genera una cookie de sesión al iniciar sesión en la plataforma. Su única finalidad es mantener la sesión del usuario activa y autenticada durante la navegación. Esta cookie se elimina automáticamente al cerrar sesión o tras un periodo de inactividad.</li>
+                <li><strong className="text-foreground">Ausencia de cookies de terceros:</strong> La plataforma NO utiliza cookies de seguimiento, publicidad, analítica de terceros ni ningún otro tipo de cookie que no sea estrictamente necesaria para la prestación del servicio.</li>
+                <li><strong className="text-foreground">Base legal:</strong> Al tratarse de cookies técnicas imprescindibles para el funcionamiento del servicio, su uso está amparado por el artículo 22.2 de la Ley 34/2002 (LSSI-CE) y no requieren consentimiento previo del usuario, conforme a las directrices de la Agencia Española de Protección de Datos (AEPD).</li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">10. Declaración de Aceptación</h2>
               <p className="leading-relaxed text-muted-foreground">
                 Al registrarme en la plataforma y pulsar el botón de aceptación, declaro expresamente que:
               </p>
