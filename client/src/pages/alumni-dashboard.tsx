@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { RichTextEditor } from "@/components/rich-text-editor";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
@@ -87,15 +88,29 @@ export default function AlumniDashboard() {
       setApplyJobId(null);
       setCoverLetter("");
     },
-    onError: (err: any) => {
+    onError: async (err: any) => {
       let msg = "Error al postularte";
-      if (err.message?.includes("409")) {
+      let title = "Error";
+      try {
+        const data = err.data || (err.response ? await err.response.json() : null);
+        if (data?.incompleteProfile) {
+          title = "Perfil incompleto";
+          msg = data.message;
+          toast({ title, description: msg, variant: "destructive" });
+          setApplyJobId(null);
+          return;
+        }
+      } catch {}
+      if (err.message?.includes("400")) {
+        title = "Perfil incompleto";
+        msg = "Debes completar tu perfil y tener al menos un CV antes de postularte.";
+      } else if (err.message?.includes("409")) {
         msg = "Ya te has postulado a esta oferta";
       } else if (err.message?.includes("404")) {
-        msg = "Esta oferta ya no esta disponible. Es posible que se haya cubierto el puesto o haya expirado.";
+        msg = "Esta oferta ya no está disponible. Es posible que se haya cubierto el puesto o haya expirado.";
         queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
       }
-      toast({ title: "Oferta no disponible", description: msg, variant: "destructive" });
+      toast({ title, description: msg, variant: "destructive" });
       setApplyJobId(null);
     },
   });
@@ -140,6 +155,26 @@ export default function AlumniDashboard() {
   });
 
   const appliedJobIds = new Set(myApplications.map((a) => a.jobOfferId));
+
+  const profileComplete = !!(
+    user?.name &&
+    user?.phone &&
+    user?.university &&
+    user?.familiaProfesional &&
+    user?.cicloFormativo &&
+    (user?.cvUrl || user?.cvData)
+  );
+
+  const getMissingProfileFields = () => {
+    const missing: string[] = [];
+    if (!user?.name) missing.push("nombre");
+    if (!user?.phone) missing.push("teléfono");
+    if (!user?.university) missing.push("centro de FP");
+    if (!user?.familiaProfesional) missing.push("familia profesional");
+    if (!user?.cicloFormativo) missing.push("ciclo formativo");
+    if (!user?.cvUrl && !user?.cvData) missing.push("CV (subido o digital)");
+    return missing;
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -291,6 +326,35 @@ export default function AlumniDashboard() {
                       <div className="flex-shrink-0">
                         {appliedJobIds.has(job.id) ? (
                           <Badge variant="secondary">Postulado</Badge>
+                        ) : !profileComplete ? (
+                          <Dialog open={applyJobId === `incomplete-${job.id}`} onOpenChange={(open) => { if (!open) setApplyJobId(null); }}>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline" className="gap-1 text-amber-600 border-amber-300" onClick={() => setApplyJobId(`incomplete-${job.id}`)} data-testid={`button-apply-incomplete-${job.id}`}>
+                                Postularme <ChevronRight className="w-3.5 h-3.5" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Perfil incompleto</DialogTitle>
+                                <DialogDescription>
+                                  Debes completar tu perfil y tener al menos un CV antes de postularte a ofertas.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-3 py-2">
+                                <div className="p-3 rounded-md bg-amber-50 border border-amber-200 text-sm">
+                                  <p className="font-medium text-amber-800 mb-2">Te falta completar:</p>
+                                  <ul className="list-disc pl-5 text-amber-700 space-y-1">
+                                    {getMissingProfileFields().map((field) => (
+                                      <li key={field}>{field}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={() => setApplyJobId(null)}>Cerrar</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
                         ) : (
                           <Dialog open={applyJobId === job.id} onOpenChange={(open) => { if (!open) setApplyJobId(null); }}>
                             <DialogTrigger asChild>
@@ -298,7 +362,7 @@ export default function AlumniDashboard() {
                                 Postularme <ChevronRight className="w-3.5 h-3.5" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="max-w-lg">
                               <DialogHeader>
                                 <DialogTitle>Postularse a: {job.title}</DialogTitle>
                                 <DialogDescription>
@@ -312,12 +376,10 @@ export default function AlumniDashboard() {
                                 </div>
                                 <div className="space-y-2">
                                   <Label>Carta de presentación (opcional)</Label>
-                                  <Textarea
+                                  <RichTextEditor
+                                    content={coverLetter}
+                                    onChange={setCoverLetter}
                                     placeholder="Cuéntale a la empresa por qué eres un buen candidato..."
-                                    value={coverLetter}
-                                    onChange={(e) => setCoverLetter(e.target.value)}
-                                    rows={4}
-                                    data-testid="textarea-cover-letter"
                                   />
                                 </div>
                               </div>
@@ -384,9 +446,7 @@ export default function AlumniDashboard() {
                           )}
                         </p>
                         {app.coverLetter && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                            {app.coverLetter}
-                          </p>
+                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: app.coverLetter }} />
                         )}
                       </div>
                       </div>

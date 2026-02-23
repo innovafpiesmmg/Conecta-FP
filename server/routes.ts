@@ -6,6 +6,7 @@ import crypto from "crypto";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
+import sanitizeHtml from "sanitize-html";
 import { storage } from "./storage";
 import { pool } from "./db";
 import { setupAuth, requireAuth, requireRole } from "./auth";
@@ -634,7 +635,30 @@ export async function registerRoutes(
 
   app.post("/api/applications", requireRole("ALUMNI"), async (req, res, next) => {
     try {
-      const parsed = insertApplicationSchema.parse(req.body);
+      const user = req.user as User;
+      const missingFields: string[] = [];
+      if (!user.name) missingFields.push("nombre");
+      if (!user.phone) missingFields.push("teléfono");
+      if (!user.university) missingFields.push("centro de FP");
+      if (!user.familiaProfesional) missingFields.push("familia profesional");
+      if (!user.cicloFormativo) missingFields.push("ciclo formativo");
+      if (!user.cvUrl && !user.cvData) missingFields.push("CV (subido o digital)");
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          message: `Debes completar tu perfil antes de postularte. Faltan: ${missingFields.join(", ")}`,
+          incompleteProfile: true,
+          missingFields,
+        });
+      }
+
+      const body = { ...req.body };
+      if (body.coverLetter && typeof body.coverLetter === "string") {
+        body.coverLetter = sanitizeHtml(body.coverLetter, {
+          allowedTags: ["b", "i", "u", "strong", "em", "p", "br", "ul", "ol", "li", "h2", "h3"],
+          allowedAttributes: {},
+        });
+      }
+      const parsed = insertApplicationSchema.parse(body);
       const existing = await storage.getApplication(req.user!.id, parsed.jobOfferId);
       if (existing) return res.status(409).json({ message: "Ya te has postulado a esta oferta" });
 

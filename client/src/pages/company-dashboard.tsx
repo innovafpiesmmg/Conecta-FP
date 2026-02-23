@@ -524,9 +524,10 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{app.alumni.bio}</p>
                       )}
                       {app.coverLetter && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          <FileText className="w-3 h-3 inline mr-1" />Carta: {app.coverLetter}
-                        </p>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          <p className="font-medium mb-1 flex items-center gap-1"><FileText className="w-3 h-3" />Carta de presentación:</p>
+                          <div className="prose prose-sm max-w-none text-xs" dangerouslySetInnerHTML={{ __html: app.coverLetter }} />
+                        </div>
                       )}
                       <div className="flex items-center gap-3 mt-2 flex-wrap">
                         {app.alumni?.cvUrl && (
