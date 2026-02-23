@@ -831,9 +831,38 @@ export async function registerRoutes(
     try {
       const target = await storage.getUser(req.params.id);
       if (!target) return res.status(404).json({ message: "Usuario no encontrado" });
-      if (target.role === "ADMIN") return res.status(403).json({ message: "No se puede eliminar un administrador" });
+      if (target.id === req.user!.id) return res.status(403).json({ message: "No puedes eliminar tu propia cuenta de administrador" });
       await storage.deleteUser(req.params.id);
       res.json({ message: "Usuario eliminado" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/admin/users", requireRole("ADMIN"), async (req, res, next) => {
+    try {
+      const { email, password, name } = req.body;
+      if (!email || !password || !name) {
+        return res.status(400).json({ message: "Email, nombre y contrasena son obligatorios" });
+      }
+      const existing = await storage.getUserByEmail(email);
+      if (existing) {
+        return res.status(409).json({ message: "Ya existe un usuario con ese email" });
+      }
+      const bcrypt = await import("bcrypt");
+      const hashed = await bcrypt.hash(password, 12);
+      const newAdmin = await storage.createUser({
+        email,
+        password: hashed,
+        name,
+        role: "ADMIN",
+        consentGiven: true,
+        consentTimestamp: new Date(),
+        emailVerified: true,
+        profilePublic: false,
+      });
+      const { password: _, ...safeAdmin } = newAdmin;
+      res.status(201).json(safeAdmin);
     } catch (err) {
       next(err);
     }

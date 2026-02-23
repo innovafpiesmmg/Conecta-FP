@@ -1,8 +1,11 @@
 import { Link } from "wouter";
 import { useAuth } from "@/lib/auth";
-import { Briefcase, Shield, Users, GraduationCap, Building2, ArrowRight, Lock, Eye, Trash2, MessageSquarePlus } from "lucide-react";
+import { Briefcase, Shield, Users, GraduationCap, Building2, ArrowRight, Lock, Eye, Trash2, MessageSquarePlus, CheckCircle2, Search, FileText, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import heroImage from "@/assets/images/hero-students.jpg";
+import alumniImage from "@/assets/images/feature-alumni.jpg";
+import companyImage from "@/assets/images/feature-company.jpg";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -30,7 +33,7 @@ export default function Landing() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" data-testid="button-login">Iniciar Sesión</Button>
+                  <Button variant="ghost" data-testid="button-login">Iniciar Sesion</Button>
                 </Link>
                 <Link href="/register">
                   <Button data-testid="button-register">Registrarse</Button>
@@ -42,23 +45,26 @@ export default function Landing() {
       </header>
 
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 lg:py-32">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-sm text-muted-foreground mb-6">
+        <div className="absolute inset-0">
+          <img src={heroImage} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 lg:py-36">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 backdrop-blur-sm px-3 py-1 text-sm text-white/90 mb-6">
               <Shield className="w-3.5 h-3.5" />
-              Portal privado con protección RGPD
+              Portal privado con proteccion RGPD
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-6 text-white">
               Conecta talento
-              <span className="text-primary"> de FP</span>
+              <span className="text-blue-300"> de FP</span>
               <br />con oportunidades reales
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              Plataforma exclusiva para titulados de FP y empresas. Tus datos están protegidos: 
-              solo compartes información cuando tú decides postularte.
+            <p className="text-lg sm:text-xl text-white/80 mb-8 max-w-xl leading-relaxed">
+              Plataforma exclusiva para titulados de Formacion Profesional y empresas en Canarias.
+              Tus datos protegidos: solo compartes informacion cuando decides postularte.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start gap-3">
               <Link href="/register?role=alumni">
                 <Button size="lg" className="gap-2 w-full sm:w-auto" data-testid="button-register-alumni">
                   <GraduationCap className="w-5 h-5" />
@@ -67,9 +73,142 @@ export default function Landing() {
                 </Button>
               </Link>
               <Link href="/register?role=company">
-                <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto" data-testid="button-register-company">
+                <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto border-white/30 text-white hover:bg-white/10" data-testid="button-register-company">
                   <Building2 className="w-5 h-5" />
                   Soy Empresa
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {[
+              { value: "23", label: "Familias Profesionales" },
+              { value: "91", label: "Ciclos Formativos" },
+              { value: "131", label: "Centros FP en Canarias" },
+              { value: "100%", label: "Gratuito y Seguro" },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="text-3xl sm:text-4xl font-bold text-primary">{s.value}</p>
+                <p className="text-sm text-muted-foreground mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Como funciona</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Un proceso sencillo y seguro para conectar talento con oportunidades
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { icon: Users, step: "1", title: "Registrate", desc: "Crea tu cuenta como titulado de FP o empresa. Aceptas el tratamiento de datos con total transparencia." },
+              { icon: Search, step: "2", title: "Explora ofertas", desc: "Las empresas publican vacantes y los titulados de FP buscan entre las oportunidades disponibles." },
+              { icon: FileText, step: "3", title: "Postulate", desc: "Solo cuando te inscribes en una oferta, la empresa puede ver tu perfil y contacto." },
+            ].map((item) => (
+              <Card key={item.step} className="p-6 text-center relative overflow-hidden group hover:border-primary/30 transition-colors">
+                <div className="absolute top-3 right-3 text-5xl font-bold text-muted/30 select-none">{item.step}</div>
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                  <item.icon className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-24 bg-card/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="order-2 lg:order-1">
+              <div className="inline-flex items-center gap-2 rounded-md bg-primary/10 px-3 py-1 text-sm text-primary mb-4">
+                <GraduationCap className="w-4 h-4" />
+                Para Titulados FP
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+                Tu futuro profesional empieza aqui
+              </h2>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Accede a ofertas de empleo exclusivas para titulados de Formacion Profesional.
+                Crea tu CV digital, recibe notificaciones de ofertas que encajan contigo y gestiona tus candidaturas.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {[
+                  "Busca ofertas por familia profesional y ciclo formativo",
+                  "Recibe alertas cuando se publiquen ofertas para tu perfil",
+                  "Constructor de CV digital integrado",
+                  "Tu perfil solo visible cuando tu decides",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/register?role=alumni">
+                <Button className="gap-2" data-testid="button-section-register-alumni">
+                  Crear cuenta de Titulado FP
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="rounded-lg overflow-hidden shadow-lg">
+                <img src={alumniImage} alt="Titulados FP trabajando" className="w-full h-72 sm:h-80 object-cover" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="rounded-lg overflow-hidden shadow-lg">
+                <img src={companyImage} alt="Empresas contratando" className="w-full h-72 sm:h-80 object-cover" />
+              </div>
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-md bg-primary/10 px-3 py-1 text-sm text-primary mb-4">
+                <Building2 className="w-4 h-4" />
+                Para Empresas
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+                Encuentra el talento que necesitas
+              </h2>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Publica ofertas de empleo, gestiona candidaturas y contacta directamente con los titulados
+                de FP que se ajusten a tu perfil. Todo en un entorno seguro y conforme al RGPD.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {[
+                  "Publica ofertas segmentadas por familia y ciclo formativo",
+                  "Recibe candidaturas con CV y carta de presentacion",
+                  "Contacto directo via email, telefono o WhatsApp",
+                  "Panel de gestion completo para tus ofertas",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/register?role=company">
+                <Button className="gap-2" data-testid="button-section-register-company">
+                  Registrar mi Empresa
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
             </div>
@@ -80,56 +219,16 @@ export default function Landing() {
       <section className="py-16 sm:py-20 bg-card/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Cómo funciona</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Privacidad por diseno</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Un proceso sencillo y seguro para conectar talento con oportunidades
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">1. Regístrate</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Crea tu cuenta como titulado de FP o empresa. Aceptas el tratamiento de datos con total transparencia.
-              </p>
-            </Card>
-            <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Briefcase className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">2. Explora ofertas</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Las empresas publican vacantes y los titulados de FP buscan entre las oportunidades disponibles.
-              </p>
-            </Card>
-            <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">3. Postúlate</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Solo cuando te inscribes en una oferta, la empresa puede ver tu perfil y contacto.
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Privacidad por diseño</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Cumplimos con el RGPD y priorizamos la protección de tus datos personales
+              Cumplimos con el RGPD y priorizamos la proteccion de tus datos personales
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-md bg-accent flex items-center justify-center flex-shrink-0">
-                  <Eye className="w-5 h-5 text-foreground" />
+                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Eye className="w-5 h-5 text-primary" />
                 </div>
                 <h3 className="font-semibold">Visibilidad selectiva</h3>
               </div>
@@ -139,10 +238,10 @@ export default function Landing() {
             </Card>
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-md bg-accent flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-foreground" />
+                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="font-semibold">Consentimiento explícito</h3>
+                <h3 className="font-semibold">Consentimiento explicito</h3>
               </div>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Registramos la fecha y hora exacta de tu consentimiento para el tratamiento de datos.
@@ -150,8 +249,8 @@ export default function Landing() {
             </Card>
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-md bg-accent flex items-center justify-center flex-shrink-0">
-                  <Trash2 className="w-5 h-5 text-foreground" />
+                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Trash2 className="w-5 h-5 text-primary" />
                 </div>
                 <h3 className="font-semibold">Derecho al olvido</h3>
               </div>
@@ -163,11 +262,13 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 bg-primary text-primary-foreground">
-        <div className="max-w-3xl mx-auto text-center px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Empieza hoy mismo</h2>
+      <section className="relative py-20 sm:py-28 overflow-hidden">
+        <div className="absolute inset-0 bg-primary" />
+        <div className="relative max-w-3xl mx-auto text-center px-4 sm:px-6">
+          <Star className="w-10 h-10 text-primary-foreground/30 mx-auto mb-4" />
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-primary-foreground">Empieza hoy mismo</h2>
           <p className="text-primary-foreground/80 mb-8 text-lg">
-            Únete a nuestra comunidad de titulados de FP y empresas. Es gratuito y seguro.
+            Unete a nuestra comunidad de titulados de FP y empresas en Canarias. Es gratuito y seguro.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/register?role=alumni">
@@ -177,7 +278,7 @@ export default function Landing() {
               </Button>
             </Link>
             <Link href="/register?role=company">
-              <Button size="lg" variant="outline" className="gap-2 border-primary-foreground/30 text-primary-foreground w-full sm:w-auto" data-testid="button-cta-company">
+              <Button size="lg" variant="outline" className="gap-2 border-primary-foreground/30 text-primary-foreground w-full sm:w-auto hover:bg-white/10" data-testid="button-cta-company">
                 <Building2 className="w-5 h-5" />
                 Registrar mi Empresa
               </Button>
@@ -200,7 +301,7 @@ export default function Landing() {
               </span>
             </Link>
             <Link href="/terms">
-              <span className="cursor-pointer hover:text-foreground transition-colors" data-testid="link-terms-footer">Términos y Privacidad</span>
+              <span className="cursor-pointer hover:text-foreground transition-colors" data-testid="link-terms-footer">Terminos y Privacidad</span>
             </Link>
             <span>Protegido por RGPD</span>
           </div>

@@ -103,8 +103,24 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/applications"] });
       toast({ title: "Usuario eliminado correctamente" });
     },
-    onError: () => toast({ title: "Error al eliminar usuario", variant: "destructive" }),
+    onError: (err: any) => toast({ title: err?.message || "Error al eliminar usuario", variant: "destructive" }),
   });
+
+  const createAdminMutation = useMutation({
+    mutationFn: (data: { email: string; password: string; name: string }) =>
+      apiRequest("POST", "/api/admin/users", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      toast({ title: "Administrador creado correctamente" });
+      setShowAddAdmin(false);
+      setNewAdminData({ email: "", password: "", name: "" });
+    },
+    onError: (err: any) => toast({ title: err?.message || "Error al crear administrador", variant: "destructive" }),
+  });
+
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [newAdminData, setNewAdminData] = useState({ email: "", password: "", name: "" });
 
   const toggleJobMutation = useMutation({
     mutationFn: (jobId: string) => apiRequest("PATCH", `/api/admin/jobs/${jobId}/toggle`),
@@ -194,13 +210,77 @@ export default function AdminDashboard() {
                   data-testid="input-admin-user-search"
                 />
                 <p className="text-sm text-muted-foreground">{filteredUsers.length} usuarios</p>
+                <Button
+                  size="sm"
+                  onClick={() => setShowAddAdmin(!showAddAdmin)}
+                  className="ml-auto gap-1"
+                  data-testid="button-add-admin"
+                >
+                  <Shield className="w-4 h-4" />
+                  {showAddAdmin ? "Cancelar" : "Nuevo Administrador"}
+                </Button>
               </div>
+              {showAddAdmin && (
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2"><Shield className="w-4 h-4" /> Crear nuevo administrador</h3>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      createAdminMutation.mutate(newAdminData);
+                    }}
+                    className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                    data-testid="form-add-admin"
+                  >
+                    <div>
+                      <Label htmlFor="admin-name" className="text-xs mb-1 block">Nombre</Label>
+                      <Input
+                        id="admin-name"
+                        placeholder="Nombre completo"
+                        value={newAdminData.name}
+                        onChange={(e) => setNewAdminData(d => ({ ...d, name: e.target.value }))}
+                        required
+                        data-testid="input-admin-name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="admin-email" className="text-xs mb-1 block">Email</Label>
+                      <Input
+                        id="admin-email"
+                        type="email"
+                        placeholder="admin@ejemplo.com"
+                        value={newAdminData.email}
+                        onChange={(e) => setNewAdminData(d => ({ ...d, email: e.target.value }))}
+                        required
+                        data-testid="input-admin-email"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="admin-password" className="text-xs mb-1 block">Contrasena</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="admin-password"
+                          type="password"
+                          placeholder="Contrasena segura"
+                          value={newAdminData.password}
+                          onChange={(e) => setNewAdminData(d => ({ ...d, password: e.target.value }))}
+                          required
+                          minLength={6}
+                          data-testid="input-admin-password"
+                        />
+                        <Button type="submit" disabled={createAdminMutation.isPending} data-testid="button-submit-admin">
+                          {createAdminMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Crear"}
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </Card>
+              )}
               {usersLoading ? (
                 <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
               ) : (
                 <div className="space-y-2">
                   {filteredUsers.map((u) => (
-                    <UserRow key={u.id} user={u} onDelete={(id) => deleteUserMutation.mutate(id)} deleting={deleteUserMutation.isPending} />
+                    <UserRow key={u.id} user={u} currentUserId={user.id} onDelete={(id) => deleteUserMutation.mutate(id)} deleting={deleteUserMutation.isPending} />
                   ))}
                 </div>
               )}
@@ -319,7 +399,8 @@ function StatsPanel({ stats, isLoading }: { stats?: Stats; isLoading: boolean })
   );
 }
 
-function UserRow({ user, onDelete, deleting }: { user: Omit<User, "password">; onDelete: (id: string) => void; deleting: boolean }) {
+function UserRow({ user, currentUserId, onDelete, deleting }: { user: Omit<User, "password">; currentUserId: string; onDelete: (id: string) => void; deleting: boolean }) {
+  const isSelf = user.id === currentUserId;
   return (
     <Card className="p-4" data-testid={`card-admin-user-${user.id}`}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -356,7 +437,7 @@ function UserRow({ user, onDelete, deleting }: { user: Omit<User, "password">; o
           </p>
         </div>
         </div>
-        {user.role !== "ADMIN" && (
+        {!isSelf && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="icon" data-testid={`button-delete-user-${user.id}`}>
@@ -365,9 +446,9 @@ function UserRow({ user, onDelete, deleting }: { user: Omit<User, "password">; o
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Eliminar usuario</AlertDialogTitle>
+                <AlertDialogTitle>Eliminar {user.role === "ADMIN" ? "administrador" : "usuario"}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Se eliminará permanentemente la cuenta de <strong>{user.name}</strong> ({user.email}) y todos sus datos asociados. Esta acción no se puede deshacer.
+                  Se eliminara permanentemente la cuenta de <strong>{user.name}</strong> ({user.email}) y todos sus datos asociados. Esta accion no se puede deshacer.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -382,6 +463,9 @@ function UserRow({ user, onDelete, deleting }: { user: Omit<User, "password">; o
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        )}
+        {isSelf && (
+          <Badge variant="outline" className="text-xs">Tu cuenta</Badge>
         )}
       </div>
     </Card>
