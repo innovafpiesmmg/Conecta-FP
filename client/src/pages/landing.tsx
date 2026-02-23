@@ -33,7 +33,7 @@ export default function Landing() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" data-testid="button-login">Iniciar Sesion</Button>
+                  <Button variant="ghost" data-testid="button-login">Iniciar Sesión</Button>
                 </Link>
                 <Link href="/register">
                   <Button data-testid="button-register">Registrarse</Button>
@@ -53,7 +53,7 @@ export default function Landing() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 backdrop-blur-sm px-3 py-1 text-sm text-white/90 mb-6">
               <Shield className="w-3.5 h-3.5" />
-              Portal privado con proteccion RGPD
+              Portal privado con protección RGPD
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-6 text-white">
               Conecta talento
@@ -61,8 +61,8 @@ export default function Landing() {
               <br />con oportunidades reales
             </h1>
             <p className="text-lg sm:text-xl text-white/80 mb-8 max-w-xl leading-relaxed">
-              Plataforma exclusiva para titulados de Formacion Profesional y empresas en Canarias.
-              Tus datos protegidos: solo compartes informacion cuando decides postularte.
+              Plataforma exclusiva para titulados de Formación Profesional y empresas en Canarias.
+              Tus datos protegidos: solo compartes información cuando decides postularte.
             </p>
             <div className="flex flex-col sm:flex-row items-start gap-3">
               <Link href="/register?role=alumni">
@@ -104,16 +104,16 @@ export default function Landing() {
       <section className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-14">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Como funciona</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Cómo funciona</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Un proceso sencillo y seguro para conectar talento con oportunidades
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Users, step: "1", title: "Registrate", desc: "Crea tu cuenta como titulado de FP o empresa. Aceptas el tratamiento de datos con total transparencia." },
+              { icon: Users, step: "1", title: "Regístrate", desc: "Crea tu cuenta como titulado de FP o empresa. Aceptas el tratamiento de datos con total transparencia." },
               { icon: Search, step: "2", title: "Explora ofertas", desc: "Las empresas publican vacantes y los titulados de FP buscan entre las oportunidades disponibles." },
-              { icon: FileText, step: "3", title: "Postulate", desc: "Solo cuando te inscribes en una oferta, la empresa puede ver tu perfil y contacto." },
+              { icon: FileText, step: "3", title: "Postúlate", desc: "Solo cuando te inscribes en una oferta, la empresa puede ver tu perfil y contacto." },
             ].map((item) => (
               <Card key={item.step} className="p-6 text-center relative overflow-hidden group hover:border-primary/30 transition-colors">
                 <div className="absolute top-3 right-3 text-5xl font-bold text-muted/30 select-none">{item.step}</div>
@@ -137,10 +137,10 @@ export default function Landing() {
                 Para Titulados FP
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-                Tu futuro profesional empieza aqui
+                Tu futuro profesional empieza aquí
               </h2>
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                Accede a ofertas de empleo exclusivas para titulados de Formacion Profesional.
+                Accede a ofertas de empleo exclusivas para titulados de Formación Profesional.
                 Crea tu CV digital, recibe notificaciones de ofertas que encajan contigo y gestiona tus candidaturas.
               </p>
               <ul className="space-y-3 mb-8">
@@ -148,7 +148,7 @@ export default function Landing() {
                   "Busca ofertas por familia profesional y ciclo formativo",
                   "Recibe alertas cuando se publiquen ofertas para tu perfil",
                   "Constructor de CV digital integrado",
-                  "Tu perfil solo visible cuando tu decides",
+                  "Tu perfil solo visible cuando tú decides",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -195,9 +195,9 @@ export default function Landing() {
               <ul className="space-y-3 mb-8">
                 {[
                   "Publica ofertas segmentadas por familia y ciclo formativo",
-                  "Recibe candidaturas con CV y carta de presentacion",
-                  "Contacto directo via email, telefono o WhatsApp",
-                  "Panel de gestion completo para tus ofertas",
+                  "Recibe candidaturas con CV y carta de presentación",
+                  "Contacto directo vía email, teléfono o WhatsApp",
+                  "Panel de gestión completo para tus ofertas",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -219,9 +219,9 @@ export default function Landing() {
       <section className="py-16 sm:py-20 bg-card/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Privacidad por diseno</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Privacidad por diseño</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Cumplimos con el RGPD y priorizamos la proteccion de tus datos personales
+              Cumplimos con el RGPD y priorizamos la protección de tus datos personales
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -241,7 +241,7 @@ export default function Landing() {
                 <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Shield className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="font-semibold">Consentimiento explicito</h3>
+                <h3 className="font-semibold">Consentimiento explícito</h3>
               </div>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Registramos la fecha y hora exacta de tu consentimiento para el tratamiento de datos.
@@ -268,7 +268,7 @@ export default function Landing() {
           <Star className="w-10 h-10 text-primary-foreground/30 mx-auto mb-4" />
           <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-primary-foreground">Empieza hoy mismo</h2>
           <p className="text-primary-foreground/80 mb-8 text-lg">
-            Unete a nuestra comunidad de titulados de FP y empresas en Canarias. Es gratuito y seguro.
+            Únete a nuestra comunidad de titulados de FP y empresas en Canarias. Es gratuito y seguro.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/register?role=alumni">
@@ -294,7 +294,7 @@ export default function Landing() {
               <Briefcase className="w-4 h-4" />
               <span>Conecta FP Canarias - Portal de Empleo Privado</span>
             </div>
-            <span className="text-xs text-muted-foreground">Un proyecto promovido por el Dpto. de Administracion de Empresas del IES Manuel Martin Gonzalez</span>
+            <span className="text-xs text-muted-foreground">Un proyecto promovido por el Dpto. de Administración de Empresas del IES Manuel Martín González</span>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             <Link href="/sugerencias">
@@ -304,7 +304,7 @@ export default function Landing() {
               </span>
             </Link>
             <Link href="/terms">
-              <span className="cursor-pointer hover:text-foreground transition-colors" data-testid="link-terms-footer">Terminos y Privacidad</span>
+              <span className="cursor-pointer hover:text-foreground transition-colors" data-testid="link-terms-footer">Términos y Privacidad</span>
             </Link>
             <span>Protegido por RGPD</span>
           </div>
