@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -459,6 +459,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
   const [whatsapp, setWhatsapp] = useState(user.whatsapp || "");
   const [bio, setBio] = useState(user.bio || "");
   const [university, setUniversity] = useState(user.university || "");
+  const [customCenter, setCustomCenter] = useState(false);
   const [graduationYear, setGraduationYear] = useState(user.graduationYear?.toString() || "");
   const [familiaProfesional, setFamiliaProfesional] = useState(user.familiaProfesional || "");
   const [cicloFormativo, setCicloFormativo] = useState(user.cicloFormativo || "");
@@ -470,6 +471,12 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
   const { data: fpCentersList = [] } = useFpCenters();
   const { data: ciclosList = [] } = useCiclosByFamiliaName(familiaProfesional);
   const ciclosDisponibles = ciclosList.map(c => c.name);
+
+  useEffect(() => {
+    if (fpCentersList.length > 0 && university && !fpCentersList.some(c => c.name === university)) {
+      setCustomCenter(true);
+    }
+  }, [fpCentersList]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -638,16 +645,45 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Centro de FP</Label>
-            <Select value={university} onValueChange={setUniversity}>
-              <SelectTrigger data-testid="select-profile-university">
-                <SelectValue placeholder="Selecciona tu centro" />
-              </SelectTrigger>
-              <SelectContent>
-                {fpCentersList.map((c) => (
-                  <SelectItem key={c.id} value={c.name}>{c.name} ({c.isla})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!customCenter ? (
+              <Select value={university} onValueChange={(val) => {
+                if (val === "__otro__") {
+                  setCustomCenter(true);
+                  setUniversity("");
+                } else {
+                  setUniversity(val);
+                }
+              }}>
+                <SelectTrigger data-testid="select-profile-university">
+                  <SelectValue placeholder="Selecciona tu centro" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fpCentersList.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>{c.name} ({c.isla})</SelectItem>
+                  ))}
+                  <SelectItem value="__otro__">Otro centro (introducir manualmente)</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="space-y-2">
+                <Input
+                  placeholder="Escribe el nombre de tu centro"
+                  value={university}
+                  onChange={(e) => setUniversity(e.target.value)}
+                  data-testid="input-profile-university-custom"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-primary"
+                  onClick={() => { setCustomCenter(false); setUniversity(""); }}
+                  data-testid="button-back-to-center-list-profile"
+                >
+                  Volver a la lista de centros
+                </Button>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Año de promoción</Label>

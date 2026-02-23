@@ -40,6 +40,7 @@ export default function Register() {
     },
   });
 
+  const [customCenter, setCustomCenter] = useState(false);
   const { data: familiasList = [] } = useFamilias();
   const { data: fpCentersList = [] } = useFpCenters();
   const selectedFamilia = alumniForm.watch("familiaProfesional");
@@ -175,19 +176,48 @@ export default function Register() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Centro de FP</Label>
-                    <Select
-                      value={alumniForm.watch("university") || ""}
-                      onValueChange={(val) => alumniForm.setValue("university", val)}
-                    >
-                      <SelectTrigger data-testid="select-alumni-university">
-                        <SelectValue placeholder="Selecciona tu centro" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fpCentersList.map((c) => (
-                          <SelectItem key={c.id} value={c.name}>{c.name} ({c.isla})</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {!customCenter ? (
+                      <Select
+                        value={alumniForm.watch("university") || ""}
+                        onValueChange={(val) => {
+                          if (val === "__otro__") {
+                            setCustomCenter(true);
+                            alumniForm.setValue("university", "");
+                          } else {
+                            alumniForm.setValue("university", val);
+                          }
+                        }}
+                      >
+                        <SelectTrigger data-testid="select-alumni-university">
+                          <SelectValue placeholder="Selecciona tu centro" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fpCentersList.map((c) => (
+                            <SelectItem key={c.id} value={c.name}>{c.name} ({c.isla})</SelectItem>
+                          ))}
+                          <SelectItem value="__otro__">Otro centro (introducir manualmente)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="Escribe el nombre de tu centro"
+                          value={alumniForm.watch("university") || ""}
+                          onChange={(e) => alumniForm.setValue("university", e.target.value)}
+                          data-testid="input-alumni-university-custom"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 text-xs text-primary"
+                          onClick={() => { setCustomCenter(false); alumniForm.setValue("university", ""); }}
+                          data-testid="button-back-to-center-list"
+                        >
+                          Volver a la lista de centros
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="alumni-year">Año de promoción</Label>
