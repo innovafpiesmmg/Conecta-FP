@@ -54,14 +54,34 @@ export default function Terms() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">3. Base Jurídica y Consentimiento (RGPD)</h2>
+              <h2 className="text-lg font-semibold">3. Carácter Gratuito y Ausencia de Ánimo de Lucro</h2>
+              <p className="leading-relaxed text-muted-foreground">
+                La plataforma Conecta-FP es una iniciativa de carácter estrictamente educativo y social. El IES MANUEL MARTÍN GONZÁLEZ presta este servicio de forma totalmente gratuita y sin ningún ánimo de lucro. El centro no recibe contraprestación económica alguna ni por parte de los alumnos ni por parte de las empresas por el uso de la herramienta o la gestión de los contactos.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">4. Exclusión de Garantías y Responsabilidad</h2>
+              <p className="leading-relaxed text-muted-foreground">
+                El IES MANUEL MARTÍN GONZÁLEZ se esfuerza por mantener la plataforma operativa y segura, sin embargo, el usuario acepta que:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li><strong className="text-foreground">Disponibilidad del Servicio:</strong> El centro no garantiza que la plataforma funcione de manera ininterrumpida, puntual, segura o libre de errores. El servicio se presta "tal cual" y según disponibilidad, pudiendo ser suspendido por mantenimiento o causas técnicas sin previo aviso.</li>
+                <li><strong className="text-foreground">Limitación de Responsabilidad:</strong> El centro no se hace responsable de los daños o perjuicios de cualquier naturaleza que pudieran derivarse de la falta de disponibilidad, fallos en el sistema, virus informáticos o desconexiones en la red.</li>
+                <li><strong className="text-foreground">Uso del Servicio:</strong> El IES no acepta responsabilidad alguna por la veracidad de la información publicada por terceros (empresas o alumnos), ni por el éxito o resultado de las entrevistas o relaciones laborales que puedan surgir tras el contacto inicial en la plataforma.</li>
+                <li><strong className="text-foreground">Alcance General:</strong> El centro queda exento de cualquier responsabilidad civil, mercantil o administrativa derivada del uso de la aplicación por parte de los usuarios.</li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">5. Base Jurídica y Consentimiento (RGPD)</h2>
               <p className="leading-relaxed text-muted-foreground">
                 En cumplimiento del Reglamento General de Protección de Datos (RGPD - UE 2016/679) y la Ley Orgánica 3/2018 (LOPDGDD), el tratamiento de sus datos se basa en su consentimiento explícito. Al marcar la casilla de aceptación, usted autoriza el tratamiento de sus datos conforme a los fines aquí descritos.
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">4. Política de Visibilidad y Privacidad (Control del Usuario)</h2>
+              <h2 className="text-lg font-semibold">6. Política de Visibilidad y Privacidad (Control del Usuario)</h2>
               <p className="leading-relaxed text-muted-foreground">
                 Para garantizar la soberanía del usuario sobre su propia información, Conecta-FP opera bajo un modelo de postulación voluntaria:
               </p>
@@ -73,7 +93,7 @@ export default function Terms() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">5. Derechos del Usuario (ARCO+)</h2>
+              <h2 className="text-lg font-semibold">7. Derechos del Usuario (ARCO+)</h2>
               <p className="leading-relaxed text-muted-foreground">
                 Usted tiene derecho a acceder, rectificar, limitar y portar sus datos. Especialmente, destacamos:
               </p>
@@ -84,21 +104,22 @@ export default function Terms() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">6. Seguridad de la Información</h2>
+              <h2 className="text-lg font-semibold">8. Seguridad de la Información</h2>
               <p className="leading-relaxed text-muted-foreground">
                 El sistema utiliza una arquitectura Express.js y base de datos PostgreSQL con cifrado en tránsito y en reposo. Se aplican políticas de seguridad a nivel de fila (Row Level Security) para asegurar que nadie acceda a datos para los que no tiene permiso explícito.
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">7. Declaración de Aceptación</h2>
+              <h2 className="text-lg font-semibold">9. Declaración de Aceptación</h2>
               <p className="leading-relaxed text-muted-foreground">
                 Al registrarme en la plataforma y pulsar el botón de aceptación, declaro expresamente que:
               </p>
               <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                 <li><strong className="text-foreground">ACEPTO</strong> el tratamiento de mis datos personales conforme al marco del RGPD detallado anteriormente.</li>
                 <li><strong className="text-foreground">ENTIENDO</strong> que mis datos de perfil solo serán visibles para las empresas en aquellas ofertas a las que me postule voluntariamente.</li>
-                <li><strong className="text-foreground">RECONOZCO</strong> que puedo ejercer mi derecho al olvido y solicitar la eliminación total de mi información en cualquier momento a través del panel de configuración de mi cuenta o mediante comunicación directa al Responsable del Tratamiento.</li>
+                <li><strong className="text-foreground">ACEPTO</strong> las condiciones de exclusión de responsabilidad y el carácter gratuito del servicio prestado por el IES Manuel Martín González.</li>
+                <li><strong className="text-foreground">RECONOZCO</strong> que puedo ejercer mi derecho al olvido y solicitar la eliminación total de mi información en cualquier momento a través del panel de configuración de mi cuenta.</li>
               </ul>
             </section>
 
