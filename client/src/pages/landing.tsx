@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import heroImage from "@/assets/images/hero-students.jpg";
 import alumniImage from "@/assets/images/feature-alumni.jpg";
 import companyImage from "@/assets/images/feature-company.jpg";
+import asdLogo from "@assets/ASD_1771889294764.png";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -379,6 +380,10 @@ export default function Landing() {
             </Link>
             <span>Protegido por RGPD</span>
           </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <img src={asdLogo} alt="Atreyu Servicios Digitales" className="h-5 w-auto" data-testid="img-asd-logo" />
+          <span>Software desarrollado por Atreyu Servicios Digitales</span>
         </div>
       </footer>
     </div>
