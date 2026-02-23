@@ -181,6 +181,8 @@ async function migrate() {
       `ALTER TABLE "job_offers" ADD COLUMN IF NOT EXISTS "salary_min" integer`,
       `ALTER TABLE "job_offers" ADD COLUMN IF NOT EXISTS "salary_max" integer`,
       `ALTER TABLE "job_offers" ADD COLUMN IF NOT EXISTS "job_type" "job_type"`,
+      `ALTER TABLE "job_offers" ADD COLUMN IF NOT EXISTS "positions" integer NOT NULL DEFAULT 1`,
+      `ALTER TABLE "job_offers" ADD COLUMN IF NOT EXISTS "positions_filled" integer NOT NULL DEFAULT 0`,
       `ALTER TABLE "applications" ADD COLUMN IF NOT EXISTS "cover_letter" text`,
     ];
 
