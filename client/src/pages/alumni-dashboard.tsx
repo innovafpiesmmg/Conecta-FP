@@ -87,8 +87,15 @@ export default function AlumniDashboard() {
       setCoverLetter("");
     },
     onError: (err: any) => {
-      const msg = err.message?.includes("409") ? "Ya te has postulado a esta oferta" : "Error al postularte";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+      let msg = "Error al postularte";
+      if (err.message?.includes("409")) {
+        msg = "Ya te has postulado a esta oferta";
+      } else if (err.message?.includes("404")) {
+        msg = "Esta oferta ya no esta disponible. Es posible que se haya cubierto el puesto o haya expirado.";
+        queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      }
+      toast({ title: "Oferta no disponible", description: msg, variant: "destructive" });
+      setApplyJobId(null);
     },
   });
 
