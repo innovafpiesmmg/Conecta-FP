@@ -7,7 +7,7 @@ import type { JobOffer, Application, User } from "@shared/schema";
 import { useFamilias, useCiclosByFamiliaName, useFpCenters } from "@/hooks/use-fp-data";
 import {
   Briefcase, Search, User as UserIcon, FileText, LogOut, Loader2, MapPin,
-  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X, ClipboardList, Bell
+  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X, ClipboardList, Bell, HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
@@ -170,7 +171,7 @@ export default function AlumniDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-4">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5">
             <TabsTrigger value="jobs" className="gap-2" data-testid="tab-jobs">
               <Search className="w-4 h-4" /> Ofertas
             </TabsTrigger>
@@ -182,6 +183,9 @@ export default function AlumniDashboard() {
             </TabsTrigger>
             <TabsTrigger value="profile" className="gap-2" data-testid="tab-profile">
               <UserIcon className="w-4 h-4" /> Perfil
+            </TabsTrigger>
+            <TabsTrigger value="faq" className="gap-2" data-testid="tab-faq">
+              <HelpCircle className="w-4 h-4" /> FAQ
             </TabsTrigger>
           </TabsList>
 
@@ -441,6 +445,70 @@ export default function AlumniDashboard() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="faq" className="space-y-4">
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-primary" />
+                Preguntas Frecuentes para Titulados FP
+              </h2>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="faq-1">
+                  <AccordionTrigger>¿Cómo puedo buscar ofertas de empleo?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">En la pestaña <strong>Ofertas</strong> puedes ver todas las ofertas activas. Usa los filtros de familia profesional, ciclo formativo y ubicación para encontrar las que mejor se ajusten a tu perfil. También puedes buscar por palabras clave en el título o descripción.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-2">
+                  <AccordionTrigger>¿Qué información ve la empresa cuando me postulo?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Cuando te postulas a una oferta, la empresa puede ver tu nombre, email, teléfono, WhatsApp, biografía, centro de FP, ciclo formativo, CV adjunto y tu carta de presentación. <strong>Tu perfil es privado por defecto</strong>: solo se comparte cuando tú decides postularte.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-3">
+                  <AccordionTrigger>¿Cómo funciona el CV digital?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">En la pestaña <strong>Mi CV</strong> puedes construir un CV estructurado con secciones de formación, experiencia profesional, idiomas e información adicional. Este CV se guarda en la plataforma y las empresas pueden consultarlo cuando te postulas. Además, puedes subir un CV en PDF desde tu perfil.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-4">
+                  <AccordionTrigger>¿Puedo recibir notificaciones de nuevas ofertas?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Sí. En la pestaña <strong>Perfil</strong>, en la sección de notificaciones, puedes activar las alertas por email. Cuando una empresa publique una oferta que coincida con tu ciclo formativo, recibirás un correo automáticamente.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-5">
+                  <AccordionTrigger>¿Qué significa cada estado de mi candidatura?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">
+                      <strong>Pendiente:</strong> la empresa aún no ha revisado tu candidatura.<br />
+                      <strong>Revisada:</strong> la empresa ha visto tu perfil y está evaluándolo.<br />
+                      <strong>Aceptada:</strong> la empresa quiere contar contigo y se pondrá en contacto.<br />
+                      <strong>Rechazada:</strong> la empresa ha decidido no continuar con tu candidatura en esta ocasión.
+                    </p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-6">
+                  <AccordionTrigger>¿Puedo eliminar mi cuenta y todos mis datos?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Sí. Conforme al RGPD, tienes derecho al olvido. En la pestaña <strong>Perfil</strong>, al final de la página, encontrarás la opción de eliminar tu cuenta de forma permanente. Se borrarán todos tus datos, candidaturas, CV y archivos subidos.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-7">
+                  <AccordionTrigger>¿Puedo hacer que mi perfil sea visible en el directorio público?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Sí. En la pestaña <strong>Perfil</strong> puedes activar la opción de perfil público. Esto permite que tu nombre, ciclo formativo y centro aparezcan en el directorio de la plataforma, pero sin mostrar tu email ni teléfono directamente.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-8">
+                  <AccordionTrigger>¿Qué es la autenticación en dos pasos (2FA)?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Es una capa extra de seguridad. Al activarla, además de tu contraseña, necesitarás un código temporal generado por una app como Google Authenticator o Authy. Puedes activarla o desactivarla en la pestaña <strong>Perfil</strong>, sección de seguridad.</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </Card>
           </TabsContent>
         </Tabs>

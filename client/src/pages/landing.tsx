@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/lib/auth";
-import { Briefcase, Shield, Users, GraduationCap, Building2, ArrowRight, Lock, Eye, Trash2, MessageSquarePlus, CheckCircle2, Search, FileText, Star } from "lucide-react";
+import { Briefcase, Shield, Users, GraduationCap, Building2, ArrowRight, Lock, Eye, Trash2, MessageSquarePlus, CheckCircle2, Search, FileText, Star, HelpCircle } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import heroImage from "@/assets/images/hero-students.jpg";
@@ -284,6 +285,64 @@ export default function Landing() {
               </Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="py-16 bg-muted/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <HelpCircle className="w-8 h-8 text-primary" />
+              <h2 className="text-3xl font-bold">Preguntas Frecuentes</h2>
+            </div>
+            <p className="text-muted-foreground text-lg">Resolvemos tus dudas sobre la plataforma</p>
+          </div>
+          <Card className="p-6">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="faq-1">
+                <AccordionTrigger>¿Qué es Conecta FP Canarias?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">Es un portal de empleo privado diseñado específicamente para titulados de Formación Profesional en Canarias. Conectamos a graduados de ciclos formativos con empresas que buscan perfiles técnicos cualificados.</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-2">
+                <AccordionTrigger>¿Es gratuito registrarse?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">Sí, el registro es completamente gratuito tanto para titulados FP como para empresas. No tiene coste alguno publicar ofertas ni postularse a ellas.</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-3">
+                <AccordionTrigger>¿Cómo se protegen mis datos personales?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">Cumplimos con el RGPD (Reglamento General de Protección de Datos). Tu perfil es privado por defecto: las empresas solo pueden ver tus datos cuando tú decides postularte a una oferta. Además, puedes ejercer tu derecho al olvido y eliminar toda tu información en cualquier momento.</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-4">
+                <AccordionTrigger>¿Qué ciclos formativos están disponibles?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">La plataforma incluye las 23 familias profesionales con todos sus ciclos formativos: desde Informática y Comunicaciones (DAW, DAM, ASIR) hasta Administración, Sanidad, Hostelería, Comercio y muchas más. Al registrarte, seleccionas tu familia y ciclo específico.</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-5">
+                <AccordionTrigger>¿Puedo recibir alertas de nuevas ofertas?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">Sí. Los titulados FP pueden activar notificaciones por email en su perfil. Cuando una empresa publique una oferta que coincida con tu ciclo formativo, recibirás un aviso automáticamente.</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-6">
+                <AccordionTrigger>¿Las empresas pueden contactarme directamente?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">Solo cuando tú te postulas a una oferta. En ese momento, la empresa puede ver tu perfil, CV y datos de contacto, incluyendo la opción de contactarte por WhatsApp si has proporcionado tu número.</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-7">
+                <AccordionTrigger>¿Quién está detrás de esta plataforma?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">Conecta FP Canarias es un proyecto promovido por el Departamento de Administración de Empresas del IES Manuel Martín González, con el objetivo de facilitar la inserción laboral de los titulados de FP en las Islas Canarias.</p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </Card>
         </div>
       </section>
 

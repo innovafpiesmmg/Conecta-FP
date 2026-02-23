@@ -9,7 +9,7 @@ import {
   Briefcase, Plus, Users, LogOut, Loader2, MapPin, Clock, Building2,
   Mail, Phone, GraduationCap, FileText, ChevronDown, ChevronUp,
   Trash2, Shield, ExternalLink, Eye, Camera, Upload, X, User as UserIcon, Image,
-  Search, Pencil, MessageCircle
+  Search, Pencil, MessageCircle, HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
@@ -131,12 +132,15 @@ export default function CompanyDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="jobs" className="gap-2" data-testid="tab-jobs">
               <Briefcase className="w-4 h-4" /> Mis Ofertas
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2" data-testid="tab-settings">
               <Building2 className="w-4 h-4" /> Mi Empresa
+            </TabsTrigger>
+            <TabsTrigger value="faq" className="gap-2" data-testid="tab-faq">
+              <HelpCircle className="w-4 h-4" /> FAQ
             </TabsTrigger>
           </TabsList>
 
@@ -253,6 +257,65 @@ export default function CompanyDashboard() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="faq" className="space-y-4">
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-primary" />
+                Preguntas Frecuentes para Empresas
+              </h2>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="faq-1">
+                  <AccordionTrigger>¿Cómo publico una oferta de empleo?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">En la pestaña <strong>Mis Ofertas</strong>, haz clic en el botón <strong>Nueva Oferta</strong>. Rellena el formulario con el título, descripción, ubicación, salario, requisitos, familia profesional, ciclo formativo y fecha de expiración. La oferta será visible inmediatamente para los titulados FP registrados.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-2">
+                  <AccordionTrigger>¿Cómo veo los candidatos que se han postulado?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Haz clic en el icono de candidatos junto a cada oferta para ver la lista de postulantes. Podrás ver su perfil completo, CV, carta de presentación y contactarles por WhatsApp o email. También puedes cambiar el estado de cada candidatura.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-3">
+                  <AccordionTrigger>¿Qué ocurre cuando acepto a un candidato?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Al aceptar a un candidato, la oferta se cierra automáticamente y deja de estar visible para nuevos postulantes. El candidato aceptado recibirá una notificación por email. Las demás candidaturas pendientes se marcarán como rechazadas.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-4">
+                  <AccordionTrigger>¿Puedo editar una oferta después de publicarla?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Sí. Haz clic en el icono de edición junto a cada oferta para modificar el título, descripción, ubicación, salario, requisitos y fecha de expiración. Los cambios se aplican inmediatamente.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-5">
+                  <AccordionTrigger>¿Qué pasa cuando mi oferta expira?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Las ofertas se desactivan automáticamente cuando llegan a su fecha de expiración. Recibirás un recordatorio por email 7 días antes. Puedes extender la fecha de expiración en cualquier momento desde la lista de ofertas.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-6">
+                  <AccordionTrigger>¿Cómo subo el logotipo de mi empresa?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">En la pestaña <strong>Mi Empresa</strong>, en la sección de logotipo, puedes subir una imagen en formato JPG, PNG o WebP (máximo 5 MB). El logotipo aparecerá junto a tus ofertas en la plataforma.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-7">
+                  <AccordionTrigger>¿Puedo hacer que mi empresa sea visible en el directorio público?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Sí. En <strong>Mi Empresa</strong> puedes activar la opción de perfil público. Esto permite que el nombre de tu empresa, sector y descripción aparezcan en el directorio de la plataforma, facilitando que los titulados te conozcan.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-8">
+                  <AccordionTrigger>¿Cómo contacto a un candidato por WhatsApp?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Si el candidato ha proporcionado su número de WhatsApp, verás un icono verde de WhatsApp junto a su perfil en la lista de candidatos. Al hacer clic, se abrirá una conversación directa de WhatsApp con un mensaje predefinido mencionando la oferta.</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </Card>
           </TabsContent>
         </Tabs>
