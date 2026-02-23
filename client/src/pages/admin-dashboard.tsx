@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -7,7 +7,8 @@ import {
   Shield, Users, Briefcase, FileText, LogOut, Loader2,
   Trash2, ToggleLeft, ToggleRight, Mail, Phone, Building2,
   GraduationCap, MapPin, Eye, EyeOff, BarChart3, Settings, Send, MessageCircle,
-  TrendingUp, ChevronDown, ChevronRight, School, BookOpen, Library
+  TrendingUp, ChevronDown, ChevronRight, School, BookOpen, Library,
+  Download, Copy, ClipboardCopy, ArrowUpRight, ArrowDownRight, Target, Award, DollarSign, Activity, Percent, Clock
 } from "lucide-react";
 import { CentrosFpManager, FamiliasProfesionalesManager, CiclosFormativosManager } from "@/components/admin-tables-manager";
 import { Button } from "@/components/ui/button";
@@ -563,7 +564,69 @@ type MetricsData = {
   jobsByLocation: MetricRow[];
   alumniByFamilia: MetricRow[];
   alumniByCiclo: MetricRow[];
+  applicationStatus: { pending: number; reviewed: number; accepted: number; rejected: number; total: number; acceptanceRate: number; rejectionRate: number };
+  topCompanies: { name: string; jobCount: number; applicationCount: number; acceptedCount: number; avgSalaryMin: number | null; avgSalaryMax: number | null }[];
+  trends: {
+    monthlyJobs: { month: string; count: number }[];
+    monthlyApplications: { month: string; count: number; accepted: number; rejected: number }[];
+  };
+  salaryByFamilia: { name: string; avgMin: number | null; avgMax: number | null; minSalary: number | null; maxSalary: number | null }[];
+  positionFillRate: { totalPositions: number; totalFilled: number; totalOffers: number; fullyFilled: number; fillPercentage: number };
+  demandSupply: { name: string; demand: number; supply: number }[];
+  recentActivity: { newUsers30d: number; newJobs30d: number; newApps30d: number; newUsers7d: number; newJobs7d: number; newApps7d: number; avgAppsPerJob: number; alumniWithCv: number; totalAlumni: number };
 };
+
+async function copySvgAsImage(svgElement: SVGSVGElement) {
+  const serializer = new XMLSerializer();
+  const svgStr = serializer.serializeToString(svgElement);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+  const img = new Image();
+  const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  return new Promise<void>((resolve) => {
+    img.onload = async () => {
+      canvas.width = img.width * 2;
+      canvas.height = img.height * 2;
+      ctx.scale(2, 2);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(async (pngBlob) => {
+        if (pngBlob) {
+          try { await navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob })]); } catch {}
+        }
+        URL.revokeObjectURL(url);
+        resolve();
+      });
+    };
+    img.src = url;
+  });
+}
+
+function downloadCSV(filename: string, csvContent: string) {
+  const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function copyTableToClipboard(headers: string[], rows: (string | number)[][]) {
+  const text = [headers.join("\t"), ...rows.map(r => r.join("\t"))].join("\n");
+  navigator.clipboard.writeText(text);
+}
+
+function formatEur(val: number | null) {
+  if (val === null || val === undefined) return "-";
+  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(val);
+}
+
+function SectionCopyButton({ onClick, label = "Copiar" }: { onClick: () => void; label?: string }) {
+  return (
+    <Button variant="outline" size="sm" onClick={onClick} data-testid={`button-copy-${label.toLowerCase().replace(/\s/g, "-")}`}>
+      <Copy className="w-3 h-3 mr-1" /> {label}
+    </Button>
+  );
+}
 
 function MetricBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.max((value / max) * 100, 2) : 0;
@@ -582,6 +645,17 @@ function MetricTable({ title, icon, data, columns }: {
   columns: { key: string; label: string; color: string }[];
 }) {
   const [expanded, setExpanded] = useState(true);
+
+  const handleCopy = () => {
+    const headers = ["Nombre", ...(data[0]?.familia !== undefined ? ["Familia"] : []), ...columns.map(c => c.label)];
+    const rows = data.map(row => [
+      row.name,
+      ...(row.familia !== undefined ? [row.familia || ""] : []),
+      ...columns.map(c => (row as any)[c.key] || 0),
+    ]);
+    copyTableToClipboard(headers, rows);
+  };
+
   if (data.length === 0) {
     return (
       <Card className="p-4" data-testid={`metric-card-${title.toLowerCase().replace(/\s/g, "-")}`}>
@@ -601,16 +675,19 @@ function MetricTable({ title, icon, data, columns }: {
 
   return (
     <Card className="p-4" data-testid={`metric-card-${title.toLowerCase().replace(/\s/g, "-")}`}>
-      <button
-        className="flex items-center gap-2 w-full text-left"
-        onClick={() => setExpanded(!expanded)}
-        data-testid={`button-toggle-metric-${title.toLowerCase().replace(/\s/g, "-")}`}
-      >
-        {icon}
-        <h3 className="font-semibold flex-1">{title}</h3>
-        <Badge variant="secondary" className="text-xs">{data.length}</Badge>
-        {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-      </button>
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          className="flex items-center gap-2 flex-1 text-left min-w-0"
+          onClick={() => setExpanded(!expanded)}
+          data-testid={`button-toggle-metric-${title.toLowerCase().replace(/\s/g, "-")}`}
+        >
+          {icon}
+          <h3 className="font-semibold flex-1">{title}</h3>
+          <Badge variant="secondary" className="text-xs">{data.length}</Badge>
+          {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        {expanded && <SectionCopyButton onClick={handleCopy} />}
+      </div>
 
       {expanded && (
         <div className="mt-4 space-y-3">
@@ -642,60 +719,461 @@ function MetricTable({ title, icon, data, columns }: {
   );
 }
 
+function KpiCards({ metrics }: { metrics: MetricsData }) {
+  const ra = metrics.recentActivity;
+  const as = metrics.applicationStatus;
+  const pf = metrics.positionFillRate;
+  const cvPct = ra.totalAlumni > 0 ? ((ra.alumniWithCv / ra.totalAlumni) * 100).toFixed(1) : "0";
+
+  const kpis = [
+    { label: "Nuevos usuarios (7d)", value: ra.newUsers7d, sub: `${ra.newUsers30d} en 30d`, icon: Users, color: "text-blue-600 dark:text-blue-400" },
+    { label: "Nuevas ofertas (7d)", value: ra.newJobs7d, sub: `${ra.newJobs30d} en 30d`, icon: Briefcase, color: "text-indigo-600 dark:text-indigo-400" },
+    { label: "Nuevas candidaturas (7d)", value: ra.newApps7d, sub: `${ra.newApps30d} en 30d`, icon: FileText, color: "text-purple-600 dark:text-purple-400" },
+    { label: "Tasa de aceptación", value: `${as.acceptanceRate.toFixed(1)}%`, sub: `${as.accepted} aceptadas`, icon: Target, color: "text-green-600 dark:text-green-400" },
+    { label: "Tasa de rechazo", value: `${as.rejectionRate.toFixed(1)}%`, sub: `${as.rejected} rechazadas`, icon: ArrowDownRight, color: "text-red-600 dark:text-red-400" },
+    { label: "Cobertura de puestos", value: `${pf.fillPercentage.toFixed(1)}%`, sub: `${pf.totalFilled}/${pf.totalPositions} cubiertos`, icon: Award, color: "text-orange-600 dark:text-orange-400" },
+    { label: "Media candidaturas/oferta", value: ra.avgAppsPerJob.toFixed(1), sub: `${as.total} total`, icon: Activity, color: "text-cyan-600 dark:text-cyan-400" },
+    { label: "Titulados con CV", value: `${cvPct}%`, sub: `${ra.alumniWithCv}/${ra.totalAlumni}`, icon: GraduationCap, color: "text-teal-600 dark:text-teal-400" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {kpis.map((k) => (
+        <Card key={k.label} className="p-4" data-testid={`kpi-${k.label.toLowerCase().replace(/[\s/()]/g, "-")}`}>
+          <div className="flex items-start gap-3">
+            <k.icon className={`w-6 h-6 mt-0.5 ${k.color}`} />
+            <div className="min-w-0">
+              <p className="text-xl font-bold">{k.value}</p>
+              <p className="text-xs text-muted-foreground">{k.label}</p>
+              <Badge variant="secondary" className="text-xs mt-1">{k.sub}</Badge>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function TrendBarChart({ title, data, barKey, barColor, svgRef }: {
+  title: string;
+  data: { month: string; count: number }[];
+  barKey: string;
+  barColor: string;
+  svgRef: React.RefObject<SVGSVGElement>;
+}) {
+  if (!data || data.length === 0) return null;
+  const maxVal = Math.max(...data.map(d => (d as any)[barKey] || d.count), 1);
+  const chartW = 600;
+  const chartH = 200;
+  const pad = { top: 20, right: 10, bottom: 40, left: 45 };
+  const innerW = chartW - pad.left - pad.right;
+  const innerH = chartH - pad.top - pad.bottom;
+  const barW = Math.max(innerW / data.length - 4, 8);
+
+  const yTicks = [0, Math.round(maxVal / 2), maxVal];
+
+  return (
+    <Card className="p-4" data-testid={`chart-${title.toLowerCase().replace(/\s/g, "-")}`}>
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <h3 className="font-semibold flex items-center gap-2"><BarChart3 className="w-4 h-4" /> {title}</h3>
+        <div className="flex gap-2">
+          <SectionCopyButton onClick={() => {
+            const headers = ["Mes", "Cantidad"];
+            const rows = data.map(d => [d.month, (d as any)[barKey] || d.count]);
+            copyTableToClipboard(headers, rows);
+          }} />
+          <Button variant="outline" size="sm" onClick={() => { if (svgRef.current) copySvgAsImage(svgRef.current); }} data-testid={`button-copy-image-${title.toLowerCase().replace(/\s/g, "-")}`}>
+            <ClipboardCopy className="w-3 h-3 mr-1" /> Copiar como imagen
+          </Button>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <svg ref={svgRef} width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} className="w-full max-w-full" style={{ minWidth: 400 }} xmlns="http://www.w3.org/2000/svg">
+          <rect width={chartW} height={chartH} fill="transparent" />
+          {yTicks.map(t => (
+            <g key={t}>
+              <line x1={pad.left} y1={pad.top + innerH - (t / maxVal) * innerH} x2={chartW - pad.right} y2={pad.top + innerH - (t / maxVal) * innerH} stroke="currentColor" strokeOpacity={0.1} />
+              <text x={pad.left - 5} y={pad.top + innerH - (t / maxVal) * innerH + 4} textAnchor="end" fontSize={10} fill="currentColor" fillOpacity={0.5}>{t}</text>
+            </g>
+          ))}
+          {data.map((d, i) => {
+            const val = (d as any)[barKey] || d.count;
+            const x = pad.left + (i * (innerW / data.length)) + (innerW / data.length - barW) / 2;
+            const h = (val / maxVal) * innerH;
+            return (
+              <g key={i}>
+                <rect x={x} y={pad.top + innerH - h} width={barW} height={h} fill={barColor} rx={2} />
+                {val > 0 && <text x={x + barW / 2} y={pad.top + innerH - h - 4} textAnchor="middle" fontSize={9} fill="currentColor" fillOpacity={0.7}>{val}</text>}
+                <text x={x + barW / 2} y={chartH - pad.bottom + 14} textAnchor="middle" fontSize={9} fill="currentColor" fillOpacity={0.5}>{d.month.slice(0, 3)}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    </Card>
+  );
+}
+
+function TrendStackedChart({ metrics, svgRef }: { metrics: MetricsData; svgRef: React.RefObject<SVGSVGElement> }) {
+  const data = metrics.trends?.monthlyApplications;
+  if (!data || data.length === 0) return null;
+  const maxVal = Math.max(...data.map(d => d.count), 1);
+  const chartW = 600;
+  const chartH = 220;
+  const pad = { top: 20, right: 10, bottom: 50, left: 45 };
+  const innerW = chartW - pad.left - pad.right;
+  const innerH = chartH - pad.top - pad.bottom;
+  const barW = Math.max(innerW / data.length - 4, 8);
+  const yTicks = [0, Math.round(maxVal / 2), maxVal];
+
+  return (
+    <Card className="p-4" data-testid="chart-candidaturas-mensuales">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Candidaturas mensuales</h3>
+        <div className="flex gap-2">
+          <SectionCopyButton onClick={() => {
+            copyTableToClipboard(["Mes", "Total", "Aceptadas", "Rechazadas"], data.map(d => [d.month, d.count, d.accepted, d.rejected]));
+          }} />
+          <Button variant="outline" size="sm" onClick={() => { if (svgRef.current) copySvgAsImage(svgRef.current); }} data-testid="button-copy-image-candidaturas">
+            <ClipboardCopy className="w-3 h-3 mr-1" /> Copiar como imagen
+          </Button>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 mb-2 flex-wrap">
+        <span className="flex items-center gap-1 text-xs"><span className="w-3 h-3 rounded-sm bg-blue-500 inline-block" /> Total</span>
+        <span className="flex items-center gap-1 text-xs"><span className="w-3 h-3 rounded-sm bg-green-500 inline-block" /> Aceptadas</span>
+        <span className="flex items-center gap-1 text-xs"><span className="w-3 h-3 rounded-sm bg-red-400 inline-block" /> Rechazadas</span>
+      </div>
+      <div className="overflow-x-auto">
+        <svg ref={svgRef} width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} className="w-full max-w-full" style={{ minWidth: 400 }} xmlns="http://www.w3.org/2000/svg">
+          <rect width={chartW} height={chartH} fill="transparent" />
+          {yTicks.map(t => (
+            <g key={t}>
+              <line x1={pad.left} y1={pad.top + innerH - (t / maxVal) * innerH} x2={chartW - pad.right} y2={pad.top + innerH - (t / maxVal) * innerH} stroke="currentColor" strokeOpacity={0.1} />
+              <text x={pad.left - 5} y={pad.top + innerH - (t / maxVal) * innerH + 4} textAnchor="end" fontSize={10} fill="currentColor" fillOpacity={0.5}>{t}</text>
+            </g>
+          ))}
+          {data.map((d, i) => {
+            const x = pad.left + (i * (innerW / data.length)) + (innerW / data.length - barW) / 2;
+            const totalH = (d.count / maxVal) * innerH;
+            const accH = (d.accepted / maxVal) * innerH;
+            const rejH = (d.rejected / maxVal) * innerH;
+            const otherH = totalH - accH - rejH;
+            return (
+              <g key={i}>
+                <rect x={x} y={pad.top + innerH - totalH} width={barW} height={Math.max(otherH, 0)} fill="#3b82f6" rx={0} />
+                <rect x={x} y={pad.top + innerH - accH - rejH} width={barW} height={Math.max(accH, 0)} fill="#22c55e" rx={0} />
+                <rect x={x} y={pad.top + innerH - rejH} width={barW} height={Math.max(rejH, 0)} fill="#f87171" rx={0} />
+                {d.count > 0 && <text x={x + barW / 2} y={pad.top + innerH - totalH - 4} textAnchor="middle" fontSize={9} fill="currentColor" fillOpacity={0.7}>{d.count}</text>}
+                <text x={x + barW / 2} y={chartH - pad.bottom + 14} textAnchor="middle" fontSize={9} fill="currentColor" fillOpacity={0.5}>{d.month.slice(0, 3)}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    </Card>
+  );
+}
+
+function ApplicationStatusBar({ status }: { status: MetricsData["applicationStatus"] }) {
+  const total = status.total || 1;
+  const segments = [
+    { label: "Pendientes", count: status.pending, color: "bg-yellow-500", pct: ((status.pending / total) * 100).toFixed(1) },
+    { label: "Revisadas", count: status.reviewed, color: "bg-blue-500", pct: ((status.reviewed / total) * 100).toFixed(1) },
+    { label: "Aceptadas", count: status.accepted, color: "bg-green-500", pct: ((status.accepted / total) * 100).toFixed(1) },
+    { label: "Rechazadas", count: status.rejected, color: "bg-red-500", pct: ((status.rejected / total) * 100).toFixed(1) },
+  ];
+
+  return (
+    <Card className="p-4" data-testid="section-application-status">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <h3 className="font-semibold flex items-center gap-2"><Percent className="w-4 h-4" /> Estado de candidaturas</h3>
+        <SectionCopyButton onClick={() => {
+          copyTableToClipboard(["Estado", "Cantidad", "Porcentaje"], segments.map(s => [s.label, s.count, `${s.pct}%`]));
+        }} />
+      </div>
+      <div className="w-full h-8 rounded-md overflow-hidden flex">
+        {segments.map(s => (
+          s.count > 0 && (
+            <div key={s.label} className={`${s.color} h-full flex items-center justify-center text-white text-xs font-medium`} style={{ width: `${(s.count / total) * 100}%`, minWidth: s.count > 0 ? 30 : 0 }} title={`${s.label}: ${s.count} (${s.pct}%)`}>
+              {(s.count / total) * 100 > 8 ? s.count : ""}
+            </div>
+          )
+        ))}
+      </div>
+      <div className="flex items-center gap-4 mt-3 flex-wrap">
+        {segments.map(s => (
+          <div key={s.label} className="flex items-center gap-1.5 text-xs">
+            <span className={`w-3 h-3 rounded-sm ${s.color} inline-block`} />
+            <span className="text-muted-foreground">{s.label}:</span>
+            <span className="font-medium">{s.count}</span>
+            <span className="text-muted-foreground">({s.pct}%)</span>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function DemandSupplyTable({ data }: { data: MetricsData["demandSupply"] }) {
+  if (!data || data.length === 0) return null;
+  return (
+    <Card className="p-4" data-testid="section-demand-supply">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Demanda vs Oferta</h3>
+        <SectionCopyButton onClick={() => {
+          copyTableToClipboard(["Familia", "Demanda (ofertas)", "Oferta (titulados)", "Diferencia"], data.map(d => [d.name, d.demand, d.supply, d.supply - d.demand]));
+        }} />
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Familia Profesional</th>
+              <th className="text-right py-2 px-2 font-medium text-muted-foreground">Demanda</th>
+              <th className="text-right py-2 px-2 font-medium text-muted-foreground">Oferta</th>
+              <th className="text-right py-2 pl-2 font-medium text-muted-foreground">Diferencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((d, i) => {
+              const gap = d.supply - d.demand;
+              return (
+                <tr key={i} className="border-b last:border-b-0" data-testid={`row-demand-supply-${i}`}>
+                  <td className="py-2 pr-4 truncate max-w-[200px]" title={d.name}>{d.name}</td>
+                  <td className="py-2 px-2 text-right font-medium">{d.demand}</td>
+                  <td className="py-2 px-2 text-right font-medium">{d.supply}</td>
+                  <td className="py-2 pl-2 text-right">
+                    <span className={`inline-flex items-center gap-0.5 font-medium ${gap >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                      {gap >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                      {gap >= 0 ? `+${gap}` : gap}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
+function TopCompaniesTable({ companies }: { companies: MetricsData["topCompanies"] }) {
+  if (!companies || companies.length === 0) return null;
+  return (
+    <Card className="p-4" data-testid="section-top-companies">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <h3 className="font-semibold flex items-center gap-2"><Building2 className="w-4 h-4" /> Ranking de empresas</h3>
+        <SectionCopyButton onClick={() => {
+          copyTableToClipboard(
+            ["Empresa", "Ofertas", "Candidaturas", "Aceptadas", "Salario min medio", "Salario max medio"],
+            companies.map(c => [c.name, c.jobCount, c.applicationCount, c.acceptedCount, c.avgSalaryMin !== null ? `${c.avgSalaryMin}€` : "-", c.avgSalaryMax !== null ? `${c.avgSalaryMax}€` : "-"])
+          );
+        }} />
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Empresa</th>
+              <th className="text-right py-2 px-2 font-medium text-muted-foreground">Ofertas</th>
+              <th className="text-right py-2 px-2 font-medium text-muted-foreground">Candidaturas</th>
+              <th className="text-right py-2 px-2 font-medium text-muted-foreground">Aceptadas</th>
+              <th className="text-right py-2 pl-2 font-medium text-muted-foreground">Salario medio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {companies.map((c, i) => (
+              <tr key={i} className="border-b last:border-b-0" data-testid={`row-company-${i}`}>
+                <td className="py-2 pr-4 font-medium truncate max-w-[200px]" title={c.name}>{c.name}</td>
+                <td className="py-2 px-2 text-right">{c.jobCount}</td>
+                <td className="py-2 px-2 text-right">{c.applicationCount}</td>
+                <td className="py-2 px-2 text-right">{c.acceptedCount}</td>
+                <td className="py-2 pl-2 text-right text-muted-foreground">
+                  {c.avgSalaryMin !== null || c.avgSalaryMax !== null
+                    ? `${formatEur(c.avgSalaryMin)} - ${formatEur(c.avgSalaryMax)}`
+                    : "-"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
+function SalaryChart({ data }: { data: MetricsData["salaryByFamilia"] }) {
+  const filtered = (data || []).filter(d => d.avgMin !== null || d.avgMax !== null);
+  if (filtered.length === 0) return null;
+  const globalMax = Math.max(...filtered.map(d => d.maxSalary || d.avgMax || 0), 1);
+
+  return (
+    <Card className="p-4" data-testid="section-salary-analysis">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <h3 className="font-semibold flex items-center gap-2"><DollarSign className="w-4 h-4" /> Análisis salarial por familia</h3>
+        <SectionCopyButton onClick={() => {
+          copyTableToClipboard(
+            ["Familia", "Media mín", "Media máx", "Mínimo", "Máximo"],
+            filtered.map(d => [d.name, d.avgMin !== null ? `${d.avgMin}€` : "-", d.avgMax !== null ? `${d.avgMax}€` : "-", d.minSalary !== null ? `${d.minSalary}€` : "-", d.maxSalary !== null ? `${d.maxSalary}€` : "-"])
+          );
+        }} />
+      </div>
+      <div className="space-y-3">
+        {filtered.map((d, i) => {
+          const minPct = ((d.avgMin || 0) / globalMax) * 100;
+          const maxPct = ((d.avgMax || 0) / globalMax) * 100;
+          return (
+            <div key={i} data-testid={`salary-row-${i}`}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm truncate max-w-[60%]" title={d.name}>{d.name}</span>
+                <span className="text-xs text-muted-foreground">{formatEur(d.avgMin)} - {formatEur(d.avgMax)}</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-4 relative overflow-hidden">
+                <div className="absolute h-full bg-emerald-400/40 rounded-full" style={{ left: `${minPct}%`, width: `${Math.max(maxPct - minPct, 2)}%` }} />
+                <div className="absolute h-full w-1 bg-emerald-600 rounded-full" style={{ left: `${minPct}%` }} />
+                <div className="absolute h-full w-1 bg-emerald-600 rounded-full" style={{ left: `${maxPct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+function generateFullCSV(metrics: MetricsData): string {
+  const sections: string[] = [];
+
+  sections.push("=== ACTIVIDAD RECIENTE ===");
+  const ra = metrics.recentActivity;
+  sections.push(["Métrica", "7 días", "30 días"].join(","));
+  sections.push(["Nuevos usuarios", ra.newUsers7d, ra.newUsers30d].join(","));
+  sections.push(["Nuevas ofertas", ra.newJobs7d, ra.newJobs30d].join(","));
+  sections.push(["Nuevas candidaturas", ra.newApps7d, ra.newApps30d].join(","));
+  sections.push(`Media candidaturas/oferta,${ra.avgAppsPerJob.toFixed(1)}`);
+  sections.push(`Titulados con CV,${ra.alumniWithCv},de ${ra.totalAlumni}`);
+
+  sections.push("");
+  sections.push("=== ESTADO DE CANDIDATURAS ===");
+  const as = metrics.applicationStatus;
+  sections.push(["Estado", "Cantidad", "Porcentaje"].join(","));
+  sections.push(["Pendientes", as.pending, `${((as.pending / (as.total || 1)) * 100).toFixed(1)}%`].join(","));
+  sections.push(["Revisadas", as.reviewed, `${((as.reviewed / (as.total || 1)) * 100).toFixed(1)}%`].join(","));
+  sections.push(["Aceptadas", as.accepted, `${as.acceptanceRate.toFixed(1)}%`].join(","));
+  sections.push(["Rechazadas", as.rejected, `${as.rejectionRate.toFixed(1)}%`].join(","));
+
+  sections.push("");
+  sections.push("=== COBERTURA DE PUESTOS ===");
+  const pf = metrics.positionFillRate;
+  sections.push(`Posiciones totales,${pf.totalPositions}`);
+  sections.push(`Posiciones cubiertas,${pf.totalFilled}`);
+  sections.push(`Porcentaje cobertura,${pf.fillPercentage.toFixed(1)}%`);
+
+  if (metrics.topCompanies?.length > 0) {
+    sections.push("");
+    sections.push("=== TOP EMPRESAS ===");
+    sections.push(["Empresa", "Ofertas", "Candidaturas", "Aceptadas", "Salario min medio", "Salario max medio"].join(","));
+    metrics.topCompanies.forEach(c => {
+      sections.push([`"${c.name}"`, c.jobCount, c.applicationCount, c.acceptedCount, c.avgSalaryMin ?? "", c.avgSalaryMax ?? ""].join(","));
+    });
+  }
+
+  if (metrics.demandSupply?.length > 0) {
+    sections.push("");
+    sections.push("=== DEMANDA VS OFERTA ===");
+    sections.push(["Familia", "Demanda", "Oferta", "Diferencia"].join(","));
+    metrics.demandSupply.forEach(d => {
+      sections.push([`"${d.name}"`, d.demand, d.supply, d.supply - d.demand].join(","));
+    });
+  }
+
+  if (metrics.salaryByFamilia?.length > 0) {
+    sections.push("");
+    sections.push("=== SALARIOS POR FAMILIA ===");
+    sections.push(["Familia", "Media mín", "Media máx", "Mínimo", "Máximo"].join(","));
+    metrics.salaryByFamilia.forEach(d => {
+      sections.push([`"${d.name}"`, d.avgMin ?? "", d.avgMax ?? "", d.minSalary ?? "", d.maxSalary ?? ""].join(","));
+    });
+  }
+
+  if (metrics.trends?.monthlyJobs?.length > 0) {
+    sections.push("");
+    sections.push("=== OFERTAS MENSUALES ===");
+    sections.push(["Mes", "Cantidad"].join(","));
+    metrics.trends.monthlyJobs.forEach(d => sections.push([d.month, d.count].join(",")));
+  }
+
+  if (metrics.trends?.monthlyApplications?.length > 0) {
+    sections.push("");
+    sections.push("=== CANDIDATURAS MENSUALES ===");
+    sections.push(["Mes", "Total", "Aceptadas", "Rechazadas"].join(","));
+    metrics.trends.monthlyApplications.forEach(d => sections.push([d.month, d.count, d.accepted, d.rejected].join(",")));
+  }
+
+  const tableExport = (title: string, headers: string[], rows: MetricRow[], keys: string[]) => {
+    if (rows.length === 0) return;
+    sections.push("");
+    sections.push(`=== ${title} ===`);
+    sections.push(headers.join(","));
+    rows.forEach(r => {
+      sections.push(keys.map(k => {
+        const v = (r as any)[k];
+        return typeof v === "string" ? `"${v}"` : (v ?? "");
+      }).join(","));
+    });
+  };
+
+  tableExport("OFERTAS POR FAMILIA", ["Familia", "Ofertas", "Activas", "Candidaturas"], metrics.jobsByFamilia, ["name", "jobCount", "activeJobs", "applicationCount"]);
+  tableExport("OFERTAS POR CICLO", ["Ciclo", "Familia", "Ofertas", "Activas", "Candidaturas"], metrics.jobsByCiclo, ["name", "familia", "jobCount", "activeJobs", "applicationCount"]);
+  tableExport("OFERTAS POR LOCALIDAD", ["Localidad", "Ofertas", "Activas", "Candidaturas"], metrics.jobsByLocation, ["name", "jobCount", "activeJobs", "applicationCount"]);
+  tableExport("TITULADOS POR FAMILIA", ["Familia", "Titulados"], metrics.alumniByFamilia, ["name", "alumniCount"]);
+  tableExport("TITULADOS POR CICLO", ["Ciclo", "Familia", "Titulados"], metrics.alumniByCiclo, ["name", "familia", "alumniCount"]);
+
+  return sections.join("\n");
+}
+
 function MetricsPanel() {
   const { data: metrics, isLoading } = useQuery<MetricsData>({
     queryKey: ["/api/admin/metrics"],
   });
 
+  const jobsChartRef = useRef<SVGSVGElement>(null);
+  const appsChartRef = useRef<SVGSVGElement>(null);
+
   if (isLoading || !metrics) {
     return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   }
 
-  const totalJobs = metrics.jobsByFamilia.reduce((s, r) => s + (r.jobCount || 0), 0);
-  const totalApps = metrics.jobsByFamilia.reduce((s, r) => s + (r.applicationCount || 0), 0);
-  const totalAlumni = metrics.alumniByFamilia.reduce((s, r) => s + (r.alumniCount || 0), 0);
-  const totalLocations = metrics.jobsByLocation.length;
-
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4" data-testid="metric-summary-jobs">
-          <div className="flex items-center gap-3">
-            <Briefcase className="w-7 h-7 text-blue-600 dark:text-blue-400" />
-            <div>
-              <p className="text-2xl font-bold">{totalJobs}</p>
-              <p className="text-xs text-muted-foreground">Ofertas con familia</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4" data-testid="metric-summary-apps">
-          <div className="flex items-center gap-3">
-            <FileText className="w-7 h-7 text-purple-600 dark:text-purple-400" />
-            <div>
-              <p className="text-2xl font-bold">{totalApps}</p>
-              <p className="text-xs text-muted-foreground">Candidaturas</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4" data-testid="metric-summary-alumni">
-          <div className="flex items-center gap-3">
-            <GraduationCap className="w-7 h-7 text-green-600 dark:text-green-400" />
-            <div>
-              <p className="text-2xl font-bold">{totalAlumni}</p>
-              <p className="text-xs text-muted-foreground">Titulados con familia</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4" data-testid="metric-summary-locations">
-          <div className="flex items-center gap-3">
-            <MapPin className="w-7 h-7 text-orange-600 dark:text-orange-400" />
-            <div>
-              <p className="text-2xl font-bold">{totalLocations}</p>
-              <p className="text-xs text-muted-foreground">Localidades</p>
-            </div>
-          </div>
-        </Card>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h2 className="text-lg font-bold flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Panel de métricas</h2>
+        <Button variant="outline" size="sm" onClick={() => downloadCSV("informe-metricas.csv", generateFullCSV(metrics))} data-testid="button-download-csv">
+          <Download className="w-4 h-4 mr-1" /> Descargar Informe CSV
+        </Button>
       </div>
+
+      <KpiCards metrics={metrics} />
+
+      {metrics.trends && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TrendBarChart title="Ofertas mensuales" data={metrics.trends.monthlyJobs || []} barKey="count" barColor="#3b82f6" svgRef={jobsChartRef} />
+          <TrendStackedChart metrics={metrics} svgRef={appsChartRef} />
+        </div>
+      )}
+
+      {metrics.applicationStatus && (
+        <ApplicationStatusBar status={metrics.applicationStatus} />
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {metrics.demandSupply && <DemandSupplyTable data={metrics.demandSupply} />}
+        {metrics.topCompanies && <TopCompaniesTable companies={metrics.topCompanies} />}
+      </div>
+
+      {metrics.salaryByFamilia && <SalaryChart data={metrics.salaryByFamilia} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MetricTable

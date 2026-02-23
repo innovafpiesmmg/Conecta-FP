@@ -818,51 +818,137 @@ export async function registerRoutes(
 
   app.get("/api/admin/metrics", requireRole("ADMIN"), async (req, res, next) => {
     try {
-      const jobsByFamilia = await pool.query(`
-        SELECT familia_profesional AS name, COUNT(*) AS job_count,
-          COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
-          COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.familia_profesional = jo.familia_profesional), 0) AS application_count
-        FROM job_offers jo
-        WHERE familia_profesional IS NOT NULL AND familia_profesional != ''
-        GROUP BY familia_profesional
-        ORDER BY job_count DESC
-      `);
+      const [
+        jobsByFamilia, jobsByCiclo, jobsByLocation,
+        alumniByFamilia, alumniByCiclo,
+        applicationStatusCounts, topCompanies,
+        monthlyJobs, monthlyApplications,
+        salaryByFamilia, positionFillRate,
+        demandSupply, recentActivity
+      ] = await Promise.all([
+        pool.query(`
+          SELECT familia_profesional AS name, COUNT(*) AS job_count,
+            COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
+            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.familia_profesional = jo.familia_profesional), 0) AS application_count
+          FROM job_offers jo WHERE familia_profesional IS NOT NULL AND familia_profesional != ''
+          GROUP BY familia_profesional ORDER BY job_count DESC
+        `),
+        pool.query(`
+          SELECT ciclo_formativo AS name, familia_profesional AS familia, COUNT(*) AS job_count,
+            COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
+            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.ciclo_formativo = jo.ciclo_formativo), 0) AS application_count
+          FROM job_offers jo WHERE ciclo_formativo IS NOT NULL AND ciclo_formativo != ''
+          GROUP BY ciclo_formativo, familia_profesional ORDER BY job_count DESC
+        `),
+        pool.query(`
+          SELECT location AS name, COUNT(*) AS job_count,
+            COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
+            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.location = jo.location), 0) AS application_count
+          FROM job_offers jo WHERE location IS NOT NULL AND location != ''
+          GROUP BY location ORDER BY job_count DESC
+        `),
+        pool.query(`
+          SELECT familia_profesional AS name, COUNT(*) AS alumni_count
+          FROM users WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND familia_profesional != ''
+          GROUP BY familia_profesional ORDER BY alumni_count DESC
+        `),
+        pool.query(`
+          SELECT ciclo_formativo AS name, familia_profesional AS familia, COUNT(*) AS alumni_count
+          FROM users WHERE role = 'ALUMNI' AND ciclo_formativo IS NOT NULL AND ciclo_formativo != ''
+          GROUP BY ciclo_formativo, familia_profesional ORDER BY alumni_count DESC
+        `),
+        pool.query(`
+          SELECT status, COUNT(*) AS count FROM applications GROUP BY status
+        `),
+        pool.query(`
+          SELECT u.id, COALESCE(u.company_name, u.name) AS company_name,
+            COUNT(DISTINCT jo.id) AS job_count,
+            COUNT(DISTINCT a.id) AS application_count,
+            COUNT(DISTINCT a.id) FILTER (WHERE a.status = 'ACCEPTED') AS accepted_count,
+            ROUND(AVG(jo.salary_min)) AS avg_salary_min,
+            ROUND(AVG(jo.salary_max)) AS avg_salary_max
+          FROM users u
+          JOIN job_offers jo ON u.id = jo.company_id
+          LEFT JOIN applications a ON jo.id = a.job_offer_id
+          WHERE u.role = 'COMPANY'
+          GROUP BY u.id, u.company_name, u.name
+          ORDER BY job_count DESC LIMIT 10
+        `),
+        pool.query(`
+          SELECT TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS month,
+            COUNT(*) AS count
+          FROM job_offers
+          WHERE created_at >= NOW() - INTERVAL '12 months'
+          GROUP BY DATE_TRUNC('month', created_at)
+          ORDER BY month ASC
+        `),
+        pool.query(`
+          SELECT TO_CHAR(DATE_TRUNC('month', applied_at), 'YYYY-MM') AS month,
+            COUNT(*) AS count,
+            COUNT(*) FILTER (WHERE status = 'ACCEPTED') AS accepted,
+            COUNT(*) FILTER (WHERE status = 'REJECTED') AS rejected
+          FROM applications
+          WHERE applied_at >= NOW() - INTERVAL '12 months'
+          GROUP BY DATE_TRUNC('month', applied_at)
+          ORDER BY month ASC
+        `),
+        pool.query(`
+          SELECT familia_profesional AS name,
+            ROUND(AVG(salary_min)) AS avg_min, ROUND(AVG(salary_max)) AS avg_max,
+            MIN(salary_min) AS min_salary, MAX(salary_max) AS max_salary
+          FROM job_offers
+          WHERE familia_profesional IS NOT NULL AND familia_profesional != ''
+            AND (salary_min IS NOT NULL OR salary_max IS NOT NULL)
+          GROUP BY familia_profesional ORDER BY avg_max DESC NULLS LAST
+        `),
+        pool.query(`
+          SELECT
+            SUM(positions) AS total_positions,
+            SUM(positions_filled) AS total_filled,
+            COUNT(*) AS total_offers,
+            COUNT(*) FILTER (WHERE positions_filled >= positions AND positions > 0) AS fully_filled
+          FROM job_offers
+        `),
+        pool.query(`
+          SELECT fp.name,
+            COALESCE(j.job_count, 0) AS demand,
+            COALESCE(a.alumni_count, 0) AS supply
+          FROM (SELECT DISTINCT familia_profesional AS name FROM job_offers WHERE familia_profesional IS NOT NULL AND familia_profesional != ''
+                UNION SELECT DISTINCT familia_profesional AS name FROM users WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND familia_profesional != '') fp
+          LEFT JOIN (SELECT familia_profesional AS name, COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS job_count FROM job_offers GROUP BY familia_profesional) j ON fp.name = j.name
+          LEFT JOIN (SELECT familia_profesional AS name, COUNT(*) AS alumni_count FROM users WHERE role = 'ALUMNI' GROUP BY familia_profesional) a ON fp.name = a.name
+          ORDER BY demand DESC
+        `),
+        pool.query(`
+          SELECT
+            (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '30 days') AS new_users_30d,
+            (SELECT COUNT(*) FROM job_offers WHERE created_at >= NOW() - INTERVAL '30 days') AS new_jobs_30d,
+            (SELECT COUNT(*) FROM applications WHERE applied_at >= NOW() - INTERVAL '30 days') AS new_apps_30d,
+            (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '7 days') AS new_users_7d,
+            (SELECT COUNT(*) FROM job_offers WHERE created_at >= NOW() - INTERVAL '7 days') AS new_jobs_7d,
+            (SELECT COUNT(*) FROM applications WHERE applied_at >= NOW() - INTERVAL '7 days') AS new_apps_7d,
+            (SELECT ROUND(AVG(app_count)::numeric, 1) FROM (SELECT COUNT(*) AS app_count FROM applications GROUP BY job_offer_id) sub) AS avg_apps_per_job,
+            (SELECT COUNT(*) FROM users WHERE role = 'ALUMNI' AND cv_data IS NOT NULL) AS alumni_with_cv,
+            (SELECT COUNT(*) FROM users WHERE role = 'ALUMNI') AS total_alumni
+        `)
+      ]);
 
-      const jobsByCiclo = await pool.query(`
-        SELECT ciclo_formativo AS name, familia_profesional AS familia, COUNT(*) AS job_count,
-          COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
-          COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.ciclo_formativo = jo.ciclo_formativo), 0) AS application_count
-        FROM job_offers jo
-        WHERE ciclo_formativo IS NOT NULL AND ciclo_formativo != ''
-        GROUP BY ciclo_formativo, familia_profesional
-        ORDER BY job_count DESC
-      `);
+      const statusMap: Record<string, number> = {};
+      applicationStatusCounts.rows.forEach((r: any) => { statusMap[r.status] = Number(r.count); });
+      const totalAppsAll = Object.values(statusMap).reduce((a, b) => a + b, 0);
+      const pfr = positionFillRate.rows[0] || {};
 
-      const jobsByLocation = await pool.query(`
-        SELECT location AS name, COUNT(*) AS job_count,
-          COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
-          COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.location = jo.location), 0) AS application_count
-        FROM job_offers jo
-        WHERE location IS NOT NULL AND location != ''
-        GROUP BY location
-        ORDER BY job_count DESC
-      `);
-
-      const alumniByFamilia = await pool.query(`
-        SELECT familia_profesional AS name, COUNT(*) AS alumni_count
-        FROM users
-        WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND familia_profesional != ''
-        GROUP BY familia_profesional
-        ORDER BY alumni_count DESC
-      `);
-
-      const alumniByCiclo = await pool.query(`
-        SELECT ciclo_formativo AS name, familia_profesional AS familia, COUNT(*) AS alumni_count
-        FROM users
-        WHERE role = 'ALUMNI' AND ciclo_formativo IS NOT NULL AND ciclo_formativo != ''
-        GROUP BY ciclo_formativo, familia_profesional
-        ORDER BY alumni_count DESC
-      `);
+      const padMonths = <T extends Record<string, any>>(data: T[], defaults: Omit<T, "month">): T[] => {
+        const map = new Map(data.map(d => [(d as any).month, d]));
+        const result: T[] = [];
+        const now = new Date();
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          result.push(map.get(key) || { month: key, ...defaults } as T);
+        }
+        return result;
+      };
 
       res.json({
         jobsByFamilia: jobsByFamilia.rows.map(r => ({ name: r.name, jobCount: Number(r.job_count), activeJobs: Number(r.active_jobs), applicationCount: Number(r.application_count) })),
@@ -870,6 +956,48 @@ export async function registerRoutes(
         jobsByLocation: jobsByLocation.rows.map(r => ({ name: r.name, jobCount: Number(r.job_count), activeJobs: Number(r.active_jobs), applicationCount: Number(r.application_count) })),
         alumniByFamilia: alumniByFamilia.rows.map(r => ({ name: r.name, alumniCount: Number(r.alumni_count) })),
         alumniByCiclo: alumniByCiclo.rows.map(r => ({ name: r.name, familia: r.familia, alumniCount: Number(r.alumni_count) })),
+        applicationStatus: {
+          pending: statusMap["PENDING"] || 0,
+          reviewed: statusMap["REVIEWED"] || 0,
+          accepted: statusMap["ACCEPTED"] || 0,
+          rejected: statusMap["REJECTED"] || 0,
+          total: totalAppsAll,
+          acceptanceRate: totalAppsAll > 0 ? Math.round(((statusMap["ACCEPTED"] || 0) / totalAppsAll) * 100) : 0,
+          rejectionRate: totalAppsAll > 0 ? Math.round(((statusMap["REJECTED"] || 0) / totalAppsAll) * 100) : 0,
+        },
+        topCompanies: topCompanies.rows.map(r => ({
+          name: r.company_name, jobCount: Number(r.job_count),
+          applicationCount: Number(r.application_count), acceptedCount: Number(r.accepted_count),
+          avgSalaryMin: r.avg_salary_min ? Number(r.avg_salary_min) : null,
+          avgSalaryMax: r.avg_salary_max ? Number(r.avg_salary_max) : null,
+        })),
+        trends: {
+          monthlyJobs: padMonths(monthlyJobs.rows.map(r => ({ month: r.month, count: Number(r.count) })), { count: 0 }),
+          monthlyApplications: padMonths(monthlyApplications.rows.map(r => ({ month: r.month, count: Number(r.count), accepted: Number(r.accepted), rejected: Number(r.rejected) })), { count: 0, accepted: 0, rejected: 0 }),
+        },
+        salaryByFamilia: salaryByFamilia.rows.map(r => ({
+          name: r.name, avgMin: r.avg_min ? Number(r.avg_min) : null, avgMax: r.avg_max ? Number(r.avg_max) : null,
+          minSalary: r.min_salary ? Number(r.min_salary) : null, maxSalary: r.max_salary ? Number(r.max_salary) : null,
+        })),
+        positionFillRate: {
+          totalPositions: Number(pfr.total_positions || 0),
+          totalFilled: Number(pfr.total_filled || 0),
+          totalOffers: Number(pfr.total_offers || 0),
+          fullyFilled: Number(pfr.fully_filled || 0),
+          fillPercentage: Number(pfr.total_positions || 0) > 0 ? Math.round((Number(pfr.total_filled || 0) / Number(pfr.total_positions || 0)) * 100) : 0,
+        },
+        demandSupply: demandSupply.rows.map(r => ({ name: r.name, demand: Number(r.demand), supply: Number(r.supply) })),
+        recentActivity: {
+          newUsers30d: Number(recentActivity.rows[0]?.new_users_30d || 0),
+          newJobs30d: Number(recentActivity.rows[0]?.new_jobs_30d || 0),
+          newApps30d: Number(recentActivity.rows[0]?.new_apps_30d || 0),
+          newUsers7d: Number(recentActivity.rows[0]?.new_users_7d || 0),
+          newJobs7d: Number(recentActivity.rows[0]?.new_jobs_7d || 0),
+          newApps7d: Number(recentActivity.rows[0]?.new_apps_7d || 0),
+          avgAppsPerJob: Number(recentActivity.rows[0]?.avg_apps_per_job || 0),
+          alumniWithCv: Number(recentActivity.rows[0]?.alumni_with_cv || 0),
+          totalAlumni: Number(recentActivity.rows[0]?.total_alumni || 0),
+        },
       });
     } catch (err) {
       next(err);
