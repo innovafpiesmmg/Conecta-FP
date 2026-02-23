@@ -190,14 +190,22 @@ async function migrate() {
         "user_id" varchar NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
         "familia_profesional" text NOT NULL,
         "ciclo_formativo" text NOT NULL,
-        "created_at" timestamp NOT NULL DEFAULT now()
+        "created_at" timestamp NOT NULL DEFAULT now(),
+        UNIQUE("user_id", "familia_profesional", "ciclo_formativo")
       )`,
+
+      `DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'user_titulaciones_user_id_familia_profesional_ciclo_formativo_key'
+        ) THEN
+          ALTER TABLE user_titulaciones ADD CONSTRAINT user_titulaciones_user_id_familia_profesional_ciclo_formativo_key UNIQUE (user_id, familia_profesional, ciclo_formativo);
+        END IF;
+      END $$`,
 
       `INSERT INTO user_titulaciones (user_id, familia_profesional, ciclo_formativo)
        SELECT id, familia_profesional, ciclo_formativo FROM users
        WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND ciclo_formativo IS NOT NULL
-       AND id NOT IN (SELECT user_id FROM user_titulaciones)
-       ON CONFLICT DO NOTHING`,
+       ON CONFLICT ("user_id", "familia_profesional", "ciclo_formativo") DO NOTHING`,
     ];
 
     for (const sql of migrations) {
