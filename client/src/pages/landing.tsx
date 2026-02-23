@@ -341,6 +341,18 @@ export default function Landing() {
                   <p className="text-muted-foreground">Conecta FP Canarias es un proyecto promovido por el Departamento de Administración de Empresas del IES Manuel Martín González, con el objetivo de facilitar la inserción laboral de los titulados de FP en las Islas Canarias.</p>
                 </AccordionContent>
               </AccordionItem>
+              <AccordionItem value="faq-8">
+                <AccordionTrigger>¿Necesito completar mi perfil para postularme?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">Sí. Para garantizar candidaturas de calidad, los titulados FP deben completar su perfil (nombre, teléfono, centro de FP, familia y ciclo formativo) y tener al menos un CV (subido en PDF o creado digitalmente) antes de poder postularse a ofertas.</p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq-9">
+                <AccordionTrigger>¿Las ofertas pueden tener varias plazas?</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">Sí. Las empresas pueden indicar cuántas plazas tiene cada oferta. A medida que se aceptan candidatos, las plazas disponibles se van descontando. Cuando todas las plazas están cubiertas, la oferta se cierra automáticamente.</p>
+                </AccordionContent>
+              </AccordionItem>
             </Accordion>
           </Card>
         </div>

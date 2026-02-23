@@ -574,6 +574,24 @@ export default function AlumniDashboard() {
                     <p className="text-muted-foreground">Es una capa extra de seguridad. Al activarla, además de tu contraseña, necesitarás un código temporal generado por una app como Google Authenticator o Authy. Puedes activarla o desactivarla en la pestaña <strong>Perfil</strong>, sección de seguridad.</p>
                   </AccordionContent>
                 </AccordionItem>
+                <AccordionItem value="faq-9">
+                  <AccordionTrigger>¿Por qué no puedo postularme a una oferta?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Para postularte, tu perfil debe estar completo. Necesitas tener rellenados tu <strong>nombre</strong>, <strong>teléfono</strong>, <strong>centro de FP</strong>, <strong>familia profesional</strong>, <strong>ciclo formativo</strong> y al menos un <strong>CV</strong> (subido en PDF o creado con el CV digital). Si te falta algo, el botón de postulación te mostrará exactamente qué campos debes completar.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-10">
+                  <AccordionTrigger>¿Puedo dar formato a mi carta de presentación?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Sí. Al postularte a una oferta, la carta de presentación incluye un editor con formato enriquecido. Puedes usar <strong>negrita</strong>, <em>cursiva</em>, subrayado, títulos y listas para estructurar tu carta y destacar tus puntos fuertes ante la empresa.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-11">
+                  <AccordionTrigger>¿Qué son las ofertas con varias plazas?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Algunas ofertas tienen más de una plaza disponible. Verás el número de plazas restantes en la tarjeta de la oferta. Puedes postularte mientras queden plazas. Cuando todas las plazas se cubren, la oferta se cierra automáticamente.</p>
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
             </Card>
           </TabsContent>

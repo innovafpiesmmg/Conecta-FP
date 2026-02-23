@@ -315,6 +315,24 @@ export default function CompanyDashboard() {
                     <p className="text-muted-foreground">Si el candidato ha proporcionado su número de WhatsApp, verás un icono verde de WhatsApp junto a su perfil en la lista de candidatos. Al hacer clic, se abrirá una conversación directa de WhatsApp con un mensaje predefinido mencionando la oferta.</p>
                   </AccordionContent>
                 </AccordionItem>
+                <AccordionItem value="faq-9">
+                  <AccordionTrigger>¿Cómo funcionan las ofertas con varias plazas?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Al crear una oferta, puedes indicar el número de plazas disponibles. Cada vez que aceptas a un candidato, se descuenta una plaza. Cuando todas las plazas estén cubiertas, la oferta se cierra automáticamente y ya no será visible para nuevos candidatos.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-10">
+                  <AccordionTrigger>¿Los candidatos necesitan perfil completo para postularse?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Sí. Los candidatos deben tener su perfil completo (nombre, teléfono, centro de FP, familia profesional, ciclo formativo y al menos un CV) antes de poder postularse. Esto garantiza que siempre recibirás candidaturas con la información necesaria para evaluarlas.</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-11">
+                  <AccordionTrigger>¿Las cartas de presentación tienen formato?</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-muted-foreground">Sí. Los candidatos pueden escribir su carta de presentación con formato enriquecido (negrita, cursiva, listas, títulos). Verás la carta formateada junto al perfil de cada candidato en la lista de postulantes.</p>
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
             </Card>
           </TabsContent>
