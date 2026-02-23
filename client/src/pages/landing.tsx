@@ -367,6 +367,10 @@ export default function Landing() {
               <span>Conecta FP Canarias - Portal de Empleo Privado</span>
             </div>
             <span className="text-xs text-muted-foreground">Un proyecto promovido por el Dpto. de Administración de Empresas del IES Manuel Martín González</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <img src={asdLogo} alt="Atreyu Servicios Digitales" className="h-4 w-auto" data-testid="img-asd-logo" />
+              Software desarrollado por Atreyu Servicios Digitales
+            </span>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             <Link href="/sugerencias">
@@ -380,10 +384,6 @@ export default function Landing() {
             </Link>
             <span>Protegido por RGPD</span>
           </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <img src={asdLogo} alt="Atreyu Servicios Digitales" className="h-5 w-auto" data-testid="img-asd-logo" />
-          <span>Software desarrollado por Atreyu Servicios Digitales</span>
         </div>
       </footer>
     </div>
