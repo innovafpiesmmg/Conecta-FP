@@ -289,9 +289,12 @@ export default function Landing() {
 
       <footer className="border-t py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4" />
-            <span>Conecta FP Canarias - Portal de Empleo Privado</span>
+          <div className="flex flex-col items-center sm:items-start gap-1">
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              <span>Conecta FP Canarias - Portal de Empleo Privado</span>
+            </div>
+            <span className="text-xs text-muted-foreground">Un proyecto promovido por el Dpto. de Administracion de Empresas del IES Manuel Martin Gonzalez</span>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             <Link href="/sugerencias">
