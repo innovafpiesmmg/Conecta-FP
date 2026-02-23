@@ -54,6 +54,7 @@ shared/
 - **Required Expiry Dates**: All job offers must have an expiry date (expiresAt is NOT NULL)
 - **Search/Filter**: All dashboards (alumni, company, admin) include search and filter functionality
 - **Admin Panel**: Full admin dashboard at /admin with platform stats, user management, job management, application overview, and SMTP configuration
+- **Advanced Analytics Dashboard**: Enhanced metrics panel with KPI summary cards (7d/30d activity, acceptance/rejection rates, position fill rate, CV coverage), SVG trend charts (monthly jobs & applications), application status breakdown, demand vs supply analysis, top companies ranking, salary analysis by familia, and all original metric tables. Includes CSV report download and copy-to-clipboard for tables and charts
 - **Email Verification**: New registrations require email verification before login
 - **Password Reset**: Forgot password flow sends reset link via email (1 hour expiry)
 - **TOTP 2FA**: Optional two-factor authentication via authenticator apps (Google Authenticator, Authy, etc.)
