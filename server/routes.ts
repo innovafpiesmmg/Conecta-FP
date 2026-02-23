@@ -1202,11 +1202,21 @@ export async function registerRoutes(
         return res.status(403).json({ message: "No autorizado para modificar esta candidatura" });
       }
 
+      if (status === "ACCEPTED") {
+        const currentJob = await storage.getJob(job.id);
+        if (currentJob && currentJob.positionsFilled >= currentJob.positions) {
+          return res.status(400).json({ message: "Todas las plazas de esta oferta ya están cubiertas" });
+        }
+      }
+
       const updated = await storage.updateApplicationStatus(req.params.id, status);
       if (!updated) return res.status(404).json({ message: "Candidatura no encontrada" });
 
       if (status === "ACCEPTED") {
-        await storage.deactivateJob(job.id);
+        const updatedJob = await storage.incrementPositionsFilled(job.id);
+        if (updatedJob && updatedJob.positionsFilled >= updatedJob.positions) {
+          await storage.deactivateJob(job.id);
+        }
       }
 
       const alumni = await storage.getUser(application.alumniId);

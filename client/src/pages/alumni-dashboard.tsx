@@ -267,6 +267,12 @@ export default function AlumniDashboard() {
                                 : `Hasta ${job.salaryMax!.toLocaleString()} EUR`}
                             </span>
                           )}
+                          {(job.positions || 1) > 1 && (
+                            <span className="flex items-center gap-1 font-medium text-green-600">
+                              <UserIcon className="w-3 h-3" />
+                              {(job.positions || 1) - (job.positionsFilled || 0)} plazas disponibles
+                            </span>
+                          )}
                         </div>
                         {(job.familiaProfesional || job.cicloFormativo) && (
                           <div className="flex items-center gap-2 mb-1 flex-wrap">

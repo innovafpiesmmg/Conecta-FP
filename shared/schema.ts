@@ -71,6 +71,8 @@ export const jobOffers = pgTable("job_offers", {
   requirements: text("requirements"),
   familiaProfesional: text("familia_profesional"),
   cicloFormativo: text("ciclo_formativo"),
+  positions: integer("positions").notNull().default(1),
+  positionsFilled: integer("positions_filled").notNull().default(0),
   active: boolean("active").notNull().default(true),
   expiresAt: timestamp("expires_at").notNull(),
   expiryReminderSentAt: timestamp("expiry_reminder_sent_at"),
@@ -151,6 +153,7 @@ export const insertJobOfferSchema = createInsertSchema(jobOffers).omit({
   companyId: true,
   createdAt: true,
   active: true,
+  positionsFilled: true,
   expiryReminderSentAt: true,
 });
 

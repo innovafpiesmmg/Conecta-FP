@@ -282,7 +282,7 @@ export default function CompanyDashboard() {
                 <AccordionItem value="faq-3">
                   <AccordionTrigger>¿Qué ocurre cuando acepto a un candidato?</AccordionTrigger>
                   <AccordionContent>
-                    <p className="text-muted-foreground">Al aceptar a un candidato, la oferta se cierra automáticamente y deja de estar visible para nuevos postulantes. El candidato aceptado recibirá una notificación por email. Las demás candidaturas pendientes se marcarán como rechazadas.</p>
+                    <p className="text-muted-foreground">Al aceptar a un candidato, se descuenta una plaza disponible de la oferta. Si la oferta tiene varias plazas, podrás seguir aceptando candidatos hasta cubrir todas las plazas. Cuando todas las plazas estén cubiertas, la oferta se cierra automáticamente. El candidato aceptado recibirá una notificación por email.</p>
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="faq-4">
@@ -403,6 +403,10 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                 </span>
               )}
               <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(job.createdAt).toLocaleDateString("es-ES")}</span>
+              <span className={`flex items-center gap-1 font-medium ${(job.positionsFilled || 0) >= (job.positions || 1) ? "text-destructive" : "text-green-600"}`}>
+                <Users className="w-3 h-3" />
+                {(job.positions || 1) - (job.positionsFilled || 0)} / {job.positions || 1} plazas
+              </span>
               {job.expiresAt && (
                 <span className={`flex items-center gap-1 ${new Date(job.expiresAt) < new Date() ? "text-destructive" : ""}`}>
                   <CalendarDays className="w-3 h-3" />
@@ -691,6 +695,7 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
   const [requirements, setRequirements] = useState("");
   const [familiaProfesional, setFamiliaProfesional] = useState("");
   const [cicloFormativo, setCicloFormativo] = useState("");
+  const [positions, setPositions] = useState("1");
   const [expiresAt, setExpiresAt] = useState("");
 
   const { data: familiasList = [] } = useFamilias();
@@ -705,6 +710,7 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
       salaryMax: salaryMax ? parseInt(salaryMax) : undefined,
       familiaProfesional: familiaProfesional || undefined,
       cicloFormativo: cicloFormativo || undefined,
+      positions: positions ? parseInt(positions) : 1,
       expiresAt: expiresAt || undefined,
     });
   };
@@ -788,6 +794,13 @@ function CreateJobForm({ onSubmit, isPending }: { onSubmit: (data: any) => void;
           <Input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} placeholder="40000" data-testid="input-job-salary-max" />
         </div>
       </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Nº de plazas *</Label>
+          <Input type="number" min="1" value={positions} onChange={(e) => setPositions(e.target.value)} placeholder="1" required data-testid="input-job-positions" />
+          <p className="text-xs text-muted-foreground">Número de puestos a cubrir con esta oferta</p>
+        </div>
+      </div>
       <div className="space-y-2">
         <Label>Requisitos</Label>
         <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} placeholder="Experiencia, tecnologías, idiomas..." rows={2} data-testid="textarea-job-requirements" />
@@ -816,6 +829,7 @@ function EditJobForm({ job, onSubmit, isPending }: { job: JobOffer; onSubmit: (d
   const [requirements, setRequirements] = useState(job.requirements || "");
   const [familiaProfesional, setFamiliaProfesional] = useState(job.familiaProfesional || "");
   const [cicloFormativo, setCicloFormativo] = useState(job.cicloFormativo || "");
+  const [positions, setPositions] = useState(job.positions?.toString() || "1");
   const [expiresAt, setExpiresAt] = useState(job.expiresAt ? new Date(job.expiresAt).toISOString().split("T")[0] : "");
 
   const { data: familiasList = [] } = useFamilias();
@@ -830,6 +844,7 @@ function EditJobForm({ job, onSubmit, isPending }: { job: JobOffer; onSubmit: (d
       salaryMax: salaryMax ? parseInt(salaryMax) : undefined,
       familiaProfesional: familiaProfesional || undefined,
       cicloFormativo: cicloFormativo || undefined,
+      positions: positions ? parseInt(positions) : 1,
       expiresAt: expiresAt || undefined,
     });
   };
@@ -911,6 +926,13 @@ function EditJobForm({ job, onSubmit, isPending }: { job: JobOffer; onSubmit: (d
         <div className="space-y-2">
           <Label>Salario máximo (EUR)</Label>
           <Input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} placeholder="40000" data-testid="input-edit-job-salary-max" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Nº de plazas *</Label>
+          <Input type="number" min="1" value={positions} onChange={(e) => setPositions(e.target.value)} placeholder="1" required data-testid="input-edit-job-positions" />
+          <p className="text-xs text-muted-foreground">Plazas cubiertas: {job.positionsFilled || 0} de {job.positions || 1}</p>
         </div>
       </div>
       <div className="space-y-2">

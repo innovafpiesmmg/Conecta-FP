@@ -43,6 +43,7 @@ export interface IStorage {
   getStats(): Promise<{ totalUsers: number; totalAlumni: number; totalCompanies: number; totalJobs: number; activeJobs: number; totalApplications: number }>;
   toggleJobActive(id: string, active: boolean): Promise<JobOffer | undefined>;
   deactivateJob(id: string): Promise<JobOffer | undefined>;
+  incrementPositionsFilled(id: string): Promise<JobOffer | undefined>;
   adminDeleteJob(id: string): Promise<void>;
 
   // SMTP settings
@@ -302,6 +303,14 @@ export class DatabaseStorage implements IStorage {
 
   async deactivateJob(id: string): Promise<JobOffer | undefined> {
     const [job] = await db.update(jobOffers).set({ active: false, expiresAt: new Date() }).where(eq(jobOffers.id, id)).returning();
+    return job;
+  }
+
+  async incrementPositionsFilled(id: string): Promise<JobOffer | undefined> {
+    const [job] = await db.update(jobOffers)
+      .set({ positionsFilled: sql`${jobOffers.positionsFilled} + 1` })
+      .where(eq(jobOffers.id, id))
+      .returning();
     return job;
   }
 
