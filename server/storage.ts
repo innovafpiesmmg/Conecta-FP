@@ -34,7 +34,6 @@ export interface IStorage {
   deleteApplicationsByAlumni(alumniId: string): Promise<void>;
 
   // Public profiles
-  getPublicAlumni(): Promise<{ id: string; name: string; bio: string | null; university: string | null; graduationYear: number | null; familiaProfesional: string | null; cicloFormativo: string | null; skills: string | null; profilePhotoUrl: string | null; phone: string | null; whatsapp: string | null }[]>;
   getPublicCompanies(): Promise<{ id: string; name: string; companyName: string | null; companyDescription: string | null; companyWebsite: string | null; companySector: string | null; companyLogoUrl: string | null; companyEmail: string | null; profilePhotoUrl: string | null; phone: string | null; whatsapp: string | null }[]>;
 
   // Admin methods
@@ -244,16 +243,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteApplicationsByAlumni(alumniId: string): Promise<void> {
     await db.delete(applications).where(eq(applications.alumniId, alumniId));
-  }
-
-  async getPublicAlumni() {
-    const result = await db.select({
-      id: users.id, name: users.name, bio: users.bio, university: users.university,
-      graduationYear: users.graduationYear, familiaProfesional: users.familiaProfesional,
-      cicloFormativo: users.cicloFormativo, skills: users.skills, profilePhotoUrl: users.profilePhotoUrl,
-      phone: users.phone, whatsapp: users.whatsapp,
-    }).from(users).where(and(eq(users.role, "ALUMNI"), eq(users.profilePublic, true))).orderBy(desc(users.createdAt));
-    return result;
   }
 
   async getPublicCompanies() {

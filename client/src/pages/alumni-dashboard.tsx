@@ -564,12 +564,6 @@ export default function AlumniDashboard() {
                     <p className="text-muted-foreground">Sí. Conforme al RGPD, tienes derecho al olvido. En la pestaña <strong>Perfil</strong>, al final de la página, encontrarás la opción de eliminar tu cuenta de forma permanente. Se borrarán todos tus datos, candidaturas, CV y archivos subidos.</p>
                   </AccordionContent>
                 </AccordionItem>
-                <AccordionItem value="faq-7">
-                  <AccordionTrigger>¿Puedo hacer que mi perfil sea visible en el directorio público?</AccordionTrigger>
-                  <AccordionContent>
-                    <p className="text-muted-foreground">Sí. En la pestaña <strong>Perfil</strong> puedes activar la opción de perfil público. Esto permite que tu nombre, ciclo formativo y centro aparezcan en el directorio de la plataforma, pero sin mostrar tu email ni teléfono directamente.</p>
-                  </AccordionContent>
-                </AccordionItem>
                 <AccordionItem value="faq-8">
                   <AccordionTrigger>¿Qué es la autenticación en dos pasos (2FA)?</AccordionTrigger>
                   <AccordionContent>
@@ -619,7 +613,6 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
   const [newFamilia, setNewFamilia] = useState("");
   const [newCiclo, setNewCiclo] = useState("");
   const [skills, setSkills] = useState(user.skills || "");
-  const [profilePublic, setProfilePublic] = useState(user.profilePublic);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingCv, setUploadingCv] = useState(false);
   const { data: familiasList = [] } = useFamilias();
@@ -672,7 +665,7 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
     onSave({
       name, phone, whatsapp, bio, university,
       graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
-      skills, profilePublic,
+      skills,
     });
   };
 
@@ -952,14 +945,6 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
             )}
           </div>
           <p className="text-xs text-muted-foreground">Solo PDF. Máximo 10MB.</p>
-        </div>
-
-        <div className="flex items-center justify-between gap-4 p-3 rounded-md bg-accent/50 border">
-          <div>
-            <p className="text-sm font-medium">Perfil público</p>
-            <p className="text-xs text-muted-foreground">Tu perfil aparecerá en el directorio público de la plataforma</p>
-          </div>
-          <Switch checked={profilePublic} onCheckedChange={setProfilePublic} data-testid="switch-profile-public" />
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 rounded-md border">

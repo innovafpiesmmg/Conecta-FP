@@ -25,7 +25,7 @@ export default function Landing() {
           </Link>
           <nav className="flex items-center gap-2 flex-wrap">
             <Link href="/directorio">
-              <Button variant="ghost" data-testid="button-directory">Directorio</Button>
+              <Button variant="ghost" data-testid="button-directory">Empresas</Button>
             </Link>
             {user ? (
               <Link href={user.role === "ADMIN" ? "/admin" : user.role === "ALUMNI" ? "/dashboard" : "/company"}>

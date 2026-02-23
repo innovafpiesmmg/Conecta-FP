@@ -112,7 +112,6 @@ shared/
 - GET /api/titulaciones/:alumniId - View alumni titulaciones (companies: only if alumni applied to their jobs)
 
 ### Public Directory
-- GET /api/public/alumni - List public alumni profiles (no auth required)
 - GET /api/public/companies - List public company profiles (no auth required)
 
 ### TOTP 2FA
