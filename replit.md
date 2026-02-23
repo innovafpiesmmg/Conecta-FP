@@ -1,4 +1,4 @@
-# Conecta FP - Portal de Empleo Privado
+# Conecta FP Canarias - Portal de Empleo Privado
 
 ## Overview
 Portal de empleo privado para titulados de Formacion Profesional (FP) y empresas. Implementa funcionalidades de privacidad RGPD incluyendo consentimiento explicito, visibilidad selectiva de perfiles, y derecho al olvido.

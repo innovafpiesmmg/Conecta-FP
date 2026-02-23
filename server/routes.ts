@@ -165,7 +165,7 @@ export async function registerRoutes(
       }
 
       const totp = new OTPAuth.TOTP({
-        issuer: "Conecta FP",
+        issuer: "Conecta FP Canarias",
         label: user.email,
         algorithm: "SHA1",
         digits: 6,
@@ -310,7 +310,7 @@ export async function registerRoutes(
 
       const secret = new OTPAuth.Secret({ size: 20 });
       const totp = new OTPAuth.TOTP({
-        issuer: "Conecta FP",
+        issuer: "Conecta FP Canarias",
         label: user.email,
         algorithm: "SHA1",
         digits: 6,
@@ -339,7 +339,7 @@ export async function registerRoutes(
       }
 
       const totp = new OTPAuth.TOTP({
-        issuer: "Conecta FP",
+        issuer: "Conecta FP Canarias",
         label: user.email,
         algorithm: "SHA1",
         digits: 6,

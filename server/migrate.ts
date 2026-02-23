@@ -95,7 +95,7 @@ async function migrate() {
         "username" text NOT NULL,
         "password" text NOT NULL,
         "from_email" text NOT NULL,
-        "from_name" text NOT NULL DEFAULT 'Conecta FP',
+        "from_name" text NOT NULL DEFAULT 'Conecta FP Canarias',
         "secure" boolean NOT NULL DEFAULT false,
         "enabled" boolean NOT NULL DEFAULT false,
         "updated_at" timestamp NOT NULL DEFAULT now()

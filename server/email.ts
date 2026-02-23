@@ -47,13 +47,13 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
 export async function sendTestEmail(to: string): Promise<boolean> {
   return sendEmail(
     to,
-    "Conecta FP - Prueba de configuracion SMTP",
+    "Conecta FP Canarias - Prueba de configuracion SMTP",
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Prueba de correo electrónico</h2>
-      <p>Este es un correo de prueba enviado desde <strong>Conecta FP</strong>.</p>
+      <p>Este es un correo de prueba enviado desde <strong>Conecta FP Canarias</strong>.</p>
       <p>Si recibes este mensaje, la configuración SMTP está funcionando correctamente.</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+      <p style="color: #999; font-size: 12px;">Conecta FP Canarias - Portal de Empleo para Titulados de FP</p>
     </div>`
   );
 }
@@ -62,10 +62,10 @@ export async function sendVerificationEmail(to: string, token: string, baseUrl: 
   const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
   return sendEmail(
     to,
-    "Conecta FP - Verifica tu correo electrónico",
+    "Conecta FP Canarias - Verifica tu correo electrónico",
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Verifica tu correo electrónico</h2>
-      <p>Gracias por registrarte en <strong>Conecta FP</strong>.</p>
+      <p>Gracias por registrarte en <strong>Conecta FP Canarias</strong>.</p>
       <p>Para completar tu registro, haz clic en el siguiente enlace:</p>
       <p style="margin: 30px 0;">
         <a href="${verifyUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
@@ -75,7 +75,7 @@ export async function sendVerificationEmail(to: string, token: string, baseUrl: 
       <p style="color: #666; font-size: 14px;">Si no puedes hacer clic en el boton, copia y pega esta URL en tu navegador:</p>
       <p style="color: #666; font-size: 12px; word-break: break-all;">${verifyUrl}</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p style="color: #999; font-size: 12px;">Si no has creado una cuenta en Conecta FP, puedes ignorar este correo.</p>
+      <p style="color: #999; font-size: 12px;">Si no has creado una cuenta en Conecta FP Canarias, puedes ignorar este correo.</p>
     </div>`
   );
 }
@@ -84,10 +84,10 @@ export async function sendCvUpdateReminderEmail(to: string, name: string, baseUr
   const dashboardUrl = `${baseUrl}/dashboard`;
   return sendEmail(
     to,
-    "Conecta FP - Recordatorio: Actualiza tu CV",
+    "Conecta FP Canarias - Recordatorio: Actualiza tu CV",
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Hola ${name}, es hora de actualizar tu CV</h2>
-      <p>Ha pasado más de un año desde la última vez que actualizaste tu CV en <strong>Conecta FP</strong>.</p>
+      <p>Ha pasado más de un año desde la última vez que actualizaste tu CV en <strong>Conecta FP Canarias</strong>.</p>
       <p>Mantener tu CV actualizado aumenta tus posibilidades de ser seleccionado por las empresas que buscan talento FP.</p>
       <p style="margin: 30px 0;">
         <a href="${dashboardUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
@@ -96,7 +96,7 @@ export async function sendCvUpdateReminderEmail(to: string, name: string, baseUr
       </p>
       <p style="color: #666; font-size: 14px;">Te recomendamos añadir nueva experiencia, formación o habilidades que hayas adquirido.</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+      <p style="color: #999; font-size: 12px;">Conecta FP Canarias - Portal de Empleo para Titulados de FP</p>
     </div>`
   );
 }
@@ -106,7 +106,7 @@ export async function sendJobExpiryReminderEmail(to: string, companyName: string
   const formattedDate = expiresAt.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
   return sendEmail(
     to,
-    `Conecta FP - Tu oferta "${jobTitle}" expira pronto`,
+    `Conecta FP Canarias - Tu oferta "${jobTitle}" expira pronto`,
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Tu oferta de empleo expira pronto</h2>
       <p>Hola ${companyName},</p>
@@ -119,7 +119,7 @@ export async function sendJobExpiryReminderEmail(to: string, companyName: string
       </p>
       <p style="color: #666; font-size: 14px;">Si no amplías la fecha, la oferta se desactivará automáticamente cuando expire.</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+      <p style="color: #999; font-size: 12px;">Conecta FP Canarias - Portal de Empleo para Titulados de FP</p>
     </div>`
   );
 }
@@ -134,7 +134,7 @@ export async function sendNewApplicationEmail(
   const dashboardUrl = `${baseUrl}/company`;
   return sendEmail(
     to,
-    `Conecta FP - Nueva candidatura para "${jobTitle}"`,
+    `Conecta FP Canarias - Nueva candidatura para "${jobTitle}"`,
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Nueva candidatura recibida</h2>
       <p style="color: #555;">Hola ${companyName},</p>
@@ -145,7 +145,7 @@ export async function sendNewApplicationEmail(
       <p style="color: #555;">Accede a tu panel para revisar la candidatura y el perfil del candidato.</p>
       <a href="${dashboardUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 24px; border-radius: 6px; text-decoration: none; margin: 16px 0;">Ver candidaturas</a>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+      <p style="color: #999; font-size: 12px;">Conecta FP Canarias - Portal de Empleo para Titulados de FP</p>
     </div>`
   );
 }
@@ -183,7 +183,7 @@ export async function sendApplicationStatusEmail(
 
   return sendEmail(
     to,
-    `Conecta FP - Tu candidatura para "${jobTitle}" ha sido ${label.toLowerCase()}`,
+    `Conecta FP Canarias - Tu candidatura para "${jobTitle}" ha sido ${label.toLowerCase()}`,
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Actualización de tu candidatura</h2>
       <p>Hola ${alumniName},</p>
@@ -200,7 +200,7 @@ export async function sendApplicationStatusEmail(
         </a>
       </p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+      <p style="color: #999; font-size: 12px;">Conecta FP Canarias - Portal de Empleo para Titulados de FP</p>
     </div>`
   );
 }
@@ -223,7 +223,7 @@ export async function sendSuggestionEmail(
 
   return sendEmail(
     "conectafpcanarias@gmail.com",
-    `Conecta FP - Sugerencia: ${categoryLabel}`,
+    `Conecta FP Canarias - Sugerencia: ${categoryLabel}`,
     `<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 640px; margin: 0 auto; background-color: #ffffff;">
       <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); padding: 32px 24px; border-radius: 8px 8px 0 0;">
         <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">
@@ -259,7 +259,7 @@ export async function sendSuggestionEmail(
 
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
         <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">
-          Este mensaje fue enviado desde el formulario de sugerencias de Conecta FP
+          Este mensaje fue enviado desde el formulario de sugerencias de Conecta FP Canarias
         </p>
       </div>
     </div>`
@@ -278,7 +278,7 @@ export async function sendNewJobNotificationEmail(
   const dashboardUrl = `${baseUrl}/dashboard`;
   return sendEmail(
     to,
-    `Conecta FP - Nueva oferta de empleo para ${cicloFormativo}`,
+    `Conecta FP Canarias - Nueva oferta de empleo para ${cicloFormativo}`,
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Nueva oferta de empleo disponible</h2>
       <p>Hola ${alumniName},</p>
@@ -296,7 +296,7 @@ export async function sendNewJobNotificationEmail(
       </p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
       <p style="color: #999; font-size: 12px;">Puedes desactivar estas notificaciones desde tu panel de titulado en la sección de configuración.</p>
-      <p style="color: #999; font-size: 12px;">Conecta FP - Portal de Empleo para Titulados de FP</p>
+      <p style="color: #999; font-size: 12px;">Conecta FP Canarias - Portal de Empleo para Titulados de FP</p>
     </div>`
   );
 }
@@ -305,10 +305,10 @@ export async function sendPasswordResetEmail(to: string, token: string, baseUrl:
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
   return sendEmail(
     to,
-    "Conecta FP - Restablecer contraseña",
+    "Conecta FP Canarias - Restablecer contraseña",
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Restablecer contraseña</h2>
-      <p>Has solicitado restablecer tu contraseña en <strong>Conecta FP</strong>.</p>
+      <p>Has solicitado restablecer tu contraseña en <strong>Conecta FP Canarias</strong>.</p>
       <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
       <p style="margin: 30px 0;">
         <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">

@@ -85,7 +85,7 @@ export default function Directory() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">Conecta FP</span>
+              <span className="font-semibold text-lg tracking-tight">Conecta FP Canarias</span>
             </div>
           </Link>
           <nav className="flex items-center gap-2 flex-wrap">

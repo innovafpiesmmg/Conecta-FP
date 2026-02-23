@@ -56,7 +56,7 @@ export default function Suggestions() {
                 <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                   <Briefcase className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <span className="font-semibold text-lg tracking-tight">Conecta FP</span>
+                <span className="font-semibold text-lg tracking-tight">Conecta FP Canarias</span>
               </div>
             </Link>
           </div>
@@ -88,7 +88,7 @@ export default function Suggestions() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg tracking-tight">Conecta FP</span>
+              <span className="font-semibold text-lg tracking-tight">Conecta FP Canarias</span>
             </div>
           </Link>
           <Link href="/">
@@ -105,7 +105,7 @@ export default function Suggestions() {
           <MessageSquarePlus className="w-12 h-12 text-primary mx-auto mb-4" />
           <h1 className="text-3xl font-bold tracking-tight" data-testid="text-suggestion-title">Buzón de Sugerencias</h1>
           <p className="text-muted-foreground mt-2">
-            Tu opinión nos ayuda a mejorar. Cuéntanos cómo podemos hacer Conecta FP aún mejor.
+            Tu opinión nos ayuda a mejorar. Cuéntanos cómo podemos hacer Conecta FP Canarias aún mejor.
           </p>
         </div>
 
@@ -113,7 +113,7 @@ export default function Suggestions() {
           <CardHeader>
             <CardTitle>Enviar Sugerencia</CardTitle>
             <CardDescription>
-              Todos los campos son obligatorios. Tu sugerencia será enviada al equipo de Conecta FP.
+              Todos los campos son obligatorios. Tu sugerencia será enviada al equipo de Conecta FP Canarias.
             </CardDescription>
           </CardHeader>
           <CardContent>
