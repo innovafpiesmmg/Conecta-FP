@@ -2,12 +2,13 @@ import { eq, and, desc, count, sql, lt, isNull, isNotNull, lte } from "drizzle-o
 import { db } from "./db";
 import {
   users, jobOffers, applications, smtpSettings, fpCenters,
-  familiasProfesionales, ciclosFormativos,
+  familiasProfesionales, ciclosFormativos, userTitulaciones,
   type User, type InsertUser, type JobOffer, type InsertJobOffer,
   type Application, type InsertApplication, type SmtpSettings,
   type CvData, type FpCenter, type InsertFpCenter,
   type FamiliaProfesional, type InsertFamiliaProfesional,
-  type CicloFormativo, type InsertCicloFormativo
+  type CicloFormativo, type InsertCicloFormativo,
+  type UserTitulacion, type InsertUserTitulacion
 } from "@shared/schema";
 
 export interface IStorage {
@@ -93,6 +94,11 @@ export interface IStorage {
   createCiclo(data: InsertCicloFormativo): Promise<CicloFormativo>;
   updateCiclo(id: string, data: Partial<InsertCicloFormativo>): Promise<CicloFormativo | undefined>;
   deleteCiclo(id: string): Promise<void>;
+
+  // User Titulaciones
+  getUserTitulaciones(userId: string): Promise<UserTitulacion[]>;
+  addUserTitulacion(userId: string, data: InsertUserTitulacion): Promise<UserTitulacion>;
+  removeUserTitulacion(id: string, userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -399,12 +405,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAlumniForJobNotification(cicloFormativo: string): Promise<User[]> {
-    return db.select().from(users).where(and(
+    const byTitulaciones = await db
+      .selectDistinctOn([users.id])
+      .from(users)
+      .innerJoin(userTitulaciones, eq(users.id, userTitulaciones.userId))
+      .where(and(
+        eq(users.role, "ALUMNI"),
+        eq(userTitulaciones.cicloFormativo, cicloFormativo),
+        eq(users.jobNotificationsEnabled, true),
+        eq(users.emailVerified, true)
+      ));
+    const titUserIds = new Set(byTitulaciones.map(r => r.users.id));
+
+    const byLegacy = await db.select().from(users).where(and(
       eq(users.role, "ALUMNI"),
       eq(users.cicloFormativo, cicloFormativo),
       eq(users.jobNotificationsEnabled, true),
       eq(users.emailVerified, true)
     ));
+
+    const result: User[] = byTitulaciones.map(r => r.users);
+    for (const u of byLegacy) {
+      if (!titUserIds.has(u.id)) result.push(u);
+    }
+    return result;
   }
 
   async updateJobNotifications(userId: string, enabled: boolean): Promise<User | undefined> {
@@ -499,6 +523,23 @@ export class DatabaseStorage implements IStorage {
   }
   async deleteCiclo(id: string): Promise<void> {
     await db.delete(ciclosFormativos).where(eq(ciclosFormativos.id, id));
+  }
+
+  async getUserTitulaciones(userId: string): Promise<UserTitulacion[]> {
+    return db.select().from(userTitulaciones).where(eq(userTitulaciones.userId, userId));
+  }
+
+  async addUserTitulacion(userId: string, data: InsertUserTitulacion): Promise<UserTitulacion> {
+    const [tit] = await db.insert(userTitulaciones).values({
+      userId,
+      familiaProfesional: data.familiaProfesional,
+      cicloFormativo: data.cicloFormativo,
+    }).returning();
+    return tit;
+  }
+
+  async removeUserTitulacion(id: string, userId: string): Promise<void> {
+    await db.delete(userTitulaciones).where(and(eq(userTitulaciones.id, id), eq(userTitulaciones.userId, userId)));
   }
 }
 

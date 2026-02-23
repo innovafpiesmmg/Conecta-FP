@@ -103,6 +103,14 @@ export const ciclosFormativos = pgTable("ciclos_formativos", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const userTitulaciones = pgTable("user_titulaciones", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  familiaProfesional: text("familia_profesional").notNull(),
+  cicloFormativo: text("ciclo_formativo").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const applications = pgTable("applications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   alumniId: varchar("alumni_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -252,6 +260,8 @@ export type FamiliaProfesional = typeof familiasProfesionales.$inferSelect;
 export type InsertFamiliaProfesional = z.infer<typeof insertFamiliaProfesionalSchema>;
 export type CicloFormativo = typeof ciclosFormativos.$inferSelect;
 export type InsertCicloFormativo = z.infer<typeof insertCicloFormativoSchema>;
+export type UserTitulacion = typeof userTitulaciones.$inferSelect;
+export type InsertUserTitulacion = { familiaProfesional: string; cicloFormativo: string };
 
 export const FAMILIAS_PROFESIONALES = [
   "Informática y Comunicaciones",

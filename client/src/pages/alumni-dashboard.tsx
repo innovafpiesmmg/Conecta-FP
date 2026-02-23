@@ -7,7 +7,7 @@ import type { JobOffer, Application, User } from "@shared/schema";
 import { useFamilias, useCiclosByFamiliaName, useFpCenters } from "@/hooks/use-fp-data";
 import {
   Briefcase, Search, User as UserIcon, FileText, LogOut, Loader2, MapPin,
-  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X, ClipboardList, Bell, HelpCircle
+  Clock, Building2, ChevronRight, Trash2, Shield, ExternalLink, Upload, Camera, X, ClipboardList, Bell, HelpCircle, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -75,6 +75,10 @@ export default function AlumniDashboard() {
 
   const { data: myApplications = [], isLoading: appsLoading } = useQuery<ApplicationWithJob[]>({
     queryKey: ["/api/applications/mine"],
+  });
+
+  const { data: titulaciones = [] } = useQuery<any[]>({
+    queryKey: ["/api/auth/titulaciones"],
   });
 
   const applyMutation = useMutation({
@@ -160,8 +164,7 @@ export default function AlumniDashboard() {
     user?.name &&
     user?.phone &&
     user?.university &&
-    user?.familiaProfesional &&
-    user?.cicloFormativo &&
+    titulaciones.length > 0 &&
     (user?.cvUrl || user?.cvData)
   );
 
@@ -170,8 +173,7 @@ export default function AlumniDashboard() {
     if (!user?.name) missing.push("nombre");
     if (!user?.phone) missing.push("teléfono");
     if (!user?.university) missing.push("centro de FP");
-    if (!user?.familiaProfesional) missing.push("familia profesional");
-    if (!user?.cicloFormativo) missing.push("ciclo formativo");
+    if (titulaciones.length === 0) missing.push("titulaciones FP");
     if (!user?.cvUrl && !user?.cvData) missing.push("CV (subido o digital)");
     return missing;
   };
@@ -604,6 +606,7 @@ export default function AlumniDashboard() {
 function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: any) => void; isPending: boolean }) {
   const { refetch: refetchUser } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const photoInputRef = useRef<HTMLInputElement>(null);
   const cvInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(user.name);
@@ -613,16 +616,50 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
   const [university, setUniversity] = useState(user.university || "");
   const [customCenter, setCustomCenter] = useState(false);
   const [graduationYear, setGraduationYear] = useState(user.graduationYear?.toString() || "");
-  const [familiaProfesional, setFamiliaProfesional] = useState(user.familiaProfesional || "");
-  const [cicloFormativo, setCicloFormativo] = useState(user.cicloFormativo || "");
+  const [newFamilia, setNewFamilia] = useState("");
+  const [newCiclo, setNewCiclo] = useState("");
   const [skills, setSkills] = useState(user.skills || "");
   const [profilePublic, setProfilePublic] = useState(user.profilePublic);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingCv, setUploadingCv] = useState(false);
   const { data: familiasList = [] } = useFamilias();
   const { data: fpCentersList = [] } = useFpCenters();
-  const { data: ciclosList = [] } = useCiclosByFamiliaName(familiaProfesional);
+  const { data: ciclosList = [] } = useCiclosByFamiliaName(newFamilia);
   const ciclosDisponibles = ciclosList.map(c => c.name);
+
+  const { data: titulaciones = [], isLoading: titulacionesLoading } = useQuery<any[]>({
+    queryKey: ["/api/auth/titulaciones"],
+  });
+
+  const addTitulacionMutation = useMutation({
+    mutationFn: async (data: { familiaProfesional: string; cicloFormativo: string }) => {
+      const res = await apiRequest("POST", "/api/auth/titulaciones", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/titulaciones"] });
+      refetchUser();
+      setNewFamilia("");
+      setNewCiclo("");
+      toast({ title: "Titulación añadida" });
+    },
+    onError: (err: any) => {
+      const msg = err.message?.includes("409") ? "Ya tienes esta titulación registrada" : "Error al añadir la titulación";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    },
+  });
+
+  const removeTitulacionMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/auth/titulaciones/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/titulaciones"] });
+      refetchUser();
+      toast({ title: "Titulación eliminada" });
+    },
+    onError: () => toast({ title: "Error", description: "No se pudo eliminar la titulación", variant: "destructive" }),
+  });
 
   useEffect(() => {
     if (fpCentersList.length > 0 && university && !fpCentersList.some(c => c.name === university)) {
@@ -635,8 +672,6 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
     onSave({
       name, phone, whatsapp, bio, university,
       graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
-      familiaProfesional: familiaProfesional || undefined,
-      cicloFormativo: cicloFormativo || undefined,
       skills, profilePublic,
     });
   };
@@ -756,42 +791,80 @@ function ProfileForm({ user, onSave, isPending }: { user: User; onSave: (data: a
             <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+34 600 000 000" data-testid="input-profile-whatsapp" />
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Familia Profesional</Label>
-            <Select
-              value={familiaProfesional}
-              onValueChange={(val) => {
-                setFamiliaProfesional(val);
-                setCicloFormativo("");
-              }}
+        <div className="space-y-3">
+          <Label>Titulaciones FP</Label>
+          <p className="text-sm text-muted-foreground">Añade todas tus titulaciones de FP para recibir notificaciones de empleo relevantes.</p>
+          {titulacionesLoading ? (
+            <p className="text-sm text-muted-foreground">Cargando titulaciones...</p>
+          ) : titulaciones.length > 0 ? (
+            <div className="space-y-2">
+              {titulaciones.map((tit: any) => (
+                <div key={tit.id} className="flex items-center justify-between border rounded-lg p-3 bg-muted/30" data-testid={`titulacion-item-${tit.id}`}>
+                  <div>
+                    <p className="text-sm font-medium">{tit.cicloFormativo}</p>
+                    <p className="text-xs text-muted-foreground">{tit.familiaProfesional}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeTitulacionMutation.mutate(tit.id)}
+                    disabled={removeTitulacionMutation.isPending}
+                    data-testid={`remove-titulacion-${tit.id}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-amber-600">No tienes titulaciones registradas. Añade al menos una.</p>
+          )}
+
+          <div className="border rounded-lg p-3 space-y-3 bg-muted/10">
+            <p className="text-sm font-medium">Añadir titulación</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Select
+                value={newFamilia}
+                onValueChange={(val) => {
+                  setNewFamilia(val);
+                  setNewCiclo("");
+                }}
+              >
+                <SelectTrigger data-testid="select-new-familia">
+                  <SelectValue placeholder="Familia profesional" />
+                </SelectTrigger>
+                <SelectContent>
+                  {familiasList.map((f) => (
+                    <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={newCiclo}
+                onValueChange={setNewCiclo}
+                disabled={ciclosDisponibles.length === 0}
+              >
+                <SelectTrigger data-testid="select-new-ciclo">
+                  <SelectValue placeholder="Ciclo formativo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ciclosDisponibles.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!newFamilia || !newCiclo || addTitulacionMutation.isPending}
+              onClick={() => addTitulacionMutation.mutate({ familiaProfesional: newFamilia, cicloFormativo: newCiclo })}
+              data-testid="button-add-titulacion"
             >
-              <SelectTrigger data-testid="select-profile-familia">
-                <SelectValue placeholder="Selecciona familia" />
-              </SelectTrigger>
-              <SelectContent>
-                {familiasList.map((f) => (
-                  <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Ciclo Formativo</Label>
-            <Select
-              value={cicloFormativo}
-              onValueChange={setCicloFormativo}
-              disabled={ciclosDisponibles.length === 0}
-            >
-              <SelectTrigger data-testid="select-profile-ciclo">
-                <SelectValue placeholder="Selecciona ciclo" />
-              </SelectTrigger>
-              <SelectContent>
-                {ciclosDisponibles.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Plus className="h-4 w-4 mr-1" /> Añadir titulación
+            </Button>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

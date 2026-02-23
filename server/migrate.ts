@@ -184,6 +184,20 @@ async function migrate() {
       `ALTER TABLE "job_offers" ADD COLUMN IF NOT EXISTS "positions" integer NOT NULL DEFAULT 1`,
       `ALTER TABLE "job_offers" ADD COLUMN IF NOT EXISTS "positions_filled" integer NOT NULL DEFAULT 0`,
       `ALTER TABLE "applications" ADD COLUMN IF NOT EXISTS "cover_letter" text`,
+
+      `CREATE TABLE IF NOT EXISTS "user_titulaciones" (
+        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" varchar NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "familia_profesional" text NOT NULL,
+        "ciclo_formativo" text NOT NULL,
+        "created_at" timestamp NOT NULL DEFAULT now()
+      )`,
+
+      `INSERT INTO user_titulaciones (user_id, familia_profesional, ciclo_formativo)
+       SELECT id, familia_profesional, ciclo_formativo FROM users
+       WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND ciclo_formativo IS NOT NULL
+       AND id NOT IN (SELECT user_id FROM user_titulaciones)
+       ON CONFLICT DO NOTHING`,
     ];
 
     for (const sql of migrations) {

@@ -649,15 +649,7 @@ function JobCard({ job, expanded, onToggle }: { job: JobOffer; expanded: boolean
                 </div>
               </div>
 
-              {(viewProfileAlumni.familiaProfesional || viewProfileAlumni.cicloFormativo) && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Formación Profesional</h4>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {viewProfileAlumni.familiaProfesional && <Badge variant="outline">{viewProfileAlumni.familiaProfesional}</Badge>}
-                    {viewProfileAlumni.cicloFormativo && <Badge variant="secondary">{viewProfileAlumni.cicloFormativo}</Badge>}
-                  </div>
-                </div>
-              )}
+              <AlumniTitulacionesList alumniId={viewProfileAlumni.id} fallbackFamilia={viewProfileAlumni.familiaProfesional} fallbackCiclo={viewProfileAlumni.cicloFormativo} />
 
               {viewProfileAlumni.bio && (
                 <div className="space-y-2">
@@ -1182,5 +1174,40 @@ function CompanyProfileForm({ user }: { user: User }) {
         </Button>
       </form>
     </Card>
+  );
+}
+
+function AlumniTitulacionesList({ alumniId, fallbackFamilia, fallbackCiclo }: { alumniId: string; fallbackFamilia?: string | null; fallbackCiclo?: string | null }) {
+  const { data: titulaciones, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/titulaciones", alumniId],
+    queryFn: async () => {
+      const res = await fetch(`/api/titulaciones/${alumniId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  if (isLoading) return null;
+
+  const items = titulaciones && titulaciones.length > 0
+    ? titulaciones
+    : (fallbackFamilia || fallbackCiclo)
+      ? [{ familiaProfesional: fallbackFamilia, cicloFormativo: fallbackCiclo }]
+      : [];
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <h4 className="font-medium text-sm">Titulaciones FP</h4>
+      <div className="space-y-1.5">
+        {items.map((tit: any, i: number) => (
+          <div key={tit.id || i} className="flex items-center gap-2 flex-wrap">
+            {tit.cicloFormativo && <Badge variant="secondary" className="text-xs">{tit.cicloFormativo}</Badge>}
+            {tit.familiaProfesional && <Badge variant="outline" className="text-xs">{tit.familiaProfesional}</Badge>}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

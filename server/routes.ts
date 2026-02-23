@@ -447,6 +447,48 @@ export async function registerRoutes(
     }
   });
 
+  // ============ USER TITULACIONES ============
+  app.get("/api/auth/titulaciones", requireAuth, requireRole("ALUMNI"), async (req, res, next) => {
+    try {
+      const titulaciones = await storage.getUserTitulaciones(req.user!.id);
+      res.json(titulaciones);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/auth/titulaciones", requireAuth, requireRole("ALUMNI"), async (req, res, next) => {
+    try {
+      const { familiaProfesional, cicloFormativo } = req.body;
+      if (!familiaProfesional || !cicloFormativo) {
+        return res.status(400).json({ message: "Familia profesional y ciclo formativo son obligatorios" });
+      }
+      const existing = await storage.getUserTitulaciones(req.user!.id);
+      const duplicate = existing.find(t => t.familiaProfesional === familiaProfesional && t.cicloFormativo === cicloFormativo);
+      if (duplicate) {
+        return res.status(409).json({ message: "Ya tienes esta titulación registrada" });
+      }
+      const tit = await storage.addUserTitulacion(req.user!.id, { familiaProfesional, cicloFormativo });
+
+      if (!req.user!.familiaProfesional || !req.user!.cicloFormativo) {
+        await storage.updateUser(req.user!.id, { familiaProfesional, cicloFormativo });
+      }
+
+      res.status(201).json(tit);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.delete("/api/auth/titulaciones/:id", requireAuth, requireRole("ALUMNI"), async (req, res, next) => {
+    try {
+      await storage.removeUserTitulacion(req.params.id, req.user!.id);
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // ============ RIGHT TO ERASURE (GDPR Art. 17) ============
   app.delete("/api/auth/account", requireAuth, async (req, res, next) => {
     try {
@@ -728,6 +770,26 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Candidato no encontrado" });
       }
       res.json({ cvData: alumni.cvData || null, cvLastUpdatedAt: alumni.cvLastUpdatedAt || null });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.get("/api/titulaciones/:alumniId", requireAuth, async (req, res, next) => {
+    try {
+      const user = req.user as User;
+      const alumniId = req.params.alumniId;
+      if (user.role === "ALUMNI" && user.id !== alumniId) {
+        return res.status(403).json({ message: "No autorizado" });
+      }
+      if (user.role === "COMPANY") {
+        const hasApplication = await storage.hasApplicationFromAlumni(alumniId, user.id);
+        if (!hasApplication) {
+          return res.status(403).json({ message: "Solo puedes ver las titulaciones de candidatos que se han postulado a tus ofertas" });
+        }
+      }
+      const tits = await storage.getUserTitulaciones(alumniId);
+      res.json(tits);
     } catch (err) {
       next(err);
     }
