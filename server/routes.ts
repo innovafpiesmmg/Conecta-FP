@@ -818,6 +818,17 @@ export async function registerRoutes(
 
   app.get("/api/admin/metrics", requireRole("ADMIN"), async (req, res, next) => {
     try {
+      const periodMap: Record<string, string> = {
+        "3m": "3 months", "6m": "6 months", "12m": "12 months", "all": "",
+      };
+      const period = periodMap[req.query.period as string] || "";
+      const jobDateFilter = period ? `AND jo.created_at >= NOW() - INTERVAL '${period}'` : "";
+      const jobDateFilterPlain = period ? `AND created_at >= NOW() - INTERVAL '${period}'` : "";
+      const appDateFilter = period ? `AND applied_at >= NOW() - INTERVAL '${period}'` : "";
+      const userDateFilter = period ? `AND created_at >= NOW() - INTERVAL '${period}'` : "";
+      const trendMonths = req.query.period === "3m" ? 3 : req.query.period === "6m" ? 6 : 12;
+      const trendInterval = `${trendMonths} months`;
+
       const [
         jobsByFamilia, jobsByCiclo, jobsByLocation,
         alumniByFamilia, alumniByCiclo,
@@ -829,36 +840,36 @@ export async function registerRoutes(
         pool.query(`
           SELECT familia_profesional AS name, COUNT(*) AS job_count,
             COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
-            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.familia_profesional = jo.familia_profesional), 0) AS application_count
-          FROM job_offers jo WHERE familia_profesional IS NOT NULL AND familia_profesional != ''
+            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.familia_profesional = jo.familia_profesional ${appDateFilter.replace('applied_at', 'a.applied_at')}), 0) AS application_count
+          FROM job_offers jo WHERE familia_profesional IS NOT NULL AND familia_profesional != '' ${jobDateFilter}
           GROUP BY familia_profesional ORDER BY job_count DESC
         `),
         pool.query(`
           SELECT ciclo_formativo AS name, familia_profesional AS familia, COUNT(*) AS job_count,
             COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
-            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.ciclo_formativo = jo.ciclo_formativo), 0) AS application_count
-          FROM job_offers jo WHERE ciclo_formativo IS NOT NULL AND ciclo_formativo != ''
+            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.ciclo_formativo = jo.ciclo_formativo ${appDateFilter.replace('applied_at', 'a.applied_at')}), 0) AS application_count
+          FROM job_offers jo WHERE ciclo_formativo IS NOT NULL AND ciclo_formativo != '' ${jobDateFilter}
           GROUP BY ciclo_formativo, familia_profesional ORDER BY job_count DESC
         `),
         pool.query(`
           SELECT location AS name, COUNT(*) AS job_count,
             COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS active_jobs,
-            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.location = jo.location), 0) AS application_count
-          FROM job_offers jo WHERE location IS NOT NULL AND location != ''
+            COALESCE((SELECT COUNT(*) FROM applications a JOIN job_offers j2 ON a.job_offer_id = j2.id WHERE j2.location = jo.location ${appDateFilter.replace('applied_at', 'a.applied_at')}), 0) AS application_count
+          FROM job_offers jo WHERE location IS NOT NULL AND location != '' ${jobDateFilter}
           GROUP BY location ORDER BY job_count DESC
         `),
         pool.query(`
           SELECT familia_profesional AS name, COUNT(*) AS alumni_count
-          FROM users WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND familia_profesional != ''
+          FROM users WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND familia_profesional != '' ${userDateFilter}
           GROUP BY familia_profesional ORDER BY alumni_count DESC
         `),
         pool.query(`
           SELECT ciclo_formativo AS name, familia_profesional AS familia, COUNT(*) AS alumni_count
-          FROM users WHERE role = 'ALUMNI' AND ciclo_formativo IS NOT NULL AND ciclo_formativo != ''
+          FROM users WHERE role = 'ALUMNI' AND ciclo_formativo IS NOT NULL AND ciclo_formativo != '' ${userDateFilter}
           GROUP BY ciclo_formativo, familia_profesional ORDER BY alumni_count DESC
         `),
         pool.query(`
-          SELECT status, COUNT(*) AS count FROM applications GROUP BY status
+          SELECT status, COUNT(*) AS count FROM applications WHERE 1=1 ${appDateFilter} GROUP BY status
         `),
         pool.query(`
           SELECT u.id, COALESCE(u.company_name, u.name) AS company_name,
@@ -870,7 +881,7 @@ export async function registerRoutes(
           FROM users u
           JOIN job_offers jo ON u.id = jo.company_id
           LEFT JOIN applications a ON jo.id = a.job_offer_id
-          WHERE u.role = 'COMPANY'
+          WHERE u.role = 'COMPANY' ${jobDateFilter}
           GROUP BY u.id, u.company_name, u.name
           ORDER BY job_count DESC LIMIT 10
         `),
@@ -878,7 +889,7 @@ export async function registerRoutes(
           SELECT TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS month,
             COUNT(*) AS count
           FROM job_offers
-          WHERE created_at >= NOW() - INTERVAL '12 months'
+          WHERE created_at >= NOW() - INTERVAL '${trendInterval}'
           GROUP BY DATE_TRUNC('month', created_at)
           ORDER BY month ASC
         `),
@@ -888,7 +899,7 @@ export async function registerRoutes(
             COUNT(*) FILTER (WHERE status = 'ACCEPTED') AS accepted,
             COUNT(*) FILTER (WHERE status = 'REJECTED') AS rejected
           FROM applications
-          WHERE applied_at >= NOW() - INTERVAL '12 months'
+          WHERE applied_at >= NOW() - INTERVAL '${trendInterval}'
           GROUP BY DATE_TRUNC('month', applied_at)
           ORDER BY month ASC
         `),
@@ -898,7 +909,7 @@ export async function registerRoutes(
             MIN(salary_min) AS min_salary, MAX(salary_max) AS max_salary
           FROM job_offers
           WHERE familia_profesional IS NOT NULL AND familia_profesional != ''
-            AND (salary_min IS NOT NULL OR salary_max IS NOT NULL)
+            AND (salary_min IS NOT NULL OR salary_max IS NOT NULL) ${jobDateFilterPlain}
           GROUP BY familia_profesional ORDER BY avg_max DESC NULLS LAST
         `),
         pool.query(`
@@ -907,16 +918,16 @@ export async function registerRoutes(
             SUM(positions_filled) AS total_filled,
             COUNT(*) AS total_offers,
             COUNT(*) FILTER (WHERE positions_filled >= positions AND positions > 0) AS fully_filled
-          FROM job_offers
+          FROM job_offers WHERE 1=1 ${jobDateFilterPlain}
         `),
         pool.query(`
           SELECT fp.name,
             COALESCE(j.job_count, 0) AS demand,
             COALESCE(a.alumni_count, 0) AS supply
-          FROM (SELECT DISTINCT familia_profesional AS name FROM job_offers WHERE familia_profesional IS NOT NULL AND familia_profesional != ''
-                UNION SELECT DISTINCT familia_profesional AS name FROM users WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND familia_profesional != '') fp
-          LEFT JOIN (SELECT familia_profesional AS name, COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS job_count FROM job_offers GROUP BY familia_profesional) j ON fp.name = j.name
-          LEFT JOIN (SELECT familia_profesional AS name, COUNT(*) AS alumni_count FROM users WHERE role = 'ALUMNI' GROUP BY familia_profesional) a ON fp.name = a.name
+          FROM (SELECT DISTINCT familia_profesional AS name FROM job_offers WHERE familia_profesional IS NOT NULL AND familia_profesional != '' ${jobDateFilterPlain}
+                UNION SELECT DISTINCT familia_profesional AS name FROM users WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND familia_profesional != '' ${userDateFilter}) fp
+          LEFT JOIN (SELECT familia_profesional AS name, COUNT(*) FILTER (WHERE active = true AND (expires_at IS NULL OR expires_at > NOW())) AS job_count FROM job_offers WHERE 1=1 ${jobDateFilterPlain} GROUP BY familia_profesional) j ON fp.name = j.name
+          LEFT JOIN (SELECT familia_profesional AS name, COUNT(*) AS alumni_count FROM users WHERE role = 'ALUMNI' ${userDateFilter} GROUP BY familia_profesional) a ON fp.name = a.name
           ORDER BY demand DESC
         `),
         pool.query(`
@@ -927,9 +938,9 @@ export async function registerRoutes(
             (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '7 days') AS new_users_7d,
             (SELECT COUNT(*) FROM job_offers WHERE created_at >= NOW() - INTERVAL '7 days') AS new_jobs_7d,
             (SELECT COUNT(*) FROM applications WHERE applied_at >= NOW() - INTERVAL '7 days') AS new_apps_7d,
-            (SELECT ROUND(AVG(app_count)::numeric, 1) FROM (SELECT COUNT(*) AS app_count FROM applications GROUP BY job_offer_id) sub) AS avg_apps_per_job,
-            (SELECT COUNT(*) FROM users WHERE role = 'ALUMNI' AND cv_data IS NOT NULL) AS alumni_with_cv,
-            (SELECT COUNT(*) FROM users WHERE role = 'ALUMNI') AS total_alumni
+            (SELECT ROUND(AVG(app_count)::numeric, 1) FROM (SELECT COUNT(*) AS app_count FROM applications WHERE 1=1 ${appDateFilter} GROUP BY job_offer_id) sub) AS avg_apps_per_job,
+            (SELECT COUNT(*) FROM users WHERE role = 'ALUMNI' AND cv_data IS NOT NULL ${userDateFilter}) AS alumni_with_cv,
+            (SELECT COUNT(*) FROM users WHERE role = 'ALUMNI' ${userDateFilter}) AS total_alumni
         `)
       ]);
 
@@ -938,11 +949,11 @@ export async function registerRoutes(
       const totalAppsAll = Object.values(statusMap).reduce((a, b) => a + b, 0);
       const pfr = positionFillRate.rows[0] || {};
 
-      const padMonths = <T extends Record<string, any>>(data: T[], defaults: Omit<T, "month">): T[] => {
+      const padMonths = <T extends Record<string, any>>(data: T[], defaults: Omit<T, "month">, months = trendMonths): T[] => {
         const map = new Map(data.map(d => [(d as any).month, d]));
         const result: T[] = [];
         const now = new Date();
-        for (let i = 11; i >= 0; i--) {
+        for (let i = months - 1; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
           result.push(map.get(key) || ({ month: key, ...defaults } as unknown as T));

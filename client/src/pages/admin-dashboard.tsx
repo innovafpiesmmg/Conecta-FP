@@ -1134,9 +1134,18 @@ function generateFullCSV(metrics: MetricsData): string {
   return sections.join("\n");
 }
 
+const periodOptions = [
+  { value: "all", label: "Todo" },
+  { value: "12m", label: "12 meses" },
+  { value: "6m", label: "6 meses" },
+  { value: "3m", label: "3 meses" },
+] as const;
+
 function MetricsPanel() {
+  const [period, setPeriod] = useState("all");
   const { data: metrics, isLoading } = useQuery<MetricsData>({
-    queryKey: ["/api/admin/metrics"],
+    queryKey: ["/api/admin/metrics", period],
+    queryFn: () => fetch(`/api/admin/metrics?period=${period}`, { credentials: "include" }).then(r => r.json()),
   });
 
   const jobsChartRef = useRef<SVGSVGElement>(null);
@@ -1150,9 +1159,23 @@ function MetricsPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-lg font-bold flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Panel de métricas</h2>
-        <Button variant="outline" size="sm" onClick={() => downloadCSV("informe-metricas.csv", generateFullCSV(metrics))} data-testid="button-download-csv">
-          <Download className="w-4 h-4 mr-1" /> Descargar Informe CSV
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center border rounded-md overflow-hidden" data-testid="filter-period">
+            {periodOptions.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setPeriod(opt.value)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${period === opt.value ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted text-muted-foreground"}`}
+                data-testid={`button-period-${opt.value}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => downloadCSV("informe-metricas.csv", generateFullCSV(metrics))} data-testid="button-download-csv">
+            <Download className="w-4 h-4 mr-1" /> Descargar CSV
+          </Button>
+        </div>
       </div>
 
       <KpiCards metrics={metrics} />
