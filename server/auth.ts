@@ -10,7 +10,45 @@ import type { User } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends import("@shared/schema").User {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    interface User {
+      id: string;
+      email: string;
+      password: string;
+      role: "ALUMNI" | "COMPANY" | "ADMIN";
+      name: string;
+      phone: string | null;
+      whatsapp: string | null;
+      bio: string | null;
+      cvUrl: string | null;
+      university: string | null;
+      graduationYear: number | null;
+      familiaProfesional: string | null;
+      cicloFormativo: string | null;
+      skills: string | null;
+      profilePhotoUrl: string | null;
+      companyName: string | null;
+      companyDescription: string | null;
+      companyWebsite: string | null;
+      companySector: string | null;
+      companyLogoUrl: string | null;
+      companyEmail: string | null;
+      companyCif: string | null;
+      consentGiven: boolean;
+      consentTimestamp: Date | null;
+      profilePublic: boolean;
+      emailVerified: boolean;
+      emailVerificationToken: string | null;
+      passwordResetToken: string | null;
+      passwordResetExpires: Date | null;
+      totpSecret: string | null;
+      totpEnabled: boolean;
+      cvData: unknown;
+      cvLastUpdatedAt: Date | null;
+      cvReminderSentAt: Date | null;
+      jobNotificationsEnabled: boolean;
+      createdAt: Date;
+    }
   }
 }
 
