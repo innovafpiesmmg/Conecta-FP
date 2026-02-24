@@ -1421,13 +1421,36 @@ export async function registerRoutes(
         const updatedJob = await storage.incrementPositionsFilled(job.id);
         if (updatedJob && updatedJob.positionsFilled >= updatedJob.positions) {
           await storage.deactivateJob(job.id);
+
+          const allApplications = await storage.getApplicationsByJob(job.id);
+          const pendingApps = allApplications.filter(
+            (a: any) => a.id !== req.params.id && (a.status === "PENDING" || a.status === "REVIEWED")
+          );
+          const companyName = (req.user as any).companyName || (req.user as any).name;
+          for (const pendingApp of pendingApps) {
+            await storage.updateApplicationStatus(pendingApp.id, "REJECTED");
+            if (pendingApp.alumni) {
+              sendApplicationStatusEmail(
+                pendingApp.alumni.email, pendingApp.alumni.name,
+                job.title, companyName, "REJECTED", getBaseUrl(req)
+              ).catch(() => {});
+            } else {
+              const pendingAlumni = await storage.getUser(pendingApp.alumniId);
+              if (pendingAlumni) {
+                sendApplicationStatusEmail(
+                  (pendingAlumni as any).email, (pendingAlumni as any).name,
+                  job.title, companyName, "REJECTED", getBaseUrl(req)
+                ).catch(() => {});
+              }
+            }
+          }
         }
       }
 
       const alumni = await storage.getUser(application.alumniId);
       if (alumni && job) {
-        const companyName = req.user!.companyName || req.user!.name;
-        sendApplicationStatusEmail(alumni.email, alumni.name, job.title, companyName, status, getBaseUrl(req)).catch(() => {});
+        const companyName = (req.user as any).companyName || (req.user as any).name;
+        sendApplicationStatusEmail((alumni as any).email, (alumni as any).name, job.title, companyName, status, getBaseUrl(req)).catch(() => {});
       }
 
       res.json(updated);
