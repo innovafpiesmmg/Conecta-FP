@@ -11,6 +11,7 @@ Portal de empleo privado para titulados de Formacion Profesional (FP) y empresas
 - **Email**: Nodemailer with admin-configurable SMTP settings stored in DB
 - **2FA**: TOTP-based (otpauth + qrcode libraries) - optional per user
 - **File Uploads**: Multer with local disk storage (uploads/ directory)
+- **PWA**: Progressive Web App with service worker, manifest, and installable on mobile
 - **Roles**: ALUMNI (titulados FP), COMPANY (empresas), and ADMIN (administradores)
 
 ## Project Structure
@@ -66,6 +67,7 @@ shared/
 - **Company Logos**: Company logos displayed on job cards in alumni dashboard, admin dashboard, and application listings
 - **Multiple Titulaciones**: Alumni can register multiple familia profesional/ciclo formativo pairs. Job notifications match against all titulaciones. DB table `user_titulaciones` stores pairs; legacy `users.familiaProfesional` and `users.cicloFormativo` fields kept for backwards compatibility.
 - **Job Notifications**: When a new job offer is created, alumni with matching cicloFormativo (from titulaciones table or legacy fields) receive email notifications. Alumni can toggle notifications on/off from their profile settings.
+- **PWA Installable**: Progressive Web App with manifest.json, service worker (network-first caching), and icons for all platforms. Users can install from browser on Android/iOS
 - **Reference Data Seeding**: Familias, ciclos, FP centers, and admin user are seeded idempotently on every startup (ON CONFLICT DO NOTHING)
 
 ## Deployment (Ubuntu Server)
