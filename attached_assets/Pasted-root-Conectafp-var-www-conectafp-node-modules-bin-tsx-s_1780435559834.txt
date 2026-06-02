@@ -1,0 +1,38 @@
+root@Conectafp:/var/www/conectafp# ./node_modules/.bin/tsx script/build.ts && ./node_modules/.bin/tsx server/migrate.ts && systemctl restart conectafp
+building client...
+vite v7.3.0 building client environment for production...
+transforming (1) src/main.tsxBrowserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+transforming (16) src/pages/admin-dashboard.tsx
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 1915 modules transformed.
+../dist/public/index.html                                 2.61 kB │ gzip:   0.99 kB
+../dist/public/assets/feature-alumni-B_nzB1BV.jpg       131.87 kB
+../dist/public/assets/hero-students-BgaErTfm.jpg        249.52 kB
+../dist/public/assets/ASD_1771889294764-Djy0Uxxs.png    272.02 kB
+../dist/public/assets/feature-company-DEhhxS1m.jpg      285.62 kB
+../dist/public/assets/index-CNZHXObh.css                 99.34 kB │ gzip:  15.25 kB
+../dist/public/assets/index-mBNTktRP.js               1,084.99 kB │ gzip: 315.74 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.88s
+building server...
+
+  dist/index.cjs  1.6mb ⚠️
+
+⚡ Done in 171ms
+/var/www/conectafp/node_modules/pg-pool/index.js:45
+    Error.captureStackTrace(err)
+          ^
+
+Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at /var/www/conectafp/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async migrate (/var/www/conectafp/server/migrate.ts:32:18)
+
+Node.js v20.20.2
+root@Conectafp:/var/www/conectafp# 
