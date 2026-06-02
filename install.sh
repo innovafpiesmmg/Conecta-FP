@@ -45,9 +45,7 @@ fi
 if ! grep -qiE "ubuntu" /etc/os-release 2>/dev/null; then
     print_warning "Este script está diseñado para Ubuntu 22.04/24.04"
     read -p "¿Deseas continuar de todos modos? (s/N): " CONTINUE
-    if [[ ! "$CONTINUE" =~ ^[sS]$ ]]; then
-        exit 1
-    fi
+    if [[ ! "$CONTINUE" =~ ^[sS]$ ]]; then exit 1; fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -56,7 +54,7 @@ fi
 clear
 echo -e "${CYAN}${BOLD}"
 echo "  ╔═══════════════════════════════════════════════════════╗"
-echo "  ║          Conecta FP - Autoinstalador v1.1            ║"
+echo "  ║          Conecta FP - Autoinstalador v1.2            ║"
 echo "  ║     Portal de Empleo para Titulados de FP            ║"
 echo "  ╚═══════════════════════════════════════════════════════╝"
 echo -e "${NC}"
@@ -65,10 +63,13 @@ echo -e "${NC}"
 # Detección de instalación previa
 # ─────────────────────────────────────────────────────────────────────────────
 IS_UPDATE=false
+ADMIN_EMAIL=""
+ADMIN_PASSWORD=""
+ADMIN_NAME=""
+
 if [ -f "$CONFIG_DIR/env" ]; then
     IS_UPDATE=true
-    # shellcheck disable=SC1090
-    source "$CONFIG_DIR/env"
+    set -a; source "$CONFIG_DIR/env"; set +a
     print_warning "Instalación existente detectada - modo ACTUALIZACIÓN"
     print_status "Se preservarán las credenciales y la base de datos"
     echo ""
@@ -80,7 +81,7 @@ if [ -f "$CONFIG_DIR/env" ]; then
     if [[ "$CHANGE_URL" =~ ^[sS]$ ]]; then
         echo -e "Ejemplos: ${BOLD}https://conectafp.midominio.es${NC} o ${BOLD}http://192.168.1.100${NC}"
         read -p "Nueva URL de la aplicación: " NEW_APP_URL
-        if [ -n "$NEW_APP_URL" ]; then
+        if [ -n "${NEW_APP_URL:-}" ]; then
             NEW_APP_URL=${NEW_APP_URL%/}
             if grep -q "^APP_URL=" "$CONFIG_DIR/env"; then
                 sed -i "s|^APP_URL=.*|APP_URL=$NEW_APP_URL|" "$CONFIG_DIR/env"
@@ -96,7 +97,6 @@ else
     print_status "Instalación nueva detectada"
     echo ""
 
-    # Pedir credenciales del administrador
     print_header "Datos del administrador"
     echo -e "Se necesita un email y contraseña para la cuenta de administrador."
     echo ""
@@ -128,21 +128,17 @@ else
 
     read -p "Nombre del administrador [Administrador]: " ADMIN_NAME
     ADMIN_NAME=${ADMIN_NAME:-"Administrador"}
-
     print_success "Datos del administrador recogidos"
     echo ""
 
-    # Pedir URL de la aplicación
     print_header "URL de la aplicación"
     echo -e "Introduce la URL pública con la que se accederá a Conecta FP."
     echo -e "Ejemplos: ${BOLD}https://conectafp.midominio.es${NC} o ${BOLD}http://192.168.1.100${NC}"
     echo -e "Los enlaces en los correos electrónicos usarán esta dirección."
     echo ""
-
     read -p "URL de la aplicación [http://localhost:$APP_PORT]: " APP_URL
     APP_URL=${APP_URL:-"http://localhost:$APP_PORT"}
     APP_URL=${APP_URL%/}
-
     print_success "URL configurada: $APP_URL"
     echo ""
 fi
@@ -177,55 +173,45 @@ install_nodejs() {
     apt-get install -y nodejs
 }
 
-NODE_OK=false
-NPM_OK=false
-
-if command -v node &>/dev/null; then
-    NODE_VERSION=$(node -v 2>/dev/null || echo "")
+NODE_NEEDS_INSTALL=true
+if command -v node &>/dev/null && command -v npm &>/dev/null; then
+    NODE_VERSION=$(node -v 2>/dev/null || echo "v0")
     if [[ "$NODE_VERSION" =~ ^v(20|2[1-9]|[3-9][0-9])\. ]]; then
-        print_status "Node.js ya instalado: $NODE_VERSION"
-        NODE_OK=true
+        print_status "Node.js ya instalado: $NODE_VERSION / npm $(npm -v)"
+        NODE_NEEDS_INSTALL=false
     else
         print_warning "Node.js $NODE_VERSION es antiguo, actualizando a v20..."
     fi
 fi
 
-if command -v npm &>/dev/null; then
-    NPM_OK=true
-fi
-
-if [ "$NODE_OK" = false ] || [ "$NPM_OK" = false ]; then
+if [ "$NODE_NEEDS_INSTALL" = true ]; then
     install_nodejs
 fi
 
-# Verificar que npm quedó disponible
-if ! command -v npm &>/dev/null; then
-    print_error "npm no encontrado tras la instalación. Verifica la instalación de Node.js."
+# Verificar resultado
+if ! command -v node &>/dev/null || ! command -v npm &>/dev/null; then
+    print_error "Node.js o npm no disponibles tras la instalación. Abortando."
     exit 1
 fi
 
-# Guardar rutas absolutas para usar con sudo -u
+# Rutas absolutas (evita problemas de PATH con sudo)
 NPM_BIN=$(command -v npm)
 NPX_BIN=$(command -v npx)
 NODE_BIN=$(command -v node)
-
 chmod 755 "$NODE_BIN" "$NPM_BIN" "$NPX_BIN" 2>/dev/null || true
 
 print_success "Node.js $(node -v) / npm $(npm -v)"
-print_status "  node → $NODE_BIN"
-print_status "  npm  → $NPM_BIN"
-print_status "  npx  → $NPX_BIN"
+print_status "  node=$NODE_BIN  npm=$NPM_BIN"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. PostgreSQL
 # ─────────────────────────────────────────────────────────────────────────────
 print_header "3/7 - Configurando PostgreSQL"
 
-systemctl enable postgresql
+systemctl enable postgresql --quiet
 systemctl start postgresql
 
 if [ "$IS_UPDATE" = false ]; then
-    # Crear usuario de BD si no existe
     if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1; then
         sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';"
         print_success "Usuario de BD '$DB_USER' creado"
@@ -233,7 +219,6 @@ if [ "$IS_UPDATE" = false ]; then
         print_status "Usuario de BD '$DB_USER' ya existe"
     fi
 
-    # Crear base de datos si no existe
     if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1; then
         sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
         print_success "Base de datos '$DB_NAME' creada"
@@ -243,15 +228,12 @@ if [ "$IS_UPDATE" = false ]; then
 
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;" 2>/dev/null || true
 
-    # Configurar pg_hba.conf para autenticación md5
     PG_HBA=$(sudo -u postgres psql -tAc "SHOW hba_file;" 2>/dev/null | xargs)
-    if [ -f "$PG_HBA" ]; then
-        if ! grep -q "^host.*$DB_NAME.*$DB_USER" "$PG_HBA" 2>/dev/null; then
-            echo "host    $DB_NAME    $DB_USER    127.0.0.1/32    md5" >> "$PG_HBA"
-            echo "local   $DB_NAME    $DB_USER                    md5" >> "$PG_HBA"
-            systemctl restart postgresql
-            print_success "pg_hba.conf actualizado para autenticación md5"
-        fi
+    if [ -f "$PG_HBA" ] && ! grep -q "^host.*$DB_NAME.*$DB_USER" "$PG_HBA" 2>/dev/null; then
+        echo "host    $DB_NAME    $DB_USER    127.0.0.1/32    md5" >> "$PG_HBA"
+        echo "local   $DB_NAME    $DB_USER                    md5" >> "$PG_HBA"
+        systemctl restart postgresql
+        print_success "pg_hba.conf actualizado"
     fi
 else
     print_status "Base de datos existente - sin cambios"
@@ -266,7 +248,7 @@ if ! id "$APP_USER" &>/dev/null; then
     useradd --system --create-home --shell /bin/bash "$APP_USER"
     print_success "Usuario del sistema '$APP_USER' creado"
 else
-    print_status "Usuario del sistema '$APP_USER' ya existe"
+    print_status "Usuario '$APP_USER' ya existe"
 fi
 
 APP_USER_HOME=$(getent passwd "$APP_USER" | cut -d: -f6)
@@ -280,7 +262,6 @@ print_header "5/7 - Guardando configuración"
 
 if [ "$IS_UPDATE" = false ]; then
     DATABASE_URL="postgresql://$DB_USER:$DB_PASS@localhost:5432/$DB_NAME"
-
     cat > "$CONFIG_DIR/env" << EOF
 NODE_ENV=production
 PORT=$APP_PORT
@@ -289,24 +270,22 @@ SESSION_SECRET=$SESSION_SECRET
 SECURE_COOKIES=false
 APP_URL=$APP_URL
 EOF
-
     chmod 600 "$CONFIG_DIR/env"
     chown root:root "$CONFIG_DIR/env"
     print_success "Configuración creada en $CONFIG_DIR/env"
 else
-    print_status "Configuración existente preservada en $CONFIG_DIR/env"
+    print_status "Configuración existente preservada"
 fi
 
-# shellcheck disable=SC1090
-source "$CONFIG_DIR/env"
-export DATABASE_URL
+# Cargar y exportar todas las variables de entorno para procesos hijos
+set -a; source "$CONFIG_DIR/env"; set +a
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 6. Código de la aplicación
 # ─────────────────────────────────────────────────────────────────────────────
 print_header "6/7 - Descargando y compilando la aplicación"
 
-# Parar el servicio antes de actualizar para evitar conflictos
+# Parar el servicio antes de actualizar
 if systemctl is-active --quiet "$APP_NAME" 2>/dev/null; then
     print_status "Deteniendo servicio para actualización..."
     systemctl stop "$APP_NAME"
@@ -315,70 +294,92 @@ fi
 git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 
 if [ -d "$APP_DIR/.git" ]; then
-    print_status "Actualizando código existente..."
+    print_status "Actualizando código desde GitHub..."
     cd "$APP_DIR"
     if git fetch --all 2>/dev/null; then
         git reset --hard origin/main 2>/dev/null || git reset --hard origin/master
         print_success "Código actualizado al último commit"
     else
-        print_warning "Sin acceso a internet - manteniendo código actual sin actualizar"
+        print_warning "Sin acceso a internet - manteniendo código actual"
     fi
 else
-    if [ -d "$APP_DIR" ]; then
-        print_warning "Directorio $APP_DIR existe sin repositorio git, preservando uploads..."
-        TEMP_UPLOADS=""
-        if [ -d "$UPLOADS_DIR" ]; then
-            TEMP_UPLOADS=$(mktemp -d)
-            cp -a "$UPLOADS_DIR/." "$TEMP_UPLOADS/" 2>/dev/null || true
-        fi
-        rm -rf "$APP_DIR"
+    TEMP_UPLOADS=""
+    if [ -d "$UPLOADS_DIR" ]; then
+        TEMP_UPLOADS=$(mktemp -d)
+        cp -a "$UPLOADS_DIR/." "$TEMP_UPLOADS/" 2>/dev/null || true
     fi
+    [ -d "$APP_DIR" ] && rm -rf "$APP_DIR"
+
     print_status "Clonando repositorio..."
     git clone --depth 1 "$GITHUB_REPO" "$APP_DIR"
+
     if [ -n "${TEMP_UPLOADS:-}" ] && [ -d "$TEMP_UPLOADS" ]; then
-        print_status "Restaurando archivos de uploads..."
         mkdir -p "$UPLOADS_DIR"
         cp -a "$TEMP_UPLOADS/." "$UPLOADS_DIR/" 2>/dev/null || true
         rm -rf "$TEMP_UPLOADS"
+        print_status "Uploads restaurados"
     fi
     print_success "Repositorio clonado"
 fi
 
-# Crear directorios de uploads y asignar permisos
+# Permisos
 mkdir -p "$UPLOADS_DIR/avatars" "$UPLOADS_DIR/logos" "$UPLOADS_DIR/cvs"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
-chmod -R 755 "$APP_DIR"
 chmod 600 "$CONFIG_DIR/env"
 
-# Instalar dependencias (reutiliza node_modules existentes si no hay internet)
 cd "$APP_DIR"
+
+# ── Instalar dependencias npm ────────────────────────────────────────────────
+# Siempre intentar instalar. Si hay node_modules intenta offline primero.
+# IMPORTANTE: no se hace prune de devDependencies para que tsx esté disponible
+# en futuras actualizaciones.
+print_status "Instalando dependencias npm..."
 if [ -d "$APP_DIR/node_modules" ]; then
-    print_status "node_modules existente detectado, intentando instalación offline..."
-    if sudo -u "$APP_USER" HOME="$APP_USER_HOME" "$NPM_BIN" install \
-            --no-fund --no-audit --prefer-offline 2>/dev/null; then
+    # Intento 1: offline (usa caché local, sin internet)
+    if sudo -u "$APP_USER" HOME="$APP_USER_HOME" \
+            "$NPM_BIN" install --no-fund --no-audit --prefer-offline 2>/dev/null; then
         print_success "Dependencias actualizadas (modo offline)"
     else
-        print_warning "Sin internet - usando node_modules existentes sin actualizar"
+        print_warning "npm offline falló - usando node_modules existentes"
     fi
 else
-    print_status "Instalando dependencias npm (requiere internet)..."
-    sudo -u "$APP_USER" HOME="$APP_USER_HOME" "$NPM_BIN" install --no-fund --no-audit
+    # Sin node_modules previo: necesita internet
+    sudo -u "$APP_USER" HOME="$APP_USER_HOME" \
+        "$NPM_BIN" install --no-fund --no-audit
     print_success "Dependencias instaladas"
 fi
 
-# Compilar la aplicación
+# Verificar que tsx está disponible (necesario para build y migrate)
+if [ ! -f "$APP_DIR/node_modules/.bin/tsx" ]; then
+    print_status "tsx no encontrado, instalando desde caché..."
+    sudo -u "$APP_USER" HOME="$APP_USER_HOME" \
+        "$NPM_BIN" install --no-fund --no-audit --prefer-offline tsx 2>/dev/null || \
+    sudo -u "$APP_USER" HOME="$APP_USER_HOME" \
+        "$NPM_BIN" install --no-fund --no-audit tsx
+    print_success "tsx instalado"
+fi
+
+TSX_BIN="$APP_DIR/node_modules/.bin/tsx"
+
+# ── Compilar ─────────────────────────────────────────────────────────────────
 print_status "Compilando la aplicación (puede tardar 1-2 minutos)..."
 sudo -u "$APP_USER" HOME="$APP_USER_HOME" "$NPM_BIN" run build
-print_success "Aplicación compilada"
 
-# Ejecutar migraciones de base de datos
+# Verificar que el build generó el archivo esperado
+if [ ! -f "$APP_DIR/dist/index.cjs" ]; then
+    print_error "El build no generó dist/index.cjs. Revisa los errores de compilación."
+    exit 1
+fi
+print_success "Aplicación compilada correctamente"
+
+# ── Migraciones de base de datos ──────────────────────────────────────────────
 print_status "Ejecutando migraciones de base de datos..."
 sudo -u "$APP_USER" HOME="$APP_USER_HOME" \
     DATABASE_URL="$DATABASE_URL" \
-    "$NPX_BIN" tsx server/migrate.ts
+    "$TSX_BIN" "$APP_DIR/server/migrate.ts"
 print_success "Esquema de base de datos actualizado"
 
-# Crear usuario administrador (solo instalación nueva)
+# ── Crear administrador (solo instalación nueva) ──────────────────────────────
 if [ "$IS_UPDATE" = false ] && [ -n "${ADMIN_EMAIL:-}" ]; then
     print_status "Creando usuario administrador..."
     sudo -u "$APP_USER" HOME="$APP_USER_HOME" \
@@ -386,21 +387,16 @@ if [ "$IS_UPDATE" = false ] && [ -n "${ADMIN_EMAIL:-}" ]; then
         ADMIN_PASSWORD="$ADMIN_PASSWORD" \
         ADMIN_NAME="$ADMIN_NAME" \
         DATABASE_URL="$DATABASE_URL" \
-        "$NPX_BIN" tsx server/create-admin.ts
+        "$TSX_BIN" "$APP_DIR/server/create-admin.ts"
     print_success "Administrador creado: $ADMIN_EMAIL"
 fi
-
-# Eliminar dependencias de desarrollo para ahorrar espacio
-print_status "Eliminando dependencias de desarrollo..."
-sudo -u "$APP_USER" HOME="$APP_USER_HOME" "$NPM_BIN" prune --omit=dev --no-fund --no-audit
-print_success "Dependencias de producción optimizadas"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 7. Servicios (systemd + nginx)
 # ─────────────────────────────────────────────────────────────────────────────
 print_header "7/7 - Configurando servicios"
 
-# Usar node directamente para mejor manejo de señales en systemd
+# Servicio systemd — usa node directamente (mejor manejo de señales)
 cat > "/etc/systemd/system/$APP_NAME.service" << EOF
 [Unit]
 Description=Conecta FP - Portal de Empleo
@@ -425,10 +421,10 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable "$APP_NAME"
+systemctl enable "$APP_NAME" --quiet
 print_success "Servicio systemd configurado"
 
-# Configurar nginx
+# Nginx
 cat > "/etc/nginx/sites-available/$APP_NAME" << NGINX_EOF
 server {
     listen 80;
@@ -456,16 +452,27 @@ rm -f /etc/nginx/sites-enabled/default
 if nginx -t 2>/dev/null; then
     print_success "Configuración de Nginx válida"
 else
-    print_error "Error en configuración de Nginx. Revisa: nginx -t"
+    print_error "Error en configuración de Nginx"
+    nginx -t
     exit 1
 fi
 
-systemctl enable nginx
+systemctl enable nginx --quiet
 systemctl restart nginx
 print_success "Nginx configurado como proxy reverso"
 
+# Iniciar / reiniciar la aplicación
 systemctl restart "$APP_NAME"
-print_success "Aplicación iniciada"
+
+# Verificar que arrancó
+sleep 5
+if systemctl is-active --quiet "$APP_NAME"; then
+    print_success "Servicio $APP_NAME arrancado correctamente"
+else
+    print_error "El servicio no arrancó. Revisa los logs:"
+    journalctl -u "$APP_NAME" -n 20 --no-pager
+    exit 1
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Cloudflare Tunnel (opcional)
@@ -485,20 +492,15 @@ if [ -n "${CF_TOKEN:-}" ]; then
     rm -f /tmp/cloudflared.deb
 
     cloudflared service install "$CF_TOKEN"
-    systemctl enable cloudflared
+    systemctl enable cloudflared --quiet
     systemctl start cloudflared
 
     sed -i 's/^SECURE_COOKIES=.*/SECURE_COOKIES=true/' "$CONFIG_DIR/env"
 
     echo ""
-    echo -e "Introduce el dominio configurado en Cloudflare Tunnel."
-    echo -e "Ejemplo: ${BOLD}conectafp.midominio.es${NC}"
-    echo ""
-    read -p "Dominio de Cloudflare (Enter para no cambiar APP_URL): " CF_DOMAIN
+    read -p "Dominio de Cloudflare (ej: conectafp.midominio.es) — Enter para omitir: " CF_DOMAIN
     if [ -n "${CF_DOMAIN:-}" ]; then
-        CF_DOMAIN=${CF_DOMAIN#http://}
-        CF_DOMAIN=${CF_DOMAIN#https://}
-        CF_DOMAIN=${CF_DOMAIN%/}
+        CF_DOMAIN=${CF_DOMAIN#http://}; CF_DOMAIN=${CF_DOMAIN#https://}; CF_DOMAIN=${CF_DOMAIN%/}
         if grep -q "^APP_URL=" "$CONFIG_DIR/env"; then
             sed -i "s|^APP_URL=.*|APP_URL=https://$CF_DOMAIN|" "$CONFIG_DIR/env"
         else
@@ -508,75 +510,69 @@ if [ -n "${CF_TOKEN:-}" ]; then
     fi
 
     systemctl restart "$APP_NAME"
-    print_success "Cloudflare Tunnel instalado y cookies seguras habilitadas"
+    print_success "Cloudflare Tunnel instalado y cookies seguras activadas"
 else
     print_status "Cloudflare Tunnel omitido"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Verificación final
+# Verificación HTTP final
 # ─────────────────────────────────────────────────────────────────────────────
 echo ""
-print_status "Esperando a que la aplicación inicie (15 segundos)..."
-sleep 15
+print_status "Verificando respuesta HTTP (espera 10 segundos)..."
+sleep 10
 
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$APP_PORT 2>/dev/null || echo "000")
 if [[ "$HTTP_CODE" =~ ^(200|301|302)$ ]]; then
-    APP_OK=true
     print_success "La aplicación responde correctamente (HTTP $HTTP_CODE)"
+    APP_OK=true
 else
+    print_warning "La aplicación no responde por HTTP (código: $HTTP_CODE)"
     APP_OK=false
-    print_warning "La aplicación aún no responde (HTTP $HTTP_CODE)"
-    print_warning "Revisa los logs con: journalctl -u $APP_NAME -n 50"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Resumen final
 # ─────────────────────────────────────────────────────────────────────────────
 SERVER_IP=$(hostname -I | awk '{print $1}')
+set -a; source "$CONFIG_DIR/env"; set +a
 
 echo ""
 echo -e "${CYAN}${BOLD}╔═══════════════════════════════════════════════════════╗${NC}"
 if [ "$IS_UPDATE" = true ]; then
-    echo -e "${CYAN}${BOLD}║         ACTUALIZACIÓN COMPLETADA                      ║${NC}"
+    echo -e "${CYAN}${BOLD}║         ACTUALIZACIÓN COMPLETADA ✓                    ║${NC}"
 else
-    echo -e "${CYAN}${BOLD}║         INSTALACIÓN COMPLETADA                        ║${NC}"
+    echo -e "${CYAN}${BOLD}║         INSTALACIÓN COMPLETADA ✓                      ║${NC}"
 fi
 echo -e "${CYAN}${BOLD}╚═══════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "  ${BOLD}URL de acceso:${NC}  http://$SERVER_IP"
-
-# shellcheck disable=SC1090
-source "$CONFIG_DIR/env"
+echo -e "  ${BOLD}URL de acceso:${NC}   http://$SERVER_IP"
 if [ -n "${APP_URL:-}" ] && [ "$APP_URL" != "http://localhost:$APP_PORT" ]; then
-    echo -e "  ${BOLD}URL pública:${NC}    $APP_URL"
+    echo -e "  ${BOLD}URL pública:${NC}     $APP_URL"
 fi
-if [ -n "${CF_TOKEN:-}" ]; then
-    echo -e "  ${BOLD}Cloudflare:${NC}     Configurado (acceso HTTPS via tu dominio)"
-fi
+[ -n "${CF_TOKEN:-}" ] && echo -e "  ${BOLD}Cloudflare:${NC}      Configurado (HTTPS activo)"
 echo ""
 if [ "$IS_UPDATE" = false ] && [ -n "${ADMIN_EMAIL:-}" ]; then
     echo -e "  ${BOLD}Cuenta de administrador:${NC}"
-    echo -e "    Email:        $ADMIN_EMAIL"
-    echo -e "    Contraseña:   (la que introdujiste durante la instalación)"
+    echo -e "    Email:      $ADMIN_EMAIL"
+    echo -e "    Contraseña: (la que introdujiste)"
     echo ""
 fi
 echo -e "  ${BOLD}Comandos útiles:${NC}"
-echo -e "    Estado:       ${GREEN}systemctl status $APP_NAME${NC}"
-echo -e "    Logs:         ${GREEN}journalctl -u $APP_NAME -f${NC}"
-echo -e "    Reiniciar:    ${GREEN}systemctl restart $APP_NAME${NC}"
-echo -e "    Config:       ${GREEN}cat $CONFIG_DIR/env${NC}"
-echo -e "    Nginx logs:   ${GREEN}tail -f /var/log/nginx/error.log${NC}"
+echo -e "    Estado:     ${GREEN}systemctl status $APP_NAME${NC}"
+echo -e "    Logs:       ${GREEN}journalctl -u $APP_NAME -f${NC}"
+echo -e "    Reiniciar:  ${GREEN}systemctl restart $APP_NAME${NC}"
+echo -e "    Config:     ${GREEN}cat $CONFIG_DIR/env${NC}"
 echo ""
 echo -e "  ${BOLD}Archivos importantes:${NC}"
-echo -e "    Aplicación:   $APP_DIR"
-echo -e "    Configuración: $CONFIG_DIR/env"
-echo -e "    Uploads:      $UPLOADS_DIR"
-echo -e "    Servicio:     /etc/systemd/system/$APP_NAME.service"
+echo -e "    App:        $APP_DIR"
+echo -e "    Config:     $CONFIG_DIR/env"
+echo -e "    Uploads:    $UPLOADS_DIR"
+echo -e "    Servicio:   /etc/systemd/system/$APP_NAME.service"
 echo ""
 
-if [ "$APP_OK" = false ]; then
-    echo -e "  ${YELLOW}${BOLD}NOTA:${NC} Si la app no responde, ejecuta:"
+if [ "${APP_OK:-false}" = false ]; then
+    echo -e "  ${YELLOW}${BOLD}La app no responde aún. Revisa los logs:${NC}"
     echo -e "  ${GREEN}journalctl -u $APP_NAME -n 50${NC}"
     echo ""
 fi
