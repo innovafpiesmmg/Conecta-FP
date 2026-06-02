@@ -317,9 +317,12 @@ git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 if [ -d "$APP_DIR/.git" ]; then
     print_status "Actualizando código existente..."
     cd "$APP_DIR"
-    git fetch --all
-    git reset --hard origin/main 2>/dev/null || git reset --hard origin/master
-    print_success "Código actualizado al último commit"
+    if git fetch --all 2>/dev/null; then
+        git reset --hard origin/main 2>/dev/null || git reset --hard origin/master
+        print_success "Código actualizado al último commit"
+    else
+        print_warning "Sin acceso a internet - manteniendo código actual sin actualizar"
+    fi
 else
     if [ -d "$APP_DIR" ]; then
         print_warning "Directorio $APP_DIR existe sin repositorio git, preservando uploads..."
@@ -347,11 +350,21 @@ chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 chmod -R 755 "$APP_DIR"
 chmod 600 "$CONFIG_DIR/env"
 
-# Instalar dependencias con ruta absoluta de npm y HOME correcto
-print_status "Instalando dependencias npm..."
+# Instalar dependencias (reutiliza node_modules existentes si no hay internet)
 cd "$APP_DIR"
-sudo -u "$APP_USER" HOME="$APP_USER_HOME" "$NPM_BIN" install --no-fund --no-audit
-print_success "Dependencias instaladas"
+if [ -d "$APP_DIR/node_modules" ]; then
+    print_status "node_modules existente detectado, intentando instalación offline..."
+    if sudo -u "$APP_USER" HOME="$APP_USER_HOME" "$NPM_BIN" install \
+            --no-fund --no-audit --prefer-offline 2>/dev/null; then
+        print_success "Dependencias actualizadas (modo offline)"
+    else
+        print_warning "Sin internet - usando node_modules existentes sin actualizar"
+    fi
+else
+    print_status "Instalando dependencias npm (requiere internet)..."
+    sudo -u "$APP_USER" HOME="$APP_USER_HOME" "$NPM_BIN" install --no-fund --no-audit
+    print_success "Dependencias instaladas"
+fi
 
 # Compilar la aplicación
 print_status "Compilando la aplicación (puede tardar 1-2 minutos)..."
