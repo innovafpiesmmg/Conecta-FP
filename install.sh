@@ -171,22 +171,38 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 print_header "2/7 - Instalando Node.js 20.x"
 
+install_nodejs() {
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt-get install -y -qq nodejs
+}
+
 if command -v node &>/dev/null; then
     NODE_VERSION=$(node -v)
     print_status "Node.js ya instalado: $NODE_VERSION"
     if [[ ! "$NODE_VERSION" =~ ^v20\. ]] && [[ ! "$NODE_VERSION" =~ ^v2[1-9]\. ]]; then
         print_warning "Versión de Node.js antigua, actualizando..."
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        apt-get install -y -qq nodejs
+        install_nodejs
     fi
 else
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y -qq nodejs
+    install_nodejs
 fi
 
-chmod 755 /usr/bin/node 2>/dev/null || true
-chmod 755 /usr/bin/npm 2>/dev/null || true
+# Asegurar que npm está disponible (puede faltar si Node fue instalado manualmente)
+if ! command -v npm &>/dev/null; then
+    print_warning "npm no encontrado, reinstalando Node.js con paquete oficial..."
+    install_nodejs
+fi
+
+# Obtener rutas absolutas de npm/npx para uso posterior
+NPM_BIN=$(command -v npm)
+NPX_BIN=$(command -v npx)
+NODE_BIN=$(command -v node)
+
+# Asegurar permisos de ejecución
+chmod 755 "$NODE_BIN" "$NPM_BIN" "$NPX_BIN" 2>/dev/null || true
+
 print_success "Node.js $(node -v) / npm $(npm -v)"
+print_status "Rutas: node=$NODE_BIN  npm=$NPM_BIN  npx=$NPX_BIN"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. PostgreSQL
@@ -295,26 +311,26 @@ chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 
 print_status "Instalando dependencias npm (incluye herramientas de build)..."
 cd "$APP_DIR"
-sudo -u "$APP_USER" npm install 2>&1 | tail -1
+sudo -u "$APP_USER" "$NPM_BIN" install 2>&1 | tail -1
 print_success "Dependencias instaladas"
 
 print_status "Compilando la aplicación (build)..."
-sudo -u "$APP_USER" npm run build 2>&1 | tail -3
+sudo -u "$APP_USER" "$NPM_BIN" run build 2>&1 | tail -3
 print_success "Aplicación compilada"
 
 print_status "Ejecutando migraciones de base de datos..."
 cd "$APP_DIR"
-sudo -u "$APP_USER" DATABASE_URL="$DATABASE_URL" npx tsx server/migrate.ts 2>&1
+sudo -u "$APP_USER" DATABASE_URL="$DATABASE_URL" "$NPX_BIN" tsx server/migrate.ts 2>&1
 print_success "Esquema de base de datos actualizado"
 
 if [ "$IS_UPDATE" = false ] && [ -n "$ADMIN_EMAIL" ]; then
     print_status "Creando usuario administrador..."
-    sudo -u "$APP_USER" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_NAME="$ADMIN_NAME" DATABASE_URL="$DATABASE_URL" npx tsx server/create-admin.ts 2>&1
+    sudo -u "$APP_USER" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_NAME="$ADMIN_NAME" DATABASE_URL="$DATABASE_URL" "$NPX_BIN" tsx server/create-admin.ts 2>&1
     print_success "Administrador creado: $ADMIN_EMAIL"
 fi
 
 print_status "Limpiando dependencias de desarrollo..."
-sudo -u "$APP_USER" npm prune --omit=dev 2>&1 | tail -1
+sudo -u "$APP_USER" "$NPM_BIN" prune --omit=dev 2>&1 | tail -1
 print_success "Dependencias de producción optimizadas"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -334,7 +350,7 @@ User=$APP_USER
 Group=$APP_USER
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$CONFIG_DIR/env
-ExecStart=/usr/bin/npm start
+ExecStart=$NPM_BIN start
 Restart=always
 RestartSec=10
 StandardOutput=journal
