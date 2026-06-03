@@ -1,5 +1,4 @@
 import nodemailer from "nodemailer";
-import { Resend } from "resend";
 import { storage } from "./storage";
 
 export async function getTransporter() {
@@ -40,19 +39,30 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     if (!from) return false;
 
     if (settings.emailProvider === "resend" && settings.resendApiKey) {
-      const resend = new Resend(settings.resendApiKey);
-      const { error } = await resend.emails.send({
-        from: `${from.name} <${from.address}>`,
-        to,
-        subject,
-        html,
-      });
-      if (error) {
-        console.error("[EMAIL] Resend error:", error);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { Resend } = require("resend");
+        const resend = new Resend(settings.resendApiKey);
+        const { error } = await resend.emails.send({
+          from: `${from.name} <${from.address}>`,
+          to,
+          subject,
+          html,
+        });
+        if (error) {
+          console.error("[EMAIL] Resend error:", error);
+          return false;
+        }
+        console.log(`[EMAIL] Resend sent to ${to}: ${subject}`);
+        return true;
+      } catch (requireErr: any) {
+        if (requireErr.code === "MODULE_NOT_FOUND") {
+          console.error("[EMAIL] El paquete 'resend' no está instalado en este servidor. Ejecuta: npm install resend");
+        } else {
+          console.error("[EMAIL] Resend error:", requireErr);
+        }
         return false;
       }
-      console.log(`[EMAIL] Resend sent to ${to}: ${subject}`);
-      return true;
     }
 
     const transporter = await getTransporter();

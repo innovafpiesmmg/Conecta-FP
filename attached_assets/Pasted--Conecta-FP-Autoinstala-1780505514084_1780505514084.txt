@@ -1,0 +1,97 @@
+
+  ╔═══════════════════════════════════════════════════════╗
+  ║          Conecta FP - Autoinstalador v1.2            ║
+  ║     Portal de Empleo para Titulados de FP            ║
+  ╚═══════════════════════════════════════════════════════╝
+
+[AVISO] Instalación existente detectada - modo ACTUALIZACIÓN
+[INFO] Se preservarán las credenciales y la base de datos
+
+  URL actual de la aplicación: conectafpcanarias.com
+
+¿Deseas cambiar la URL de la aplicación? (s/N): n
+
+
+=== 1/7 - Instalando dependencias del sistema ===
+
+nginx was already set to manually installed.
+[OK] Dependencias del sistema instaladas
+
+=== 2/7 - Instalando Node.js 20.x ===
+
+[INFO] Node.js ya instalado: v20.20.2 / npm 10.8.2
+[OK] Node.js v20.20.2 / npm 10.8.2
+[INFO]   node=/usr/bin/node  npm=/usr/bin/npm
+
+=== 3/7 - Configurando PostgreSQL ===
+
+[INFO] Base de datos existente - sin cambios
+
+=== 4/7 - Configurando usuario y directorios ===
+
+[INFO] Usuario 'conectafp' ya existe
+
+=== 5/7 - Guardando configuración ===
+
+[INFO] Configuración existente preservada
+
+=== 6/7 - Descargando y compilando la aplicación ===
+
+[INFO] Actualizando código desde GitHub...
+HEAD is now at 2d9932b Add Resend and standardwebhooks to the build bundling allowlist
+[OK] Código actualizado al último commit
+[INFO] Instalando dependencias npm...
+[AVISO] npm offline falló - usando node_modules existentes
+[INFO] Compilando la aplicación (puede tardar 1-2 minutos)...
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming (1) src/main.tsxBrowserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 1915 modules transformed.
+../dist/public/index.html                                 2.61 kB │ gzip:   0.99 kB
+../dist/public/assets/feature-alumni-B_nzB1BV.jpg       131.87 kB
+../dist/public/assets/hero-students-BgaErTfm.jpg        249.52 kB
+../dist/public/assets/ASD_1771889294764-Djy0Uxxs.png    272.02 kB
+../dist/public/assets/feature-company-DEhhxS1m.jpg      285.62 kB
+../dist/public/assets/index-B4-j7uyv.css                 99.56 kB │ gzip:  15.27 kB
+../dist/public/assets/index-CoLfOoJu.js               1,086.91 kB │ gzip: 316.16 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 7.42s
+building server...
+✘ [ERROR] Could not resolve "resend"
+
+    server/email.ts:2:23:
+      2 │ import { Resend } from "resend";
+        ╵                        ~~~~~~~~
+
+  You can mark the path "resend" as external to exclude it from the bundle, which will remove this
+  error and leave the unresolved path in the bundle.
+
+1 error
+Error: Build failed with 1 error:
+server/email.ts:2:23: ERROR: Could not resolve "resend"
+    at failureErrorWithLog (/var/www/conectafp/node_modules/esbuild/lib/main.js:1467:15)
+    at /var/www/conectafp/node_modules/esbuild/lib/main.js:926:25
+    at /var/www/conectafp/node_modules/esbuild/lib/main.js:878:52
+    at buildResponseToResult (/var/www/conectafp/node_modules/esbuild/lib/main.js:924:7)
+    at /var/www/conectafp/node_modules/esbuild/lib/main.js:951:16
+    at responseCallbacks.<computed> (/var/www/conectafp/node_modules/esbuild/lib/main.js:603:9)
+    at handleIncomingPacket (/var/www/conectafp/node_modules/esbuild/lib/main.js:658:12)
+    at Socket.readFromStdout (/var/www/conectafp/node_modules/esbuild/lib/main.js:581:7)
+    at Socket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+root@Conectafp:~# 
