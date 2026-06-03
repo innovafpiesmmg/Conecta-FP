@@ -48,14 +48,16 @@ export const users = pgTable("users", {
 
 export const smtpSettings = pgTable("smtp_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  host: text("host").notNull(),
+  emailProvider: text("email_provider").notNull().default("smtp"),
+  host: text("host").notNull().default(""),
   port: integer("port").notNull().default(587),
-  username: text("username").notNull(),
-  password: text("password").notNull(),
-  fromEmail: text("from_email").notNull(),
+  username: text("username").notNull().default(""),
+  password: text("password").notNull().default(""),
+  fromEmail: text("from_email").notNull().default(""),
   fromName: text("from_name").notNull().default("Conecta FP Canarias"),
   secure: boolean("secure").notNull().default(false),
   enabled: boolean("enabled").notNull().default(false),
+  resendApiKey: text("resend_api_key"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
@@ -199,14 +201,16 @@ export const updateProfileCompanySchema = z.object({
 });
 
 export const smtpSettingsSchema = z.object({
-  host: z.string().min(1, "El host es obligatorio"),
-  port: z.number().min(1).max(65535),
-  username: z.string().min(1, "El usuario es obligatorio"),
-  password: z.string().min(1, "La contrasena es obligatoria"),
-  fromEmail: z.string().email("Email no valido"),
+  emailProvider: z.enum(["smtp", "resend"]).default("smtp"),
+  host: z.string().default(""),
+  port: z.number().min(1).max(65535).default(587),
+  username: z.string().default(""),
+  password: z.string().default(""),
+  fromEmail: z.string().default(""),
   fromName: z.string().min(1, "El nombre del remitente es obligatorio"),
   secure: z.boolean(),
   enabled: z.boolean(),
+  resendApiKey: z.string().optional().nullable(),
 });
 
 export const cvEducationSchema = z.object({

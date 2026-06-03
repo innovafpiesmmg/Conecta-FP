@@ -206,6 +206,13 @@ async function migrate() {
        SELECT id, familia_profesional, ciclo_formativo FROM users
        WHERE role = 'ALUMNI' AND familia_profesional IS NOT NULL AND ciclo_formativo IS NOT NULL
        ON CONFLICT ("user_id", "familia_profesional", "ciclo_formativo") DO NOTHING`,
+
+      `ALTER TABLE "smtp_settings" ADD COLUMN IF NOT EXISTS "email_provider" text NOT NULL DEFAULT 'smtp'`,
+      `ALTER TABLE "smtp_settings" ADD COLUMN IF NOT EXISTS "resend_api_key" text`,
+      `ALTER TABLE "smtp_settings" ALTER COLUMN "host" SET DEFAULT ''`,
+      `ALTER TABLE "smtp_settings" ALTER COLUMN "username" SET DEFAULT ''`,
+      `ALTER TABLE "smtp_settings" ALTER COLUMN "password" SET DEFAULT ''`,
+      `ALTER TABLE "smtp_settings" ALTER COLUMN "from_email" SET DEFAULT ''`,
     ];
 
     for (const sql of migrations) {

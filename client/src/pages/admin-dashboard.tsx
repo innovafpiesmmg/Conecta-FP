@@ -1266,14 +1266,17 @@ function SmtpPanel() {
   });
 
   const [form, setForm] = useState({
+    emailProvider: "smtp" as "smtp" | "resend",
     host: "", port: 587, username: "", password: "",
     fromEmail: "", fromName: "Conecta FP Canarias", secure: false, enabled: false,
+    resendApiKey: "",
   });
   const [formLoaded, setFormLoaded] = useState(false);
 
   useEffect(() => {
     if (smtpData && !formLoaded) {
       setForm({
+        emailProvider: smtpData.emailProvider || "smtp",
         host: smtpData.host || "",
         port: smtpData.port || 587,
         username: smtpData.username || "",
@@ -1282,6 +1285,7 @@ function SmtpPanel() {
         fromName: smtpData.fromName || "Conecta FP Canarias",
         secure: smtpData.secure || false,
         enabled: smtpData.enabled || false,
+        resendApiKey: smtpData.resendApiKey || "",
       });
       setFormLoaded(true);
     }
@@ -1291,7 +1295,7 @@ function SmtpPanel() {
     mutationFn: () => apiRequest("POST", "/api/admin/smtp", form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/smtp"] });
-      toast({ title: "Configuración SMTP guardada" });
+      toast({ title: "Configuración de correo guardada" });
     },
     onError: () => toast({ title: "Error al guardar configuración", variant: "destructive" }),
   });
@@ -1310,61 +1314,47 @@ function SmtpPanel() {
     <div className="space-y-6 max-w-2xl">
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Mail className="w-5 h-5" /> Configuración del servidor de correo (SMTP)
+          <Mail className="w-5 h-5" /> Configuración del correo electrónico
         </h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Configura un servidor SMTP para enviar correos de verificación de registro, restablecimiento de contraseña y alertas.
+          Elige el proveedor de correo para enviar verificaciones de registro, restablecimiento de contraseña y alertas.
         </p>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="smtp-host">Servidor SMTP</Label>
-              <Input
-                id="smtp-host"
-                placeholder="smtp.gmail.com"
-                value={form.host}
-                onChange={(e) => setForm({ ...form, host: e.target.value })}
-                data-testid="input-smtp-host"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp-port">Puerto</Label>
-              <Input
-                id="smtp-port"
-                type="number"
-                placeholder="587"
-                value={form.port}
-                onChange={(e) => setForm({ ...form, port: parseInt(e.target.value) || 587 })}
-                data-testid="input-smtp-port"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="smtp-username">Usuario</Label>
-              <Input
-                id="smtp-username"
-                placeholder="usuario@email.com"
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
-                data-testid="input-smtp-username"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp-password">Contraseña</Label>
-              <Input
-                id="smtp-password"
-                type="password"
-                placeholder="Contraseña SMTP"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                data-testid="input-smtp-password"
-              />
+        <div className="space-y-5">
+          {/* Provider selector */}
+          <div className="space-y-2">
+            <Label>Proveedor de correo</Label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, emailProvider: "smtp" })}
+                data-testid="button-provider-smtp"
+                className={`flex-1 border rounded-lg p-3 text-sm font-medium transition-colors ${
+                  form.emailProvider === "smtp"
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                SMTP / Nodemailer
+                <p className="text-xs font-normal text-muted-foreground mt-0.5">Gmail, Outlook, servidor propio…</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, emailProvider: "resend" })}
+                data-testid="button-provider-resend"
+                className={`flex-1 border rounded-lg p-3 text-sm font-medium transition-colors ${
+                  form.emailProvider === "resend"
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                Resend
+                <p className="text-xs font-normal text-muted-foreground mt-0.5">API moderna · resend.com</p>
+              </button>
             </div>
           </div>
 
+          {/* Shared: from fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="smtp-from-email">Email remitente</Label>
@@ -1389,23 +1379,91 @@ function SmtpPanel() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={form.secure}
-                onCheckedChange={(checked) => setForm({ ...form, secure: checked })}
-                data-testid="switch-smtp-secure"
+          {/* SMTP-specific fields */}
+          {form.emailProvider === "smtp" && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-host">Servidor SMTP</Label>
+                  <Input
+                    id="smtp-host"
+                    placeholder="smtp.gmail.com"
+                    value={form.host}
+                    onChange={(e) => setForm({ ...form, host: e.target.value })}
+                    data-testid="input-smtp-host"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-port">Puerto</Label>
+                  <Input
+                    id="smtp-port"
+                    type="number"
+                    placeholder="587"
+                    value={form.port}
+                    onChange={(e) => setForm({ ...form, port: parseInt(e.target.value) || 587 })}
+                    data-testid="input-smtp-port"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-username">Usuario</Label>
+                  <Input
+                    id="smtp-username"
+                    placeholder="usuario@email.com"
+                    value={form.username}
+                    onChange={(e) => setForm({ ...form, username: e.target.value })}
+                    data-testid="input-smtp-username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-password">Contraseña</Label>
+                  <Input
+                    id="smtp-password"
+                    type="password"
+                    placeholder="Contraseña SMTP"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    data-testid="input-smtp-password"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.secure}
+                  onCheckedChange={(checked) => setForm({ ...form, secure: checked })}
+                  data-testid="switch-smtp-secure"
+                />
+                <Label>TLS/SSL</Label>
+              </div>
+            </>
+          )}
+
+          {/* Resend-specific fields */}
+          {form.emailProvider === "resend" && (
+            <div className="space-y-2">
+              <Label htmlFor="resend-api-key">API Key de Resend</Label>
+              <Input
+                id="resend-api-key"
+                type="password"
+                placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxx"
+                value={form.resendApiKey}
+                onChange={(e) => setForm({ ...form, resendApiKey: e.target.value })}
+                data-testid="input-resend-api-key"
               />
-              <Label>TLS/SSL</Label>
+              <p className="text-xs text-muted-foreground">
+                Obtén tu API key en <a href="https://resend.com/api-keys" target="_blank" rel="noreferrer" className="underline">resend.com/api-keys</a>. El dominio remitente debe estar verificado en Resend.
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={form.enabled}
-                onCheckedChange={(checked) => setForm({ ...form, enabled: checked })}
-                data-testid="switch-smtp-enabled"
-              />
-              <Label>Correo habilitado</Label>
-            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={form.enabled}
+              onCheckedChange={(checked) => setForm({ ...form, enabled: checked })}
+              data-testid="switch-smtp-enabled"
+            />
+            <Label>Correo habilitado</Label>
           </div>
 
           <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} data-testid="button-smtp-save">
@@ -1420,7 +1478,7 @@ function SmtpPanel() {
           <Send className="w-5 h-5" /> Enviar correo de prueba
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Envía un correo de prueba para verificar que la configuración SMTP funciona correctamente.
+          Envía un correo de prueba para verificar que la configuración funciona correctamente.
         </p>
         <div className="flex items-center gap-3 flex-wrap">
           <Input

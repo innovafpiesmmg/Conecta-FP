@@ -1112,8 +1112,12 @@ export async function registerRoutes(
     try {
       const settings = await storage.getSmtpSettings();
       if (!settings) return res.json(null);
-      const { password, ...safe } = settings;
-      res.json({ ...safe, password: "••••••••" });
+      const { password, resendApiKey, ...safe } = settings;
+      res.json({
+        ...safe,
+        password: password ? "••••••••" : "",
+        resendApiKey: resendApiKey ? "••••••••" : "",
+      });
     } catch (err) {
       next(err);
     }
@@ -1123,13 +1127,25 @@ export async function registerRoutes(
     try {
       const parsed = smtpSettingsSchema.parse(req.body);
       const existing = await storage.getSmtpSettings();
-      let passwordToSave = parsed.password;
+      let passwordToSave = parsed.password ?? "";
       if (parsed.password === "••••••••" && existing) {
         passwordToSave = existing.password;
       }
-      const settings = await storage.upsertSmtpSettings({ ...parsed, password: passwordToSave });
-      const { password, ...safe } = settings;
-      res.json({ ...safe, password: "••••••••" });
+      let resendApiKeyToSave = parsed.resendApiKey ?? null;
+      if (parsed.resendApiKey === "••••••••" && existing) {
+        resendApiKeyToSave = existing.resendApiKey ?? null;
+      }
+      const settings = await storage.upsertSmtpSettings({
+        ...parsed,
+        password: passwordToSave,
+        resendApiKey: resendApiKeyToSave,
+      });
+      const { password, resendApiKey, ...safe } = settings;
+      res.json({
+        ...safe,
+        password: password ? "••••••••" : "",
+        resendApiKey: resendApiKey ? "••••••••" : "",
+      });
     } catch (err: any) {
       if (err.name === "ZodError") return res.status(400).json({ message: "Datos invalidos", errors: err.errors });
       next(err);

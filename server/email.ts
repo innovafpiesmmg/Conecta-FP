@@ -1,9 +1,13 @@
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { storage } from "./storage";
 
 export async function getTransporter() {
   const settings = await storage.getSmtpSettings();
   if (!settings || !settings.enabled) {
+    return null;
+  }
+  if (settings.emailProvider === "resend") {
     return null;
   }
 
@@ -26,17 +30,39 @@ async function getFromAddress(): Promise<{ name: string; address: string } | nul
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    const transporter = await getTransporter();
-    if (!transporter) {
-      console.log(`[EMAIL] SMTP not configured. Would send to ${to}: ${subject}`);
+    const settings = await storage.getSmtpSettings();
+    if (!settings || !settings.enabled) {
+      console.log(`[EMAIL] Email not configured/enabled. Would send to ${to}: ${subject}`);
       return false;
     }
 
     const from = await getFromAddress();
     if (!from) return false;
 
+    if (settings.emailProvider === "resend" && settings.resendApiKey) {
+      const resend = new Resend(settings.resendApiKey);
+      const { error } = await resend.emails.send({
+        from: `${from.name} <${from.address}>`,
+        to,
+        subject,
+        html,
+      });
+      if (error) {
+        console.error("[EMAIL] Resend error:", error);
+        return false;
+      }
+      console.log(`[EMAIL] Resend sent to ${to}: ${subject}`);
+      return true;
+    }
+
+    const transporter = await getTransporter();
+    if (!transporter) {
+      console.log(`[EMAIL] SMTP not configured. Would send to ${to}: ${subject}`);
+      return false;
+    }
+
     await transporter.sendMail({ from, to, subject, html });
-    console.log(`[EMAIL] Sent to ${to}: ${subject}`);
+    console.log(`[EMAIL] SMTP sent to ${to}: ${subject}`);
     return true;
   } catch (err) {
     console.error("[EMAIL] Error sending email:", err);
@@ -47,11 +73,11 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
 export async function sendTestEmail(to: string): Promise<boolean> {
   return sendEmail(
     to,
-    "Conecta FP Canarias - Prueba de configuracion SMTP",
+    "Conecta FP Canarias - Prueba de configuracion de correo",
     `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Prueba de correo electrónico</h2>
       <p>Este es un correo de prueba enviado desde <strong>Conecta FP Canarias</strong>.</p>
-      <p>Si recibes este mensaje, la configuración SMTP está funcionando correctamente.</p>
+      <p>Si recibes este mensaje, la configuración de correo está funcionando correctamente.</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
       <p style="color: #999; font-size: 12px;">Conecta FP Canarias - Portal de Empleo para Titulados de FP</p>
     </div>`
